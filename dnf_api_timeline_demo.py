@@ -13,7 +13,7 @@ async def filter_valid_items(timeline_rows, session):
         item_id = row.get("data", {}).get("itemId")
         if not item_id:
             continue
-        equip_level = await dnf_api.fetch_item_detail(session, item_id)
+        equip_level = await dnf_api.fetch_item_detail(item_id)
         if equip_level == 115:  # 장착 가능 레벨 조건
             valid_items.append(row)
     return valid_items
@@ -49,4 +49,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(init_db())
+    asyncio.run(dnf_api.preload_item_cache())
     asyncio.run(main())

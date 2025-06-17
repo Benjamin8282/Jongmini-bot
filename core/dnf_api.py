@@ -12,6 +12,9 @@ API_KEY = os.getenv("NEOPLE_API_KEY")
 BASE_URL = "https://api.neople.co.kr/df"
 DB_PATH = Path("data/characters.db")
 
+# 글로벌 메모리 캐시
+ITEM_DETAIL_MEMCACHE = {}
+
 
 async def search_characters(server_id: str, character_name: str):
     logger.info(f"search_characters 호출: server_id={server_id}, character_name={character_name}")
@@ -102,53 +105,76 @@ async def fetch_timeline(server_id: str, character_id: str):
                 return None
 
 
-# -----------------------------
-# 아이템 상세 조회 + 캐시 연동
-# -----------------------------
-
-async def fetch_item_detail(session: aiohttp.ClientSession, item_id: str) -> int:
+# ===============================
+# 메모리 캐시 프리로드 함수
+# ===============================
+async def preload_item_cache():
     """
-    item_id로부터 장착 가능 레벨(itemAvailableLevel)을 조회.
-    DB 캐시 먼저 확인, 없으면 API 호출 후 저장.
-    실패 시 0 반환.
+    부팅 시 DB의 item_cache 전체를 메모리 캐시에 올림
     """
-    # 캐시 확인
+    global ITEM_DETAIL_MEMCACHE
+    ITEM_DETAIL_MEMCACHE = {}
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
-            conn.row_factory = aiosqlite.Row
+            async with conn.execute("SELECT item_id, item_available_level FROM item_cache") as cursor:
+                async for row in cursor:
+                    ITEM_DETAIL_MEMCACHE[row[0]] = row[1]
+        logger.info(f"메모리 캐시 preload 완료: {len(ITEM_DETAIL_MEMCACHE)}개 아이템")
+    except Exception as e:
+        logger.error(f"메모리 캐시 preload 실패: {e}")
+
+# ===============================
+# 아이템 상세 정보 조회 (캐싱 포함)
+# ===============================
+async def fetch_item_detail(item_id: str) -> int:
+    """
+    1. 메모리 캐시 → 2. DB → 3. API 순서로 조회, 없으면 0 반환
+    API 조회 성공 시 메모리/DB에 모두 저장
+    """
+    # 1. 메모리 캐시 조회
+    if item_id in ITEM_DETAIL_MEMCACHE:
+        logger.info(f"[memcache] 캐시 히트: {item_id} - {ITEM_DETAIL_MEMCACHE[item_id]}")
+        return ITEM_DETAIL_MEMCACHE[item_id]
+
+    # 2. DB 캐시 조회 (동기화 누락/실패 대응용)
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
             cursor = await conn.execute(
                 "SELECT item_available_level FROM item_cache WHERE item_id = ?", (item_id,))
             row = await cursor.fetchone()
             if row:
-                logger.info(f"아이템 캐시에서 조회 성공: {item_id} - 레벨 {row['item_available_level']}")
-                return row["item_available_level"]
+                level = row[0]
+                ITEM_DETAIL_MEMCACHE[item_id] = level  # 메모리 캐시 동기화
+                logger.info(f"[dbcache] 캐시 히트: {item_id} - {level}")
+                return level
     except Exception as e:
-        logger.error(f"아이템 캐시 조회 중 오류: {e}")
+        logger.error(f"DB 캐시 조회 중 오류: {e}")
 
-    # 캐시에 없으면 API 호출
+    # 3. API 조회
     url = f"{BASE_URL}/items/{item_id}"
     params = {"apikey": API_KEY}
     try:
-        async with session.get(url, params=params) as response:
-            if response.status == 200:
-                data = await response.json()
-                level = data.get("itemAvailableLevel", 0)
-                logger.info(f"아이템 상세 조회 성공: {item_id} - 레벨 {level}")
-
-                # DB에 캐시 저장
-                try:
-                    async with aiosqlite.connect(DB_PATH) as conn:
-                        await conn.execute(
-                            "INSERT OR REPLACE INTO item_cache (item_id, item_available_level) VALUES (?, ?)",
-                            (item_id, level))
-                        await conn.commit()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    level = data.get("itemAvailableLevel", 0)
+                    logger.info(f"아이템 상세 조회 성공: {item_id} - 레벨 {level}")
+                    # 메모리/DB 동시 캐싱
+                    ITEM_DETAIL_MEMCACHE[item_id] = level
+                    try:
+                        async with aiosqlite.connect(DB_PATH) as conn2:
+                            await conn2.execute(
+                                "INSERT OR REPLACE INTO item_cache (item_id, item_available_level) VALUES (?, ?)",
+                                (item_id, level)
+                            )
+                            await conn2.commit()
                         logger.info(f"아이템 캐시 저장 완료: {item_id} - 레벨 {level}")
-                except Exception as e:
-                    logger.error(f"아이템 캐시 저장 실패: {e}")
-
-                return level
-            else:
-                logger.warning(f"아이템 상세 조회 실패: HTTP {response.status} - {item_id}")
+                    except Exception as e:
+                        logger.error(f"아이템 캐시 저장 실패: {e}")
+                    return level
+                else:
+                    logger.warning(f"아이템 상세 조회 실패: HTTP {response.status} - {item_id}")
     except Exception as e:
         logger.error(f"아이템 상세 조회 예외 발생: {e}")
 
