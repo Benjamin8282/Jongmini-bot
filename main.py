@@ -2,7 +2,6 @@
 import os
 import discord
 from discord.ext import commands
-from discord import app_commands
 from dotenv import load_dotenv
 
 # 환경 변수 로딩 (.env에 DISCORD_TOKEN 있어야 함)
