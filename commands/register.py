@@ -1,9 +1,8 @@
-# commands/register.py
-
 import discord
 from discord import app_commands, Interaction, Embed, ui
 from core.dnf_api import search_characters, get_character_image_bytes, get_character_details
 from core.models import SERVER_CHOICES_KR, SERVER_MAP
+from core.db import save_character, register_character  # ✅ DB 저장 함수 추가
 
 
 # 선택 UI 정의
@@ -11,9 +10,12 @@ class CharacterSelect(ui.View):
     def __init__(self, characters, author_id):
         super().__init__(timeout=60)
         self.result = None
-        self.selected_character = None  # 추가
+        self.selected_character = None
         self.author_id = author_id
-        self._characters_map = {f'{char["serverId"]}:{char["characterId"]}': char for char in characters[:25]}
+        self._characters_map = {
+            f'{char["serverId"]}:{char["characterId"]}': char
+            for char in characters[:25]
+        }
 
         options = [
             discord.SelectOption(
@@ -33,9 +35,9 @@ class CharacterSelect(ui.View):
             return
 
         self.result = self.select.values[0]
-        self.selected_character = self._characters_map[self.result]  # 여기 저장
+        self.selected_character = self._characters_map[self.result]
 
-        # 추가 호출로 모험단 정보 보강
+        # 모험단 정보 추가
         details = get_character_details(
             self.selected_character["serverId"], self.selected_character["characterId"]
         )
@@ -92,4 +94,7 @@ async def register_command(interaction: Interaction, server: app_commands.Choice
 
     await view.wait()
     if view.selected_character:
-        print(f"👉 등록된 캐릭터: {view.selected_character['characterName']} ({view.selected_character['serverId']})")  # TODO: 저장 로직 연결 예정
+        # ✅ 저장 로직: 캐릭터 정보 저장 + 등록자 기록
+        await save_character(view.selected_character)
+        await register_character(interaction.user.id, view.selected_character["characterId"])
+        print(f"👉 저장 완료: {view.selected_character['characterName']} ({view.selected_character['characterId']})")

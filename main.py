@@ -2,6 +2,7 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from core.db import init_db
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -11,9 +12,13 @@ class JongminiBot(commands.Bot):
         super().__init__(command_prefix="!", intents=discord.Intents.default())
 
     async def setup_hook(self):
+        # ✅ DB 초기화
+        await init_db()
+
         # 명령어 등록
         from commands.hello import hello_command
         from commands.register import register_command
+
         # noinspection PyTypeChecker
         self.tree.add_command(hello_command)
         # noinspection PyTypeChecker
