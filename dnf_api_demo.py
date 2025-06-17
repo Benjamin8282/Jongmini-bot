@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 API_KEY = os.getenv("NEOPLE_API_KEY")
+if API_KEY is None:
+    raise ValueError("❌ Environment variable 'NEOPLE_API_KEY' is missing. Please set it before running the script.")
 
 def search_character_with_image(server_id: str, character_name: str, zoom: int = 1):
     """
@@ -32,11 +34,11 @@ def search_character_with_image(server_id: str, character_name: str, zoom: int =
             print(f"✅ {len(data['rows'])}명의 캐릭터가 검색되었습니다:\n")
             for char in data['rows']:
                 char_id = char['characterId']
-                server_id = char['serverId']
+                char_server_id = char['serverId']
                 char_name = char['characterName']
                 job_name = char['jobName']
                 level = char['level']
-                img_url = f"https://img-api.neople.co.kr/df/servers/{server_id}/characters/{char_id}?zoom={zoom}"
+                img_url = f"https://img-api.neople.co.kr/df/servers/{char_server_id}/characters/{char_id}?zoom={zoom}"
 
                 print(f"🧙 이름: {char_name} / 직업: {job_name} / 레벨: {level}")
                 print(f"🖼️ 이미지: {img_url}\n")
@@ -47,4 +49,5 @@ def search_character_with_image(server_id: str, character_name: str, zoom: int =
         print(response.text)
 
 # 예시 실행
-search_character_with_image("all", "호크시웅", zoom=3)
+if __name__ == "__main__":
+    search_character_with_image("all", "호크시웅", zoom=3)
