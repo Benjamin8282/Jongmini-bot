@@ -8,8 +8,10 @@ from core import dnf_api
 from core.db import (
     get_all_characters_grouped_by_adventure,
     get_last_checked, update_last_checked,
-    get_output_channel, init_db
+    get_output_channel
 )
+
+from core.logger import logger
 from core.models import SERVER_MAP  # 서버명 매핑용
 
 DEFAULT_PERIOD_MINUTES = 3
@@ -72,7 +74,7 @@ async def notify_items_for_character(session, char, bot, guild_id):
 
     timeline = await dnf_api.fetch_timeline(server_id, character_id, start_date=start_date, end_date=end_date)
     if timeline is None or "timeline" not in timeline or "rows" not in timeline["timeline"]:
-        print(f"[{character_name}] 타임라인 데이터를 받아오지 못했습니다.")
+        logger.warning(f"[{character_name}] 타임라인 데이터를 받아오지 못했습니다.")
         await update_last_checked(character_id, end_date)
         return
 
@@ -82,11 +84,11 @@ async def notify_items_for_character(session, char, bot, guild_id):
     # 디스코드 채널 조회
     channel_id = await get_output_channel(guild_id)
     if not channel_id:
-        print(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
+        logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
         return
     channel = bot.get_channel(int(channel_id))
     if not channel:
-        print(f"채널 {channel_id}을 찾을 수 없습니다.")
+        logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
         return
 
     if filtered_items:
@@ -103,7 +105,7 @@ async def notify_items_for_character(session, char, bot, guild_id):
 async def notify_all_characters(bot, guild_id):
     grouped = await get_all_characters_grouped_by_adventure()
     if not grouped:
-        print("DB에 등록된 캐릭터가 없습니다.")
+        logger.info("DB에 등록된 캐릭터가 없습니다.")
         return
 
     async with aiohttp.ClientSession() as session:
@@ -113,6 +115,6 @@ async def notify_all_characters(bot, guild_id):
 
 async def periodic_notify(bot, guild_id):
     while True:
-        print(f"=== DNF 타임라인 주기적 체크 시작: {datetime.now(KST)} ===")
+        logger.info(f"=== DNF 타임라인 주기적 체크 시작: {datetime.now(KST)} ===")
         await notify_all_characters(bot, guild_id)
         await asyncio.sleep(DEFAULT_PERIOD_MINUTES * 60)
