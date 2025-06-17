@@ -78,6 +78,9 @@ async def register_command(interaction: Interaction, server: app_commands.Choice
 
     for idx, char in enumerate(characters[:5]):
         image_bytes = await get_character_image_bytes(char['serverId'], char['characterId'])
+        if image_bytes is None:
+            print(f"⚠️ 이미지 데이터를 가져올 수 없습니다: {char['characterName']} ({char['characterId']})")
+            continue
         file = discord.File(BytesIO(image_bytes), filename=f"char{idx}.png")
         server_kr = SERVER_MAP.get(char['serverId'], char['serverId'])
 
