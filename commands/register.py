@@ -1,10 +1,11 @@
+from core.logger import logger
 from io import BytesIO
 
 import discord
 from discord import app_commands, Interaction, Embed, ui
 from core.dnf_api import search_characters, get_character_image_bytes, get_character_details
 from core.models import SERVER_CHOICES_KR, SERVER_MAP
-from core.db import save_character, register_character  # ✅ DB 저장 함수 추가
+from core.db import save_character, register_character
 
 
 # 선택 UI 정의
@@ -34,10 +35,13 @@ class CharacterSelect(ui.View):
     async def select_callback(self, interaction: Interaction):
         if interaction.user.id != self.author_id:
             await interaction.response.send_message("⚠️ 본인이 실행한 명령어만 응답할 수 있어요.", ephemeral=True)
+            logger.warning(f"잘못된 사용자 {interaction.user.id}가 선택 콜백을 시도함")
             return
 
         self.result = self.select.values[0]
         self.selected_character = self._characters_map[self.result]
+        logger.info(
+            f"사용자 {interaction.user.id}가 캐릭터 선택: {self.selected_character['characterName']} ({self.selected_character['characterId']})")
 
         # 모험단 정보 추가
         details = await get_character_details(
@@ -65,11 +69,13 @@ class CharacterSelect(ui.View):
 @app_commands.describe(server="서버를 선택하세요", name="캐릭터 이름")
 @app_commands.choices(server=SERVER_CHOICES_KR)
 async def register_command(interaction: Interaction, server: app_commands.Choice[str], name: str):
+    logger.info(f"/등록 명령어 호출: 사용자={interaction.user.id}, 서버={server.value}, 이름={name}")
     await interaction.response.defer(thinking=True)
 
     result = await search_characters(server.value, name)
     if not result or not result.get("rows"):
         await interaction.followup.send("❌ 캐릭터를 찾을 수 없어요.", ephemeral=True)
+        logger.warning(f"/등록 실패: 캐릭터 검색 결과 없음 - 사용자={interaction.user.id}, 검색어={name}")
         return
 
     characters = result["rows"]
@@ -79,7 +85,7 @@ async def register_command(interaction: Interaction, server: app_commands.Choice
     for idx, char in enumerate(characters[:5]):
         image_bytes = await get_character_image_bytes(char['serverId'], char['characterId'])
         if image_bytes is None:
-            print(f"⚠️ 이미지 데이터를 가져올 수 없습니다: {char['characterName']} ({char['characterId']})")
+            logger.warning(f"이미지 데이터 없음: {char['characterName']} ({char['characterId']})")
             continue
         file = discord.File(BytesIO(image_bytes), filename=f"char{idx}.png")
         server_kr = SERVER_MAP.get(char['serverId'], char['serverId'])
@@ -96,10 +102,14 @@ async def register_command(interaction: Interaction, server: app_commands.Choice
 
     view = CharacterSelect(characters, interaction.user.id)
     await interaction.followup.send(embeds=embeds, view=view, files=files, ephemeral=True)
+    logger.info(f"캐릭터 목록 전송 완료: 사용자={interaction.user.id}")
 
     await view.wait()
     if view.selected_character:
-        # ✅ 저장 로직: 캐릭터 정보 저장 + 등록자 기록
-        await save_character(view.selected_character)
-        await register_character(interaction.user.id, view.selected_character["characterId"])
-        print(f"👉 저장 완료: {view.selected_character['characterName']} ({view.selected_character['characterId']})")
+        try:
+            await save_character(view.selected_character)
+            await register_character(interaction.user.id, view.selected_character["characterId"])
+            logger.info(
+                f"캐릭터 저장 성공: 사용자={interaction.user.id}, 캐릭터={view.selected_character['characterName']} ({view.selected_character['characterId']})")
+        except Exception as e:
+            logger.error(f"캐릭터 저장 중 오류 발생: 사용자={interaction.user.id}, 에러={e}")
