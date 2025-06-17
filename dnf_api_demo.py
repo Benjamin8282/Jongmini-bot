@@ -6,6 +6,18 @@ load_dotenv()
 API_KEY = os.getenv("NEOPLE_API_KEY")
 
 def search_character_with_image(server_id: str, character_name: str, zoom: int = 1):
+    """
+        네오플 DNF API를 통해 캐릭터 정보를 검색하고,
+        이름/레벨/직업/이미지 URL을 출력합니다.
+
+        Parameters:
+            server_id (str): 검색할 서버 ID (예: 'cain', 'all')
+            character_name (str): 검색할 캐릭터 이름
+            zoom (int): 캐릭터 이미지 확대 비율 (1~3)
+
+        Returns:
+            None (콘솔에 출력)
+    """
     url = f"https://api.neople.co.kr/df/servers/{server_id}/characters"
     params = {
         "characterName": character_name,
