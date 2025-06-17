@@ -1,7 +1,6 @@
 import aiosqlite
 from pathlib import Path
 from core.logger import logger
-
 from core.models import SERVER_MAP
 
 DB_PATH = Path("data/characters.db")
@@ -12,6 +11,7 @@ async def init_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
+            # 캐릭터 테이블
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS characters (
                     character_id TEXT PRIMARY KEY,
@@ -23,6 +23,7 @@ async def init_db():
                     adventure_name TEXT NOT NULL
                 )
             """)
+            # 사용자-캐릭터 등록 테이블
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS registrations (
                     user_id INTEGER NOT NULL,
@@ -31,10 +32,26 @@ async def init_db():
                     FOREIGN KEY(character_id) REFERENCES characters(character_id)
                 )
             """)
+            # 아이템 캐시 테이블
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS item_cache (
                     item_id TEXT PRIMARY KEY,
                     item_available_level INTEGER NOT NULL
+                )
+            """)
+            # 출력 채널 테이블
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS output_channels (
+                    guild_id TEXT PRIMARY KEY,
+                    channel_id TEXT NOT NULL,
+                    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            # 캐릭터별 마지막 타임라인 체크 시간 기록 테이블
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS character_last_checked (
+                    character_id TEXT PRIMARY KEY,
+                    last_checked TEXT NOT NULL
                 )
             """)
             await conn.commit()
@@ -42,6 +59,8 @@ async def init_db():
     except Exception as e:
         logger.error(f"DB 초기화 실패: {e}")
 
+
+# ----- 캐릭터 관리 -----
 
 async def save_character(character: dict):
     logger.info(f"캐릭터 저장 시도: {character['characterName']} ({character['characterId']})")
@@ -126,12 +145,10 @@ async def get_all_characters_grouped_by_adventure() -> dict[str, list[dict]]:
                 ORDER BY adventure_name, server_id, character_name
             """)
             rows = await cursor.fetchall()
-
             grouped = {}
             for row in rows:
                 adv_name = f"{row['adventure_name']} ({SERVER_MAP.get(row['server_id'], row['server_id'])})"
                 grouped.setdefault(adv_name, []).append(dict(row))
-
         logger.info(f"전체 캐릭터 모험단별 조회 성공: {len(rows)}개 캐릭터")
         return grouped
     except Exception as e:
@@ -139,9 +156,7 @@ async def get_all_characters_grouped_by_adventure() -> dict[str, list[dict]]:
         return {}
 
 
-# ---------------------------
-# 아이템 캐시 관련 함수 추가
-# ---------------------------
+# ----- 아이템 캐시 -----
 
 async def get_item_available_level(item_id: str) -> int | None:
     logger.info(f"아이템 캐시 조회 시도: {item_id}")
@@ -161,7 +176,6 @@ async def get_item_available_level(item_id: str) -> int | None:
         logger.error(f"아이템 캐시 조회 실패: {e}")
         return None
 
-
 async def save_item_available_level(item_id: str, level: int):
     logger.info(f"아이템 캐시 저장 시도: {item_id} 레벨 {level}")
     try:
@@ -175,25 +189,7 @@ async def save_item_available_level(item_id: str, level: int):
         logger.error(f"아이템 캐시 저장 실패: {e}")
 
 
-# ---------------------------
-# 출력 채널 관리 함수 추가
-# ---------------------------
-
-async def init_output_channel_table():
-    logger.info("출력 채널 테이블 초기화 시도")
-    try:
-        async with aiosqlite.connect(DB_PATH) as conn:
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS output_channels (
-                    guild_id TEXT PRIMARY KEY,
-                    channel_id TEXT NOT NULL,
-                    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            await conn.commit()
-        logger.info("출력 채널 테이블 초기화 완료")
-    except Exception as e:
-        logger.error(f"출력 채널 테이블 초기화 실패: {e}")
+# ----- 출력 채널 -----
 
 async def save_output_channel(guild_id: str, channel_id: str):
     logger.info(f"출력 채널 저장 시도: guild={guild_id}, channel={channel_id}")
@@ -225,3 +221,36 @@ async def get_output_channel(guild_id: str) -> str | None:
     except Exception as e:
         logger.error(f"출력 채널 조회 실패: {e}")
         return None
+
+
+# ----- 캐릭터별 타임라인 체크 기록 -----
+
+async def get_last_checked(character_id: str) -> str | None:
+    logger.info(f"캐릭터 마지막 조회시각 조회 시도: {character_id}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
+                "SELECT last_checked FROM character_last_checked WHERE character_id = ?",
+                (character_id,))
+            row = await cursor.fetchone()
+            if row:
+                return row["last_checked"]
+            else:
+                return None
+    except Exception as e:
+        logger.error(f"캐릭터 마지막 조회시각 조회 실패: {e}")
+        return None
+
+async def update_last_checked(character_id: str, last_checked: str):
+    logger.info(f"캐릭터 마지막 조회시각 업데이트: {character_id} -> {last_checked}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute(
+                "INSERT OR REPLACE INTO character_last_checked (character_id, last_checked) VALUES (?, ?)",
+                (character_id, last_checked)
+            )
+            await conn.commit()
+        logger.info("캐릭터 마지막 조회시각 저장 성공")
+    except Exception as e:
+        logger.error(f"캐릭터 마지막 조회시각 저장 실패: {e}")
