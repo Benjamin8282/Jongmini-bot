@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import aiosqlite
 from pathlib import Path
 
+from datetime import datetime
+
 load_dotenv()
 API_KEY = os.getenv("NEOPLE_API_KEY")
 
@@ -85,14 +87,21 @@ async def get_character_details(server_id: str, character_id: str) -> dict:
     return {}
 
 
-async def fetch_timeline(server_id: str, character_id: str):
+async def fetch_timeline(server_id: str, character_id: str, start_date: str = None, end_date: str = None):
     url = f"{BASE_URL}/servers/{server_id}/characters/{character_id}/timeline"
 
-    # 날짜 범위는 필요에 따라 수정 가능
+    # 기본값: 최근 30일 (또는 원하는 범위로)
+    if end_date is None:
+        end_date = datetime.now().strftime("%Y%m%dT%H%M")
+    if start_date is None:
+        # 기본 30일 전
+        from datetime import timedelta
+        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%dT%H%M")
+
     params = {
         "apikey": API_KEY,
-        "startDate": "",  # 필요 시 지정
-        "endDate": "",    # 필요 시 지정
+        "startDate": start_date,
+        "endDate": end_date,
         "code": "505,504,507,508,513",
         "limit": 100
     }
