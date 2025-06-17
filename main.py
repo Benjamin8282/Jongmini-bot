@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 from core.db import init_db
+from commands.total import total_command
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -23,6 +24,8 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(hello_command)
         # noinspection PyTypeChecker
         self.tree.add_command(register_command)
+        # noinspection PyTypeChecker
+        self.tree.add_command(total_command)
 
         await self.tree.sync()
         print(self.tree.get_commands())

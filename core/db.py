@@ -1,6 +1,8 @@
 import aiosqlite
 from pathlib import Path
 
+from core.models import SERVER_MAP
+
 DB_PATH = Path("data/characters.db")
 
 async def init_db():
@@ -83,3 +85,21 @@ async def get_characters_by_user(user_id: int) -> list[dict]:
         """, (user_id,))
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
+
+
+async def get_all_characters_grouped_by_adventure() -> dict[str, list[dict]]:
+    """모든 캐릭터를 adventureName 기준으로 묶어 반환"""
+    async with aiosqlite.connect(DB_PATH) as conn:
+        conn.row_factory = aiosqlite.Row
+        cursor = await conn.execute("""
+            SELECT * FROM characters
+            ORDER BY adventure_name, server_id, character_name
+        """)
+        rows = await cursor.fetchall()
+
+        grouped = {}
+        for row in rows:
+            adv_name = f"{row['adventure_name']} ({SERVER_MAP.get(row['server_id'], row['server_id'])})"
+            grouped.setdefault(adv_name, []).append(dict(row))
+
+        return grouped
