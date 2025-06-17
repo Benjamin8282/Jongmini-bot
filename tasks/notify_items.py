@@ -15,7 +15,7 @@ from core.logger import logger
 from core.models import SERVER_MAP  # 서버명 매핑용
 
 DEFAULT_PERIOD_MINUTES = 3
-DEFAULT_LOOKBACK_MINUTES = 3000  # 기록 없으면 최근 30분간 조회
+DEFAULT_LOOKBACK_MINUTES = 30  # 기록 없으면 최근 30분간 조회
 KST = timezone(timedelta(hours=9))
 
 def get_rarity_color(rarity: str) -> int:
@@ -61,7 +61,6 @@ async def notify_items_for_character(session, char, bot, guild_id):
     adventure_name = char.get('adventure_name', '모험단명 없음')
 
     last_checked = await get_last_checked(character_id)
-    last_checked = None
     now = datetime.now(KST)
     end_date = now.strftime("%Y%m%dT%H%M")
 
