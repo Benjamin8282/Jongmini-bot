@@ -1,3 +1,5 @@
+from io import BytesIO
+
 import discord
 from discord import app_commands, Interaction, Embed, ui
 from core.dnf_api import search_characters, get_character_image_bytes, get_character_details
@@ -38,7 +40,7 @@ class CharacterSelect(ui.View):
         self.selected_character = self._characters_map[self.result]
 
         # 모험단 정보 추가
-        details = get_character_details(
+        details = await get_character_details(
             self.selected_character["serverId"], self.selected_character["characterId"]
         )
         adventure_name = details.get("adventureName", "알 수 없음")
@@ -65,7 +67,7 @@ class CharacterSelect(ui.View):
 async def register_command(interaction: Interaction, server: app_commands.Choice[str], name: str):
     await interaction.response.defer(thinking=True)
 
-    result = search_characters(server.value, name)
+    result = await search_characters(server.value, name)
     if not result or not result.get("rows"):
         await interaction.followup.send("❌ 캐릭터를 찾을 수 없어요.", ephemeral=True)
         return
@@ -75,8 +77,8 @@ async def register_command(interaction: Interaction, server: app_commands.Choice
     embeds = []
 
     for idx, char in enumerate(characters[:5]):
-        image_bytes = get_character_image_bytes(char['serverId'], char['characterId'])
-        file = discord.File(image_bytes, filename=f"char{idx}.png")
+        image_bytes = await get_character_image_bytes(char['serverId'], char['characterId'])
+        file = discord.File(BytesIO(image_bytes), filename=f"char{idx}.png")
         server_kr = SERVER_MAP.get(char['serverId'], char['serverId'])
 
         embed = Embed(
