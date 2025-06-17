@@ -1,4 +1,6 @@
 import os
+
+from core.dnf_api import preload_item_cache
 from core.logger import logger
 import discord
 from discord.ext import commands
@@ -17,14 +19,17 @@ class JongminiBot(commands.Bot):
         logger.info("봇 setup_hook 시작 - DB 초기화 및 명령어 등록")
         await init_db()
         logger.info("DB 초기화 완료")
+        await preload_item_cache()
 
         from commands.hello import hello_command
         from commands.register import register_command
         from commands.total import total_command
+        from commands.set_output_channel import set_output_channel
 
         self.tree.add_command(hello_command)
         self.tree.add_command(register_command)
         self.tree.add_command(total_command)
+        self.tree.add_command(set_output_channel)
 
         await self.tree.sync()
         logger.info(f"슬래시 명령어 동기화 완료: {self.tree.get_commands()}")
