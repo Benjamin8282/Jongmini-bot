@@ -1,6 +1,7 @@
 import aiosqlite
 from pathlib import Path
 from core.logger import logger
+
 from core.models import SERVER_MAP
 
 DB_PATH = Path("data/characters.db")
@@ -28,6 +29,12 @@ async def init_db():
                     character_id TEXT NOT NULL,
                     PRIMARY KEY (user_id, character_id),
                     FOREIGN KEY(character_id) REFERENCES characters(character_id)
+                )
+            """)
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS item_cache (
+                    item_id TEXT PRIMARY KEY,
+                    item_available_level INTEGER NOT NULL
                 )
             """)
             await conn.commit()
@@ -130,3 +137,39 @@ async def get_all_characters_grouped_by_adventure() -> dict[str, list[dict]]:
     except Exception as e:
         logger.error(f"전체 캐릭터 모험단별 조회 실패: {e}")
         return {}
+
+
+# ---------------------------
+# 아이템 캐시 관련 함수 추가
+# ---------------------------
+
+async def get_item_available_level(item_id: str) -> int | None:
+    logger.info(f"아이템 캐시 조회 시도: {item_id}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
+                "SELECT item_available_level FROM item_cache WHERE item_id = ?", (item_id,))
+            row = await cursor.fetchone()
+            if row:
+                logger.info(f"아이템 캐시 조회 성공: {item_id} 레벨 {row['item_available_level']}")
+                return row["item_available_level"]
+            else:
+                logger.info(f"아이템 캐시 없음: {item_id}")
+                return None
+    except Exception as e:
+        logger.error(f"아이템 캐시 조회 실패: {e}")
+        return None
+
+
+async def save_item_available_level(item_id: str, level: int):
+    logger.info(f"아이템 캐시 저장 시도: {item_id} 레벨 {level}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute(
+                "INSERT OR REPLACE INTO item_cache (item_id, item_available_level) VALUES (?, ?)",
+                (item_id, level))
+            await conn.commit()
+        logger.info(f"아이템 캐시 저장 성공: {item_id} 레벨 {level}")
+    except Exception as e:
+        logger.error(f"아이템 캐시 저장 실패: {e}")
