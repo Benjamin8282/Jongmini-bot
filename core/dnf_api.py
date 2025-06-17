@@ -19,6 +19,7 @@ def search_characters(server_id: str, character_name: str):
     }
     response = requests.get(url, params=params)
     if response.status_code == 200:
+        print(response.json())
         return response.json()
     return None
 
@@ -35,3 +36,17 @@ def get_character_image_bytes(server_id: str, character_id: str) -> BytesIO:
     response = requests.get(url)
     response.raise_for_status()
     return BytesIO(response.content)
+
+def get_character_details(server_id: str, character_id: str) -> dict:
+    """
+    특정 서버와 캐릭터 ID에 대한 캐릭터 정보를 가져옵니다.
+    :param server_id:
+    :param character_id:
+    :return:
+    """
+    url = f"{BASE_URL}/servers/{server_id}/characters/{character_id}"
+    params = {"apikey": API_KEY}
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        return response.json()
+    return {}

@@ -2,8 +2,7 @@
 
 import discord
 from discord import app_commands, Interaction, Embed, ui
-from discord.ext import commands
-from core.dnf_api import search_characters, get_character_image_bytes
+from core.dnf_api import search_characters, get_character_image_bytes, get_character_details
 from core.models import SERVER_CHOICES_KR, SERVER_MAP
 
 
@@ -19,7 +18,7 @@ class CharacterSelect(ui.View):
         options = [
             discord.SelectOption(
                 label=char["characterName"],
-                description=f'{char["jobName"]} (Lv.{char["level"]}) - {SERVER_MAP.get(char["serverId"], char["serverId"])}',
+                description=f'{char["jobGrowName"]} (Lv.{char["level"]}) - {SERVER_MAP.get(char["serverId"], char["serverId"])}',
                 value=f'{char["serverId"]}:{char["characterId"]}'
             ) for char in characters[:25]
         ]
@@ -35,7 +34,24 @@ class CharacterSelect(ui.View):
 
         self.result = self.select.values[0]
         self.selected_character = self._characters_map[self.result]  # 여기 저장
-        message = f"✅ `{self.selected_character['characterName']} (Lv.{self.selected_character['level']} - {self.selected_character['jobName']})` 캐릭터가 선택되었어요."
+
+        # 추가 호출로 모험단 정보 보강
+        details = get_character_details(
+            self.selected_character["serverId"], self.selected_character["characterId"]
+        )
+        adventure_name = details.get("adventureName", "알 수 없음")
+        self.selected_character["adventureName"] = adventure_name
+
+        server_name_kr = SERVER_MAP.get(
+            self.selected_character["serverId"], self.selected_character["serverId"]
+        )
+        message = (
+            f"✅ `{self.selected_character['characterName']} (Lv.{self.selected_character['level']} - {self.selected_character['jobName']})`"
+            f" 캐릭터가 선택되었어요.\n"
+            f"서버: {server_name_kr}\n"
+            f"모험단: {adventure_name}"
+        )
+
         await interaction.response.send_message(message, ephemeral=True)
         self.stop()
 
@@ -62,7 +78,7 @@ async def register_command(interaction: Interaction, server: app_commands.Choice
         server_kr = SERVER_MAP.get(char['serverId'], char['serverId'])
 
         embed = Embed(
-            title=f"{char['characterName']} (Lv.{char['level']} - {char['jobName']})",
+            title=f"{char['characterName']} (Lv.{char['level']} - {char['jobGrowName']})",
             description=f"서버: {server_kr}",
             color=discord.Color.blurple()
         )
