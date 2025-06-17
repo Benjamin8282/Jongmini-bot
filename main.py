@@ -14,10 +14,13 @@ class JongminiBot(commands.Bot):
         # 명령어 등록
         from commands.hello import hello_command
         from commands.register import register_command
+        # noinspection PyTypeChecker
         self.tree.add_command(hello_command)
+        # noinspection PyTypeChecker
         self.tree.add_command(register_command)
 
         await self.tree.sync()
+        print(self.tree.get_commands())
         print("📡 슬래시 커맨드 동기화 완료")
 
 bot = JongminiBot()
