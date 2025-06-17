@@ -173,3 +173,55 @@ async def save_item_available_level(item_id: str, level: int):
         logger.info(f"아이템 캐시 저장 성공: {item_id} 레벨 {level}")
     except Exception as e:
         logger.error(f"아이템 캐시 저장 실패: {e}")
+
+
+# ---------------------------
+# 출력 채널 관리 함수 추가
+# ---------------------------
+
+async def init_output_channel_table():
+    logger.info("출력 채널 테이블 초기화 시도")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS output_channels (
+                    guild_id TEXT PRIMARY KEY,
+                    channel_id TEXT NOT NULL,
+                    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            await conn.commit()
+        logger.info("출력 채널 테이블 초기화 완료")
+    except Exception as e:
+        logger.error(f"출력 채널 테이블 초기화 실패: {e}")
+
+async def save_output_channel(guild_id: str, channel_id: str):
+    logger.info(f"출력 채널 저장 시도: guild={guild_id}, channel={channel_id}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute(
+                "INSERT OR REPLACE INTO output_channels (guild_id, channel_id) VALUES (?, ?)",
+                (guild_id, channel_id)
+            )
+            await conn.commit()
+        logger.info("출력 채널 저장 성공")
+    except Exception as e:
+        logger.error(f"출력 채널 저장 실패: {e}")
+
+async def get_output_channel(guild_id: str) -> str | None:
+    logger.info(f"출력 채널 조회 시도: guild={guild_id}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
+                "SELECT channel_id FROM output_channels WHERE guild_id = ?",
+                (guild_id,)
+            )
+            row = await cursor.fetchone()
+            if row:
+                return row["channel_id"]
+            else:
+                return None
+    except Exception as e:
+        logger.error(f"출력 채널 조회 실패: {e}")
+        return None
