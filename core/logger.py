@@ -24,7 +24,7 @@ log_filename = log_dir / f"{datetime.now(KST).strftime('%Y-%m-%d')}.log"
 
 # ✅ 로그 포맷 설정
 log_format = "[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s"
-date_format = "%Y-%m-%d %H:%M:%S"
+date_format = "%Y-%m-%d %H:%M:%S.%f"
 
 
 # ✅ Formatter 커스터마이징 (KST 기준으로 시간 찍기)
@@ -35,7 +35,9 @@ class KSTFormatter(logging.Formatter):
     def formatTime(self, record, datefmt=None):
         dt = self.converter(record.created)
         if datefmt:
-            return dt.strftime(datefmt)
+            s = dt.strftime(datefmt)
+            # microseconds 6자리 중 앞 3자리만 (밀리초)
+            return s[:-3]
         return dt.isoformat()
 
 
