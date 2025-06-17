@@ -1,3 +1,4 @@
+import asyncio
 import os
 
 from core.dnf_api import preload_item_cache
@@ -6,6 +7,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 from core.db import init_db
+from tasks.notify_items import periodic_notify
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -40,5 +42,10 @@ bot = JongminiBot()
 async def on_ready():
     logger.info(f"종미니 봇 로그인 성공: {bot.user}")
     print(f"✅ 종미니 봇 로그인 성공: {bot.user}")
+    # 이미 알림 task가 있으면 중복 실행 막기
+    if not hasattr(bot, 'notify_task') or bot.notify_task.done():
+        guild_id = "374494724725145600"  # 실제 서버 ID로 교체하세요
+        bot.notify_task = asyncio.create_task(periodic_notify(bot, guild_id))
+        logger.info("타임라인 아이템 알림 task 시작됨")
 
 bot.run(TOKEN)
