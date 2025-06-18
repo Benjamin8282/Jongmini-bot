@@ -34,6 +34,7 @@ class CharacterSelect(ui.View):
 
     async def select_callback(self, interaction: Interaction):
         if interaction.user.id != self.author_id:
+            # noinspection PyUnresolvedReferences
             await interaction.response.send_message("⚠️ 본인이 실행한 명령어만 응답할 수 있어요.", ephemeral=True)
             logger.warning(f"잘못된 사용자 {interaction.user.id}가 선택 콜백을 시도함")
             return
@@ -60,6 +61,7 @@ class CharacterSelect(ui.View):
             f"모험단: {adventure_name}"
         )
 
+        # noinspection PyUnresolvedReferences
         await interaction.response.send_message(message, ephemeral=True)
         self.stop()
 
@@ -70,6 +72,7 @@ class CharacterSelect(ui.View):
 @app_commands.choices(server=SERVER_CHOICES_KR)
 async def register_command(interaction: Interaction, server: app_commands.Choice[str], name: str):
     logger.info(f"/등록 명령어 호출: 사용자={interaction.user.id}, 서버={server.value}, 이름={name}")
+    # noinspection PyUnresolvedReferences
     await interaction.response.defer(thinking=True)
 
     result = await search_characters(server.value, name)

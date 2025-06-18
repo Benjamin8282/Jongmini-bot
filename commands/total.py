@@ -20,21 +20,25 @@ class PaginationView(ui.View):
 
     async def go_previous(self, interaction: Interaction):
         if interaction.user.id != self.user_id:
+            # noinspection PyUnresolvedReferences
             await interaction.response.send_message("⚠️ 본인이 실행한 명령어만 조작할 수 있어요.", ephemeral=True)
             logger.warning(f"권한 없는 사용자 {interaction.user.id}가 이전 페이지 버튼을 누름")
             return
         if self.current_page > 0:
             self.current_page -= 1
+            # noinspection PyUnresolvedReferences
             await interaction.response.edit_message(embeds=self.embeds[self.current_page], view=self)
             logger.info(f"사용자 {interaction.user.id}가 페이지를 이전으로 이동: {self.current_page}")
 
     async def go_next(self, interaction: Interaction):
         if interaction.user.id != self.user_id:
+            # noinspection PyUnresolvedReferences
             await interaction.response.send_message("⚠️ 본인이 실행한 명령어만 조작할 수 있어요.", ephemeral=True)
             logger.warning(f"권한 없는 사용자 {interaction.user.id}가 다음 페이지 버튼을 누름")
             return
         if self.current_page < len(self.embeds) - 1:
             self.current_page += 1
+            # noinspection PyUnresolvedReferences
             await interaction.response.edit_message(embeds=self.embeds[self.current_page], view=self)
             logger.info(f"사용자 {interaction.user.id}가 페이지를 다음으로 이동: {self.current_page}")
 
@@ -42,6 +46,7 @@ class PaginationView(ui.View):
 @app_commands.command(name="전체조회", description="등록된 모든 캐릭터를 모험단 단위로 조회합니다")
 async def total_command(interaction: Interaction):
     logger.info(f"/전체조회 명령어 호출: 사용자={interaction.user.id}")
+    # noinspection PyUnresolvedReferences
     await interaction.response.defer(thinking=True)
 
     grouped_data = await get_all_characters_grouped_by_adventure()
