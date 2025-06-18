@@ -12,7 +12,7 @@ from core.db import (
 )
 
 from core.logger import logger
-from core.models import SERVER_MAP  # 서버명 매핑용
+from core.models import SERVER_MAP, ALLOWED_RARITIES  # 서버명 매핑용
 
 DEFAULT_PERIOD_MINUTES = 3
 DEFAULT_LOOKBACK_MINUTES = 30  # 기록 없으면 최근 30분간 조회
@@ -53,7 +53,6 @@ async def filter_valid_items(timeline_rows):
             valid_items.append(row)
     return valid_items
 
-# ... 기존 코드 유지 ...
 
 async def notify_items_for_character(session, char, bot, guild_id):
     character_id = char['character_id']
@@ -84,7 +83,7 @@ async def notify_items_for_character(session, char, bot, guild_id):
     # 레전더리 아이템 제외 필터링
     filtered_items = [
         item for item in filtered_items
-        if item.get("data", {}).get("itemRarity") in ("에픽", "태초")
+        if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
     ]
 
     # 디스코드 채널 조회
