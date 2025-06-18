@@ -24,3 +24,5 @@ SERVER_CHOICES = [
     app_commands.Choice(name=f"{korean} ({eng})", value=eng)
     for eng, korean in SERVER_MAP.items()
 ]
+
+ALLOWED_RARITIES = {"에픽", "태초"}

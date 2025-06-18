@@ -12,7 +12,7 @@ from core.db import (
 )
 
 from core.logger import logger
-from core.models import SERVER_MAP  # 서버명 매핑용
+from core.models import SERVER_MAP, ALLOWED_RARITIES  # 서버명 매핑용
 
 DEFAULT_PERIOD_MINUTES = 3
 DEFAULT_LOOKBACK_MINUTES = 30  # 기록 없으면 최근 30분간 조회
@@ -27,8 +27,7 @@ def get_rarity_color(rarity: str) -> int:
     }
     return mapping.get(rarity, 0x000000)  # 기본 검정
 
-def format_item_announce_embed(server_id, character_name, item_name, item_rarity, event_date):
-    server_name = SERVER_MAP.get(server_id, server_id)
+def format_item_announce_embed(adventure_name, character_name, item_name, item_rarity, event_date):
     import datetime
     dt = datetime.datetime.strptime(event_date, "%Y-%m-%d %H:%M")
     date_str = dt.strftime("%Y.%m.%d(%H:%M)")
@@ -36,7 +35,7 @@ def format_item_announce_embed(server_id, character_name, item_name, item_rarity
     color = get_rarity_color(item_rarity)
 
     embed = discord.Embed(
-        description=f"{server_name} 서버의 {character_name} 모험가가 {item_name}[{item_rarity}](을)를 획득했습니다.",
+        description=f"{adventure_name} 모험단의 {character_name} 모험가가 {item_name}[{item_rarity}](을)를 획득했습니다.",
         color=color
     )
     embed.set_footer(text=date_str)
@@ -53,6 +52,7 @@ async def filter_valid_items(timeline_rows):
         if equip_level == 115:
             valid_items.append(row)
     return valid_items
+
 
 async def notify_items_for_character(session, char, bot, guild_id):
     character_id = char['character_id']
@@ -80,6 +80,12 @@ async def notify_items_for_character(session, char, bot, guild_id):
     rows = timeline["timeline"]["rows"]
     filtered_items = await filter_valid_items(rows)
 
+    # 레전더리 아이템 제외 필터링
+    filtered_items = [
+        item for item in filtered_items
+        if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
+    ]
+
     # 디스코드 채널 조회
     channel_id = await get_output_channel(guild_id)
     if not channel_id:
@@ -96,10 +102,11 @@ async def notify_items_for_character(session, char, bot, guild_id):
             item_name = data.get("itemName", "알 수 없음")
             item_rarity = data.get("itemRarity", "알 수 없음")
             event_date = item.get("date", "")
-            embed = format_item_announce_embed(server_id, character_name, item_name, item_rarity, event_date)
+            embed = format_item_announce_embed(adventure_name, character_name, item_name, item_rarity, event_date)
             await channel.send(embed=embed)
 
     await update_last_checked(character_id, end_date)
+
 
 async def notify_all_characters(bot, guild_id):
     grouped = await get_all_characters_grouped_by_adventure()
