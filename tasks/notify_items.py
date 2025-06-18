@@ -18,6 +18,9 @@ DEFAULT_PERIOD_MINUTES = 3
 DEFAULT_LOOKBACK_MINUTES = 30  # 기록 없으면 최근 30분간 조회
 KST = timezone(timedelta(hours=9))
 
+# 전역 캐시: 캐릭터ID별로 마지막 처리 시점(datetime 객체) 저장
+last_processed_time = {}
+
 def get_rarity_color(rarity: str) -> int:
     # 등급별 16진수 색상을 int로 반환
     mapping = {
@@ -86,6 +89,32 @@ async def notify_items_for_character(session, char, bot, guild_id):
         if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
     ]
 
+    # --- 중복 처리용 필터링 추가 ---
+    # 이전 처리 시점
+    last_time = last_processed_time.get(character_id)
+
+    def parse_event_date(item):
+        try:
+            from datetime import datetime as dt
+            return dt.strptime(item.get("date", ""), "%Y-%m-%d %H:%M")
+        except Exception:
+            return None
+
+    new_filtered_items = []
+    max_event_time = last_time  # 이번에 처리한 가장 최신 시간 추적
+
+    for item in filtered_items:
+        event_dt = parse_event_date(item)
+        if event_dt is None:
+            continue
+        # 마지막 처리 시간 없거나, 현재 아이템 시간이 더 늦으면 포함
+        if (last_time is None) or (event_dt > last_time):
+            new_filtered_items.append(item)
+            if (max_event_time is None) or (event_dt > max_event_time):
+                max_event_time = event_dt
+
+    filtered_items = new_filtered_items
+
     # 디스코드 채널 조회
     channel_id = await get_output_channel(guild_id)
     if not channel_id:
@@ -104,6 +133,10 @@ async def notify_items_for_character(session, char, bot, guild_id):
             event_date = item.get("date", "")
             embed = format_item_announce_embed(adventure_name, character_name, item_name, item_rarity, event_date)
             await channel.send(embed=embed)
+
+    # 처리 완료한 가장 최신 시간 캐싱
+    if max_event_time is not None:
+        last_processed_time[character_id] = max_event_time
 
     await update_last_checked(character_id, end_date)
 
