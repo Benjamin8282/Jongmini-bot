@@ -14,7 +14,7 @@ from core.db import (
 from core.logger import logger
 from core.models import SERVER_MAP, ALLOWED_RARITIES  # 서버명 매핑용
 
-DEFAULT_PERIOD_MINUTES = 3
+DEFAULT_PERIOD_MINUTES = 2
 DEFAULT_LOOKBACK_MINUTES = 30  # 기록 없으면 최근 30분간 조회
 KST = timezone(timedelta(hours=9))
 
