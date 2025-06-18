@@ -1,0 +1,42 @@
+name: Build, Push and Deploy to Portainer
+
+on:
+  push:
+    branches:
+      - release/latest
+      - main
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+    - name: Build Docker image
+      run: docker build -t kangjongwoo333/jongmini-bot:latest .
+
+    - name: Push Docker image
+      run: docker push kangjongwoo333/jongmini-bot:latest
+
+    - name: Authenticate to Portainer API
+      id: portainer-auth
+      run: |
+        response=$(curl -s -k -X POST "${{ secrets.PORTAINER_URL }}/api/auth" \
+          -H "Content-Type: application/json" \
+          -d "{\"Username\":\"${{ secrets.PORTAINER_USERNAME }}\",\"Password\":\"${{ secrets.PORTAINER_PASSWORD }}\"}")
+        echo "token=$(echo $response | jq -r '.jwt')" >> $GITHUB_OUTPUT
+
+    - name: Redeploy Container via Portainer API
+      run: |
+        token=${{ steps.portainer-auth.outputs.token }}
+        # 컨테이너 재시작 (ID 필요)
+        curl -k -X POST "${{ secrets.PORTAINER_URL }}/api/endpoints/${{ secrets.PORTAINER_ENDPOINT_ID }}/docker/containers/${{ secrets.PORTAINER_CONTAINER_ID }}/restart" \
+          -H "Authorization: Bearer $token"
