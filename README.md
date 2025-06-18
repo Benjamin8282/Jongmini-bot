@@ -55,7 +55,7 @@
 ## 🙋‍♂️ 개발자
 
 **강종우**  
-- Android & Python Developer  
+- Android Native(JAVA,Kotlin) & Python Developer  
 - [GitHub](https://github.com/Benjamin8282) 
 - Email: kangjongwoo333@gmail.com
 
