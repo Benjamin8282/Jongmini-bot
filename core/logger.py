@@ -34,7 +34,8 @@ log_format = "[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)d] %(message)
 date_format = "%Y-%m-%d %H:%M:%S.%f"
 
 class KSTFormatter(logging.Formatter):
-    def converter(self, timestamp):
+    @staticmethod
+    def converter(timestamp):
         return datetime.fromtimestamp(timestamp, KST)
 
     def formatTime(self, record, datefmt=None):
