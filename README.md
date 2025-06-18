@@ -44,18 +44,19 @@
 
 ---
 
-## 🙋‍♂️ 개발자
-
-**강종우**  
-- Android & Python Developer  
-- [GitHub](https://github.com/Benjamin8282) (필요시 링크 추가)  
-
----
-
 ## 📝 기타
 
 - API 키 등 민감 정보는 `.env` 파일에서 관리  
 - DB 파일은 `data/characters.db`에 저장  
 - 기능 및 명령어는 지속적으로 확장 예정  
+
+---
+
+## 🙋‍♂️ 개발자
+
+**강종우**  
+- Android & Python Developer  
+- [GitHub](https://github.com/Benjamin8282) 
+- Email: kangjongwoo333@gmail.com
 
 ---
