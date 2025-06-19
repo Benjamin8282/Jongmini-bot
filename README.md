@@ -12,6 +12,7 @@
 - `/출력` : 득템 알림을 받을 디스코드 채널을 등록  
 - 타임라인의 득템 이벤트 감지 및 자동 축하 메시지 전송 (장착 가능 레벨 115 아이템 대상)  
 - 다중 캐릭터 관리 및 중복 득템 방지 (마지막 조회 시간 기준)  
+- 모험단별 일간 아이템 획득량 집계 및 순위 표시 기능 추가 (매일 오전 6시 자동 집계)
 
 ---
 
@@ -23,6 +24,17 @@
 - `aiosqlite` (SQLite 비동기 DB, 캐시 및 사용자/채널 정보 관리)  
 - `dotenv` (환경 변수 관리)  
 - Python 3.11+  
+- Docker & Portainer (컨테이너 기반 자동 배포 및 운영)
+
+---
+
+## 🚀 자동 배포 및 운영
+
+- **GitHub Actions**를 이용해 소스코드 변경 시 자동으로 도커 이미지 빌드 및 도커허브에 푸시  
+- Portainer를 통한 컨테이너 관리로 자동 최신 이미지 풀링 및 손쉬운 재배포 가능  
+- 도커 볼륨을 활용해 DB 및 로그 데이터 영속성 확보  
+- 컨테이너 재생성(Recreate) 시 기존 데이터 유지 및 무중단 업데이트 가능  
+- 배포 스크립트와 워크플로우는 `.github/workflows/` 경로에 정의되어 있음
 
 ---
 
@@ -40,14 +52,16 @@
 - `core/dnf_api.py` : DNF API 호출 및 아이템 상세정보 캐싱  
 - `commands/` : 슬래시 커맨드 모음 (`/hello`, `/등록`, `/출력` 등)  
 - `tasks/notify_items.py` : 주기적 타임라인 감시 및 아이템 득템 알림 작업  
-- `main.py` : 봇 초기화 및 실행  
+- `tasks/daily_aggregation.py` : 모험단별 일간 아이템 획득량 집계 및 순위 계산 작업  
+- `main.py` : 봇 초기화 및 실행, 작업 스케줄링 관리  
+- `.github/workflows/` : GitHub Actions 자동 배포 워크플로우
 
 ---
 
 ## 📝 기타
 
 - API 키 등 민감 정보는 `.env` 파일에서 관리  
-- DB 파일은 `data/characters.db`에 저장  
+- DB 파일은 도커 볼륨 `/app/data/characters.db` 경로에 저장 (데이터 영속성 보장)  
 - 기능 및 명령어는 지속적으로 확장 예정  
 
 ---
@@ -56,7 +70,7 @@
 
 **강종우**  
 - Android Native(JAVA,Kotlin) & Python Developer  
-- [GitHub](https://github.com/Benjamin8282) 
+- [GitHub](https://github.com/Benjamin8282)  
 - Email: kangjongwoo333@gmail.com
 
 ---
