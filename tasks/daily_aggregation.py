@@ -53,12 +53,8 @@ def format_rank_embed(rank_list, timestamp):
 async def aggregate_daily_items_and_notify(bot, guild_id):
     now = datetime.now(KST)
     today_6am = now.replace(hour=6, minute=0, second=0, microsecond=0)
-    if now < today_6am:
-        end_time = today_6am
-        start_time = end_time - timedelta(days=1)
-    else:
-        start_time = today_6am
-        end_time = today_6am + timedelta(days=1)
+    start_time = today_6am - timedelta(days=1)  # 전날 6시
+    end_time = today_6am - timedelta(seconds=1)  # 오늘 5시 59분 59초
 
     # 시작/종료 시간 문자열 (API 호출용)
     start_date_str = start_time.strftime("%Y%m%dT%H%M")
