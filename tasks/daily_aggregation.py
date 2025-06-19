@@ -12,13 +12,9 @@ from core.db import (
 from core.logger import logger
 import discord
 
-KST = timezone(timedelta(hours=9))
+from core.models import RARITY_WEIGHTS
 
-RARITY_WEIGHTS = {
-    "태초": 100,
-    "에픽": 10,
-    "레전더리": 4
-}
+KST = timezone(timedelta(hours=9))
 
 MAX_RETRY = 3
 RETRY_DELAY_SEC = 5  # 재시도 간격(초)
