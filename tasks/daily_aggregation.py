@@ -16,22 +16,25 @@ from core.models import RARITY_WEIGHTS
 
 KST = timezone(timedelta(hours=9))
 
-MAX_RETRY = 3
-RETRY_DELAY_SEC = 5  # 재시도 간격(초)
+MAX_RETRY_DURATION = 7 * 60 * 60  # 7시간
+RETRY_INTERVAL = 60  # 1분
 
-
-async def fetch_character_timeline_all_with_retry(server_id, character_id, start_date, end_date):
-    for attempt in range(1, MAX_RETRY + 1):
+async def fetch_character_timeline_all_with_long_retry(server_id, character_id, start_date, end_date):
+    start_time = datetime.now().timestamp()
+    while True:
         try:
             result = await dnf_api.fetch_timeline_with_pagination(server_id, character_id, start_date, end_date)
             if result is not None:
                 return result
-            logger.warning(f"[{character_id}] API 호출 실패 (null 응답), 시도 {attempt}/{MAX_RETRY}")
+            logger.warning(f"[{character_id}] API null 응답, 재시도 중...")
         except Exception as e:
-            logger.warning(f"[{character_id}] API 호출 예외: {e}, 시도 {attempt}/{MAX_RETRY}")
-        await asyncio.sleep(RETRY_DELAY_SEC)
-    logger.error(f"[{character_id}] API 호출 실패 최대 재시도 횟수 초과")
-    return None
+            logger.warning(f"[{character_id}] API 호출 예외: {e}, 재시도 중...")
+
+        if datetime.now().timestamp() - start_time > MAX_RETRY_DURATION:
+            logger.error(f"[{character_id}] 최대 재시도 시간 초과, 실패 처리")
+            return None
+
+        await asyncio.sleep(RETRY_INTERVAL)
 
 
 def format_rank_embed(rank_list, timestamp):
@@ -73,7 +76,7 @@ async def aggregate_daily_items_and_notify(bot, guild_id):
             server_id = char["server_id"]
             character_id = char["character_id"]
 
-            timeline_data = await fetch_character_timeline_all_with_retry(server_id, character_id, start_date_str, end_date_str)
+            timeline_data = await fetch_character_timeline_all_with_long_retry(server_id, character_id, start_date_str, end_date_str)
             if not timeline_data:
                 logger.warning(f"{char['character_name']} 타임라인 조회 실패")
                 continue
