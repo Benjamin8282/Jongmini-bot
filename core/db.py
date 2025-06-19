@@ -54,6 +54,13 @@ async def init_db():
                     last_checked TEXT NOT NULL
                 )
             """)
+            # 일간 집계 마지막 실행 시간 기록 테이블
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS daily_aggregation_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    last_aggregation_time TEXT NOT NULL
+                )
+            """)
             await conn.commit()
         logger.info("DB 초기화 완료")
     except Exception as e:
@@ -254,3 +261,42 @@ async def update_last_checked(character_id: str, last_checked: str):
         logger.info("캐릭터 마지막 조회시각 저장 성공")
     except Exception as e:
         logger.error(f"캐릭터 마지막 조회시각 저장 실패: {e}")
+
+async def get_last_aggregation_time() -> str | None:
+    """
+    가장 최근 일간 집계 시간 조회 (문자열, 'YYYYMMDDTHHMM' 포맷)
+    """
+    logger.info("일간 집계 마지막 실행 시간 조회 시도")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
+                "SELECT last_aggregation_time FROM daily_aggregation_log ORDER BY id DESC LIMIT 1"
+            )
+            row = await cursor.fetchone()
+            if row:
+                logger.info(f"마지막 집계 시간 조회 성공: {row['last_aggregation_time']}")
+                return row["last_aggregation_time"]
+            else:
+                logger.info("마지막 집계 시간 기록 없음")
+                return None
+    except Exception as e:
+        logger.error(f"일간 집계 마지막 실행 시간 조회 실패: {e}")
+        return None
+
+
+async def update_last_aggregation_time(timestamp_str: str):
+    """
+    집계 작업 완료 후 실행 시간 저장
+    """
+    logger.info(f"일간 집계 실행 시간 저장 시도: {timestamp_str}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute(
+                "INSERT INTO daily_aggregation_log (last_aggregation_time) VALUES (?)",
+                (timestamp_str,)
+            )
+            await conn.commit()
+        logger.info("일간 집계 실행 시간 저장 성공")
+    except Exception as e:
+        logger.error(f"일간 집계 실행 시간 저장 실패: {e}")

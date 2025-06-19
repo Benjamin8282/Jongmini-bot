@@ -113,6 +113,49 @@ async def fetch_timeline(server_id: str, character_id: str, start_date: str = No
             else:
                 return None
 
+async def fetch_timeline_with_pagination(server_id: str, character_id: str, start_date: str = None, end_date: str = None):
+    url = f"{BASE_URL}/servers/{server_id}/characters/{character_id}/timeline"
+
+    if end_date is None:
+        end_date = datetime.now().strftime("%Y%m%dT%H%M")
+    if start_date is None:
+        from datetime import timedelta
+        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%dT%H%M")
+
+    params = {
+        "apikey": API_KEY,
+        "startDate": start_date,
+        "endDate": end_date,
+        "code": "505,504,507,508,513",
+        "limit": 100
+    }
+
+    all_rows = []
+    next_token = None
+
+    async with aiohttp.ClientSession() as session:
+        while True:
+            if next_token:
+                params["next"] = next_token
+            else:
+                params.pop("next", None)
+
+            async with session.get(url, params=params) as resp:
+                if resp.status != 200:
+                    # 실패 시 None 반환 또는 예외 처리 가능
+                    return None
+
+                data = await resp.json()
+                timeline = data.get("timeline", {})
+                rows = timeline.get("rows", [])
+                all_rows.extend(rows)
+
+                next_token = data.get("next")
+                if not next_token:
+                    break
+
+    return {"timeline": {"rows": all_rows}}
+
 
 # ===============================
 # 메모리 캐시 프리로드 함수
