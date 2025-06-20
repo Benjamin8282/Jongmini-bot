@@ -92,7 +92,14 @@ def format_rank_embed(rank_list, timestamp):
     return embed
 
 
-async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time):
+async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=None):
+    """
+    기간(start_time~end_time) 동안 아이템 집계 및 Discord 알림
+    base_time: embed 표시 기준 시각 (지정 없으면 현재 시각)
+    """
+    if base_time is None:
+        base_time = datetime.now(KST)
+
     start_date_str = start_time.strftime("%Y%m%dT%H%M")
     end_date_str = end_time.strftime("%Y%m%dT%H%M")
 
@@ -131,19 +138,22 @@ async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_t
         logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
         return
 
-    embed = format_rank_embed(adventure_scores, datetime.now(KST))
+    embed = format_rank_embed(adventure_scores, base_time)
     await channel.send(embed=embed)
     logger.info("모험단 아이템 획득량 순위 Discord에 전송 완료")
 
 
 async def aggregate_daily_items_and_notify(bot, guild_id):
+    """
+    6시 정기 집계용 (전날 6시 ~ 오늘 5시 59분 59초)
+    """
     now = datetime.now(KST)
     today_6am = now.replace(hour=6, minute=0, second=0, microsecond=0)
     start_time = today_6am - timedelta(days=1)
     end_time = today_6am - timedelta(seconds=1)
-    await aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time)
+    await aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=end_time)
 
-    # 일간 자동 집계 작업만 DB 기록
+    # 6시 집계 결과만 DB에 기록
     await update_last_aggregation_time(now.strftime("%Y%m%dT%H%M"))
 
 
@@ -158,6 +168,9 @@ async def wait_until_next_6am():
 
 
 async def daily_aggregation_task(bot, guild_id):
+    """
+    6시 정기 집계 주기 작업
+    """
     while True:
         last_agg_time_str = await get_last_aggregation_time()
         now = datetime.now(KST)
@@ -168,6 +181,7 @@ async def daily_aggregation_task(bot, guild_id):
         else:
             last_agg_time = None
 
+        # 6시 이후 집계가 안 되어 있으면 즉시 집계 실행
         if last_agg_time is None or last_agg_time < today_6am <= now:
             logger.info("봇 부팅 후 최초 집계 또는 미실행 집계 감지, 즉시 실행")
             await aggregate_daily_items_and_notify(bot, guild_id)
