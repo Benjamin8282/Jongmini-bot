@@ -45,14 +45,18 @@ async def filter_items_level_115(items):
         item_id = item.get("data", {}).get("itemId")
         if not item_id:
             return None
-        async with semaphore:
-            level = await dnf_api.fetch_item_detail(item_id)
-            if level == 115:
-                return item
+        try:
+            async with semaphore:
+                level = await dnf_api.fetch_item_detail(item_id)
+                if level == 115:
+                    return item
+        except Exception as e:
+            logger.warning(f"Failed to fetch item detail for item_id {item_id}: {e}")
         return None
 
     results = await asyncio.gather(*(check_item_level(item) for item in items))
     return [item for item in results if item is not None]
+
 
 def format_rank_embed(rank_list, timestamp):
     embed = discord.Embed(
