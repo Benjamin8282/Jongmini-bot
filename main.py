@@ -28,11 +28,13 @@ class JongminiBot(commands.Bot):
         from commands.register import register_command
         from commands.total import total_command
         from commands.set_output_channel import set_output_channel
+        from commands.today_status import today_status
 
         self.tree.add_command(hello_command)
         self.tree.add_command(register_command)
         self.tree.add_command(total_command)
         self.tree.add_command(set_output_channel)
+        self.tree.add_command(today_status)
 
         await self.tree.sync()
         logger.info(f"슬래시 명령어 동기화 완료: {self.tree.get_commands()}")

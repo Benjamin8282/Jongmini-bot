@@ -18,8 +18,9 @@ KST = timezone(timedelta(hours=9))
 
 MAX_RETRY_DURATION = 7 * 60 * 60  # 7시간
 RETRY_INTERVAL = 60  # 1분
-CONCURRENT_REQUEST_LIMIT = 10  # 동시 요청 제한
+CONCURRENT_REQUEST_LIMIT = 10  # 동시 캐릭터 처리 제한
 MAX_ITEM_CONCURRENT = 20  # 아이템 레벨 조회 동시 제한
+
 
 async def fetch_character_timeline_all_with_long_retry(server_id, character_id, start_date, end_date):
     start_time = datetime.now().timestamp()
@@ -37,6 +38,7 @@ async def fetch_character_timeline_all_with_long_retry(server_id, character_id, 
             return None
 
         await asyncio.sleep(RETRY_INTERVAL)
+
 
 async def filter_items_level_115(items):
     semaphore = asyncio.Semaphore(MAX_ITEM_CONCURRENT)
@@ -58,6 +60,24 @@ async def filter_items_level_115(items):
     return [item for item in results if item is not None]
 
 
+async def process_character(char, adventure_name, start_date_str, end_date_str, adventure_item_counts, semaphore):
+    server_id = char["server_id"]
+    character_id = char["character_id"]
+    async with semaphore:
+        timeline_data = await fetch_character_timeline_all_with_long_retry(
+            server_id, character_id, start_date_str, end_date_str
+        )
+        if not timeline_data:
+            logger.warning(f"{char['character_name']} 타임라인 조회 실패")
+            return
+        rows = timeline_data.get("timeline", {}).get("rows", [])
+        filtered_rows = await filter_items_level_115(rows)
+        for item in filtered_rows:
+            rarity = item.get("data", {}).get("itemRarity")
+            if rarity in RARITY_WEIGHTS:
+                adventure_item_counts[adventure_name][rarity] += 1
+
+
 def format_rank_embed(rank_list, timestamp):
     embed = discord.Embed(
         title="모험단 일간 아이템 획득량 순위",
@@ -71,11 +91,14 @@ def format_rank_embed(rank_list, timestamp):
         embed.add_field(name=f"{i}위 {entry['adventure_name']}", value=line, inline=False)
     return embed
 
-async def aggregate_daily_items_and_notify(bot, guild_id):
-    now = datetime.now(KST)
-    today_6am = now.replace(hour=6, minute=0, second=0, microsecond=0)
-    start_time = today_6am - timedelta(days=1)  # 전날 6시
-    end_time = today_6am - timedelta(seconds=1)  # 오늘 5시 59분 59초
+
+async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=None):
+    """
+    기간(start_time~end_time) 동안 아이템 집계 및 Discord 알림
+    base_time: embed 표시 기준 시각 (지정 없으면 현재 시각)
+    """
+    if base_time is None:
+        base_time = datetime.now(KST)
 
     start_date_str = start_time.strftime("%Y%m%dT%H%M")
     end_date_str = end_time.strftime("%Y%m%dT%H%M")
@@ -86,34 +109,13 @@ async def aggregate_daily_items_and_notify(bot, guild_id):
         return
 
     adventure_item_counts = defaultdict(lambda: defaultdict(int))
-    semaphore = asyncio.Semaphore(CONCURRENT_REQUEST_LIMIT)  # 동시 캐릭터 처리 제한
-
-    async def process_character(char, adventure_name):
-        server_id = char["server_id"]
-        character_id = char["character_id"]
-        async with semaphore:
-            timeline_data = await fetch_character_timeline_all_with_long_retry(
-                server_id, character_id, start_date_str, end_date_str
-            )
-            if not timeline_data:
-                logger.warning(f"{char['character_name']} 타임라인 조회 실패")
-                return
-            rows = timeline_data.get("timeline", {}).get("rows", [])
-
-            # 115레벨 필터링 최적화된 호출
-            filtered_rows = await filter_items_level_115(rows)
-
-            for item in filtered_rows:
-                rarity = item.get("data", {}).get("itemRarity")
-                if rarity in RARITY_WEIGHTS:
-                    adventure_item_counts[adventure_name][rarity] += 1
+    semaphore = asyncio.Semaphore(CONCURRENT_REQUEST_LIMIT)
 
     tasks = [
-        process_character(char, adventure_name)
+        process_character(char, adventure_name, start_date_str, end_date_str, adventure_item_counts, semaphore)
         for adventure_name, characters in grouped.items()
         for char in characters
     ]
-
     await asyncio.gather(*tasks)
 
     adventure_scores = []
@@ -136,11 +138,24 @@ async def aggregate_daily_items_and_notify(bot, guild_id):
         logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
         return
 
-    embed = format_rank_embed(adventure_scores, now)
+    embed = format_rank_embed(adventure_scores, base_time)
     await channel.send(embed=embed)
-    logger.info("모험단 일간 획득량 순위 Discord에 전송 완료")
+    logger.info("모험단 아이템 획득량 순위 Discord에 전송 완료")
 
+
+async def aggregate_daily_items_and_notify(bot, guild_id):
+    """
+    6시 정기 집계용 (전날 6시 ~ 오늘 5시 59분 59초)
+    """
+    now = datetime.now(KST)
+    today_6am = now.replace(hour=6, minute=0, second=0, microsecond=0)
+    start_time = today_6am - timedelta(days=1)
+    end_time = today_6am - timedelta(seconds=1)
+    await aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=end_time)
+
+    # 6시 집계 결과만 DB에 기록
     await update_last_aggregation_time(now.strftime("%Y%m%dT%H%M"))
+
 
 async def wait_until_next_6am():
     now = datetime.now(KST)
@@ -151,7 +166,11 @@ async def wait_until_next_6am():
     logger.info(f"다음 6시까지 대기: {wait_seconds}초")
     await asyncio.sleep(wait_seconds)
 
+
 async def daily_aggregation_task(bot, guild_id):
+    """
+    6시 정기 집계 주기 작업
+    """
     while True:
         last_agg_time_str = await get_last_aggregation_time()
         now = datetime.now(KST)
@@ -162,6 +181,7 @@ async def daily_aggregation_task(bot, guild_id):
         else:
             last_agg_time = None
 
+        # 6시 이후 집계가 안 되어 있으면 즉시 집계 실행
         if last_agg_time is None or last_agg_time < today_6am <= now:
             logger.info("봇 부팅 후 최초 집계 또는 미실행 집계 감지, 즉시 실행")
             await aggregate_daily_items_and_notify(bot, guild_id)
