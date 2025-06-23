@@ -25,10 +25,6 @@ async def today_status(interaction: Interaction):
         interaction.client,  # 봇 인스턴스
         str(interaction.guild_id),  # 길드 ID
         start_time,
-        end_time
-    )
-
-    await interaction.response.send_message(
-        f"오늘 {start_time.strftime('%m/%d %H:%M')}부터 {end_time.strftime('%m/%d %H:%M')}까지 집계를 완료했습니다.",
-        ephemeral=True
+        end_time,
+        interaction=interaction
     )
