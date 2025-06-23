@@ -18,8 +18,8 @@ KST = timezone(timedelta(hours=9))
 
 MAX_RETRY_DURATION = 7 * 60 * 60  # 7시간
 RETRY_INTERVAL = 60  # 1분
-CONCURRENT_REQUEST_LIMIT = 10  # 동시 캐릭터 처리 제한
-MAX_ITEM_CONCURRENT = 20  # 아이템 레벨 조회 동시 제한
+CONCURRENT_REQUEST_LIMIT = 50  # 동시 캐릭터 처리 제한
+MAX_ITEM_CONCURRENT = 50  # 아이템 레벨 조회 동시 제한
 
 
 async def fetch_character_timeline_all_with_long_retry(server_id, character_id, start_date, end_date):
@@ -92,7 +92,7 @@ def format_rank_embed(rank_list, timestamp):
     return embed
 
 
-async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=None):
+async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=None, interaction=None):
     """
     기간(start_time~end_time) 동안 아이템 집계 및 Discord 알림
     base_time: embed 표시 기준 시각 (지정 없으면 현재 시각)
@@ -139,8 +139,21 @@ async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_t
         return
 
     embed = format_rank_embed(adventure_scores, base_time)
-    await channel.send(embed=embed)
-    logger.info("모험단 아이템 획득량 순위 Discord에 전송 완료")
+    if interaction is not None:
+        # 슬래시 커맨드로 호출된 경우, interaction.response로 바로 응답
+        await interaction.response.send_message(embed=embed)
+    else:
+        # 기존 방식: 등록된 출력 채널에 메시지 전송
+        channel_id = await get_output_channel(guild_id)
+        if not channel_id:
+            logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
+            return
+        channel = bot.get_channel(int(channel_id))
+        if not channel:
+            logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
+            return
+        await channel.send(embed=embed)
+        logger.info("모험단 아이템 획득량 순위 Discord에 전송 완료")
 
 
 async def aggregate_daily_items_and_notify(bot, guild_id):

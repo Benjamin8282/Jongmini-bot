@@ -66,81 +66,82 @@ async def filter_valid_items(timeline_rows):
     return valid_items
 
 
-async def notify_items_for_character(char, bot, guild_id):
-    character_id = char['character_id']
-    server_id = char['server_id']
-    character_name = char['character_name']
-    adventure_name = char.get('adventure_name', '모험단명 없음')
+async def notify_items_for_character(char, bot, guild_id, semaphore):
+    async with semaphore:
+        character_id = char['character_id']
+        server_id = char['server_id']
+        character_name = char['character_name']
+        adventure_name = char.get('adventure_name', '모험단명 없음')
 
-    last_checked = await get_last_checked(character_id)
-    now = datetime.now(KST)
-    end_date = now.strftime("%Y%m%dT%H%M")
+        last_checked = await get_last_checked(character_id)
+        now = datetime.now(KST)
+        end_date = now.strftime("%Y%m%dT%H%M")
 
-    if last_checked:
-        start_time = datetime.strptime(last_checked, "%Y%m%dT%H%M")
-        start_date = start_time.strftime("%Y%m%dT%H%M")
-    else:
-        lookback = now - timedelta(minutes=DEFAULT_LOOKBACK_MINUTES)
-        start_date = lookback.strftime("%Y%m%dT%H%M")
+        if last_checked:
+            start_time = datetime.strptime(last_checked, "%Y%m%dT%H%M")
+            start_date = start_time.strftime("%Y%m%dT%H%M")
+        else:
+            lookback = now - timedelta(minutes=DEFAULT_LOOKBACK_MINUTES)
+            start_date = lookback.strftime("%Y%m%dT%H%M")
 
-    timeline = await dnf_api.fetch_timeline(server_id, character_id, start_date=start_date, end_date=end_date)
-    if timeline is None or "timeline" not in timeline or "rows" not in timeline["timeline"]:
-        logger.warning(f"[{character_name}] 타임라인 데이터를 받아오지 못했습니다.")
-        await update_last_checked(character_id, end_date)
-        return
+        timeline = await dnf_api.fetch_timeline(server_id, character_id, start_date=start_date, end_date=end_date)
+        if timeline is None or "timeline" not in timeline or "rows" not in timeline["timeline"]:
+            logger.warning(f"[{character_name}] 타임라인 데이터를 받아오지 못했습니다.")
+            await update_last_checked(character_id, end_date)
+            return
 
-    rows = timeline["timeline"]["rows"]
-    filtered_items = await filter_valid_items(rows)
+        rows = timeline["timeline"]["rows"]
+        filtered_items = await filter_valid_items(rows)
 
-    # 레전더리 아이템 제외 필터링
-    filtered_items = [
-        item for item in filtered_items
-        if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
-    ]
+        # 레전더리 아이템 제외 필터링
+        filtered_items = [
+            item for item in filtered_items
+            if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
+        ]
 
-    # 이전 처리 시점 락을 걸고 읽기
-    async with last_processed_lock:
-        last_time = last_processed_time.get(character_id)
-
-    new_filtered_items = []
-    max_event_time = last_time  # 이번에 처리한 가장 최신 시간 추적
-
-    for item in filtered_items:
-        event_dt = parse_event_date(item)
-        if event_dt is None:
-            continue
-        if (last_time is None) or (event_dt > last_time):
-            new_filtered_items.append(item)
-            if (max_event_time is None) or (event_dt > max_event_time):
-                max_event_time = event_dt
-
-    filtered_items = new_filtered_items
-
-    # 디스코드 채널 조회
-    channel_id = await get_output_channel(guild_id)
-    if not channel_id:
-        logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
-        return
-    channel = bot.get_channel(int(channel_id))
-    if not channel:
-        logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
-        return
-
-    if filtered_items:
-        for item in filtered_items:
-            data = item.get("data", {})
-            item_name = data.get("itemName", "알 수 없음")
-            item_rarity = data.get("itemRarity", "알 수 없음")
-            event_date = item.get("date", "")
-            embed = format_item_announce_embed(adventure_name, character_name, item_name, item_rarity, event_date)
-            await channel.send(embed=embed)
-
-    # 처리 완료한 가장 최신 시간 캐싱도 락 걸고 쓰기
-    if max_event_time is not None:
+        # 이전 처리 시점 락을 걸고 읽기
         async with last_processed_lock:
-            last_processed_time[character_id] = max_event_time
+            last_time = last_processed_time.get(character_id)
 
-    await update_last_checked(character_id, end_date)
+        new_filtered_items = []
+        max_event_time = last_time  # 이번에 처리한 가장 최신 시간 추적
+
+        for item in filtered_items:
+            event_dt = parse_event_date(item)
+            if event_dt is None:
+                continue
+            if (last_time is None) or (event_dt > last_time):
+                new_filtered_items.append(item)
+                if (max_event_time is None) or (event_dt > max_event_time):
+                    max_event_time = event_dt
+
+        filtered_items = new_filtered_items
+
+        # 디스코드 채널 조회
+        channel_id = await get_output_channel(guild_id)
+        if not channel_id:
+            logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
+            return
+        channel = bot.get_channel(int(channel_id))
+        if not channel:
+            logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
+            return
+
+        if filtered_items:
+            for item in filtered_items:
+                data = item.get("data", {})
+                item_name = data.get("itemName", "알 수 없음")
+                item_rarity = data.get("itemRarity", "알 수 없음")
+                event_date = item.get("date", "")
+                embed = format_item_announce_embed(adventure_name, character_name, item_name, item_rarity, event_date)
+                await channel.send(embed=embed)
+
+        # 처리 완료한 가장 최신 시간 캐싱도 락 걸고 쓰기
+        if max_event_time is not None:
+            async with last_processed_lock:
+                last_processed_time[character_id] = max_event_time
+
+        await update_last_checked(character_id, end_date)
 
 
 async def notify_all_characters(bot, guild_id):
@@ -149,10 +150,12 @@ async def notify_all_characters(bot, guild_id):
         logger.info("DB에 등록된 캐릭터가 없습니다.")
         return
 
+    semaphore = asyncio.Semaphore(50)  # 최대 50개 동시 실행 제한
+
     async with aiohttp.ClientSession():
         for adventure, characters in grouped.items():
-            for char in characters:
-                await notify_items_for_character(char, bot, guild_id)
+            tasks = [notify_items_for_character(char, bot, guild_id, semaphore) for char in characters]
+            await asyncio.gather(*tasks)
 
 
 async def periodic_notify(bot, guild_id):
