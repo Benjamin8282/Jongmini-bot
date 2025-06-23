@@ -37,8 +37,8 @@ def format_character_rank_embed(rank_list, timestamp):
         color=0x0099ff
     )
     prev_score = None
-    rank = 0
-    count_same_score = 0  # 동점자 수
+    prev_rank = 0
+    count_same_score = 0  # 현재까지 동점자 수
 
     display_list = rank_list[:20]
 
@@ -49,14 +49,15 @@ def format_character_rank_embed(rank_list, timestamp):
         adventure_name = entry.get('adventure_name', '모험단 없음')
 
         if score == prev_score:
+            # 동점자: 순위 유지, 동점자 수 증가
+            rank = prev_rank
             count_same_score += 1
         else:
-            # 동점자 수만큼 이전 순위에서 더해주기
-            rank = i
-            if count_same_score > 0:
-                rank = rank + count_same_score
+            # 점수 다르면 이전 순위 + 동점자 수 + 1
+            rank = prev_rank + count_same_score + 1
             count_same_score = 0
             prev_score = score
+            prev_rank = rank
 
         line = (f"점수: {score} "
                 f"(태초:{counts.get('태초', 0)}, 에픽:{counts.get('에픽', 0)}, 레전더리:{counts.get('레전더리', 0)})")
