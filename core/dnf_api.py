@@ -153,7 +153,7 @@ async def fetch_timeline_with_pagination(server_id: str, character_id: str, star
                 rows = timeline.get("rows", [])
                 all_rows.extend(rows)
 
-                next_token = data.get("next")
+                next_token = data.get("timeline", {}).get("next")
                 if not next_token:
                     break
 

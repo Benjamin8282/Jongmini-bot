@@ -132,7 +132,7 @@ async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_t
         while current_start < end:
             current_end = min(current_start + timedelta(days=MAX_PERIOD_DAYS), end)
             periods.append((current_start, current_end))
-            current_start = current_end + timedelta(seconds=1)  # 중복 방지
+            current_start = current_end + timedelta(minutes=1)  # 중복 방지
         return periods
 
     periods = split_periods(start_time, end_time)
