@@ -15,5 +15,6 @@ async def season_status(interaction: Interaction):
         str(interaction.guild_id),
         SEASON_START_DATE,
         now,
-        interaction=interaction
+        interaction=interaction,
+        period="시즌"  # 집계 기간 표시
     )

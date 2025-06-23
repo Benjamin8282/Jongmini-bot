@@ -24,5 +24,5 @@ async def aggregate_monthly_items_and_notify(bot, guild_id):
     start_time = month_start
     end_time = now
 
-    await aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=end_time)
+    await aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=end_time, period="월간")
     logger.info("월간 모험단 아이템 집계 및 알림 완료")

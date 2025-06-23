@@ -78,9 +78,9 @@ async def process_character(char, adventure_name, start_date_str, end_date_str, 
                 adventure_item_counts[adventure_name][rarity] += 1
 
 
-def format_rank_embed(rank_list, timestamp):
+def format_rank_embed(rank_list, timestamp, period="일간"):
     embed = discord.Embed(
-        title="모험단 일간 아이템 획득량 순위",
+        title=f"모험단 {period} 아이템 획득량 순위",
         description=f"기준 시각: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
         color=0x00ff00
     )
@@ -111,7 +111,7 @@ def format_rank_embed(rank_list, timestamp):
     return embed
 
 
-async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=None, interaction=None):
+async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=None, interaction=None, period="일간"):
     """
     기간(start_time~end_time) 동안 아이템 집계 및 Discord 알림
     base_time: embed 표시 기준 시각 (지정 없으면 현재 시각)
@@ -157,7 +157,7 @@ async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_t
         logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
         return
 
-    embed = format_rank_embed(adventure_scores, base_time)
+    embed = format_rank_embed(adventure_scores, base_time, period=period)
     if interaction is not None:
         # 슬래시 커맨드로 호출된 경우, interaction.response로 바로 응답
         await interaction.response.send_message(embed=embed)
@@ -183,7 +183,7 @@ async def aggregate_daily_items_and_notify(bot, guild_id):
     today_6am = now.replace(hour=6, minute=0, second=0, microsecond=0)
     start_time = today_6am - timedelta(days=1)
     end_time = today_6am - timedelta(seconds=1)
-    await aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=end_time)
+    await aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=end_time, period="일간")
 
     # 6시 집계 결과만 DB에 기록
     await update_last_aggregation_time(now.strftime("%Y%m%dT%H%M"))

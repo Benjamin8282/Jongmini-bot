@@ -29,5 +29,6 @@ async def monthly_status(interaction: Interaction):
         str(interaction.guild_id),
         start_time,
         end_time,
-        interaction=interaction  # 명령어 응답용 interaction 전달
+        interaction=interaction, # 명령어 응답용 interaction 전달
+        period="월간"  # 집계 기간 표시
     )
