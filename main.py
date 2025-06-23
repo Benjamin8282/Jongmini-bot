@@ -1,6 +1,7 @@
 import asyncio
 import os
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from core.dnf_api import preload_item_cache
 from core.logger import logger
 import discord
@@ -21,6 +22,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 class JongminiBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix="!", intents=discord.Intents.default())
+        self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")  # 스케줄러 초기화
         logger.info("JongminiBot 인스턴스 생성됨")
 
     async def setup_hook(self):
