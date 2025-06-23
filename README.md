@@ -12,7 +12,11 @@
 - `/출력` : 득템 알림을 받을 디스코드 채널을 등록  
 - 타임라인의 득템 이벤트 감지 및 자동 축하 메시지 전송 (장착 가능 레벨 115 아이템 대상)  
 - 다중 캐릭터 관리 및 중복 득템 방지 (마지막 조회 시간 기준)  
-- 모험단별 일간 아이템 획득량 집계 및 순위 표시 기능 추가 (매일 오전 6시 자동 집계)
+- 모험단별 일간 아이템 획득량 집계 및 순위 표시 기능 추가 (매일 오전 6시 자동 집계)  
+- **주간, 월간, 시즌별 아이템 획득량 집계 및 순위 명령어 추가** (`/주간현황`, `/월간현황`, `/시즌현황`)  
+- **동점자 순위 처리 개선 및 페이징 토큰 기반 데이터 페치 보완**  
+- **장시간 집계를 위한 기간 분할 처리 (최대 90일 단위)**  
+- **봇 내 작업 스케줄러(APSheduler) 적용으로 정기 집계 자동 실행**
 
 ---
 
@@ -22,19 +26,23 @@
 - `aiohttp` (DNF Open API 비동기 호출)  
 - `asyncio` (비동기 주기적 감시 및 작업 처리)  
 - `aiosqlite` (SQLite 비동기 DB, 캐시 및 사용자/채널 정보 관리)  
+- `apscheduler` (비동기 작업 스케줄링)  
 - `dotenv` (환경 변수 관리)  
 - Python 3.11+  
-- Docker & Portainer (컨테이너 기반 자동 배포 및 운영)
+- Docker & Portainer (컨테이너 기반 자동 배포 및 운영)  
 
 ---
 
 ## 🚀 자동 배포 및 운영
 
 - **GitHub Actions**를 이용해 소스코드 변경 시 자동으로 도커 이미지 빌드 및 도커허브에 푸시  
-- Portainer를 통한 컨테이너 관리로 자동 최신 이미지 풀링 및 손쉬운 재배포 가능  
+- **Portainer API를 활용하여 컨테이너 이미지 자동 풀링 및 재시작 자동화**  
+  - 변경된 도커 이미지가 도커허브에 푸시되면 Portainer API 호출로 해당 컨테이너의 최신 이미지 자동 다운로드(Repull)  
+  - 컨테이너 자동 재시작을 통해 무중단 서비스 업데이트 지원  
 - 도커 볼륨을 활용해 DB 및 로그 데이터 영속성 확보  
 - 컨테이너 재생성(Recreate) 시 기존 데이터 유지 및 무중단 업데이트 가능  
-- 배포 스크립트와 워크플로우는 `.github/workflows/` 경로에 정의되어 있음
+- 배포 스크립트와 워크플로우는 `.github/workflows/` 경로에 정의되어 있음  
+
 
 ---
 
@@ -43,18 +51,21 @@
 - 실시간 득템 로그를 감지하여 유저와 커뮤니티에 빠른 알림 제공  
 - 개인/길드용 봇으로 확장 가능하도록 구조화  
 - Python 비동기 프로그래밍과 Discord 봇 개발 역량 강화 및 포트폴리오 구축  
+- 효율적인 데이터 페칭과 집계 로직으로 정확한 통계 제공
 
 ---
 
 ## 🗂 주요 구조 및 파일
 
 - `core/db.py` : DB 초기화, 캐릭터 및 채널 정보 저장/조회, 아이템 캐시 관리  
-- `core/dnf_api.py` : DNF API 호출 및 아이템 상세정보 캐싱  
-- `commands/` : 슬래시 커맨드 모음 (`/hello`, `/등록`, `/출력` 등)  
+- `core/dnf_api.py` : DNF API 호출 및 아이템 상세정보 캐싱, 페이징 처리  
+- `commands/` : 슬래시 커맨드 모음 (`/hello`, `/등록`, `/출력`, `/주간현황`, `/월간현황`, `/시즌현황`, `/주간캐릭터현황` 등)  
 - `tasks/notify_items.py` : 주기적 타임라인 감시 및 아이템 득템 알림 작업  
-- `tasks/daily_aggregation.py` : 모험단별 일간 아이템 획득량 집계 및 순위 계산 작업  
-- `main.py` : 봇 초기화 및 실행, 작업 스케줄링 관리  
-- `.github/workflows/` : GitHub Actions 자동 배포 워크플로우
+- `tasks/daily_aggregation.py` : 모험단별 일간 아이템 획득량 집계 및 순위 계산 작업 (90일 단위 분할 처리 포함)  
+- `tasks/weekly_aggregation.py` : 주간 아이템 집계 작업  
+- `tasks/monthly_aggregation.py` : 월간 아이템 집계 작업  
+- `main.py` : 봇 초기화 및 실행, 작업 스케줄링 관리 (APSheduler 적용)  
+- `.github/workflows/` : GitHub Actions 자동 배포 워크플로우  
 
 ---
 
@@ -72,5 +83,3 @@
 - Android Native(JAVA,Kotlin) & Python Developer  
 - [GitHub](https://github.com/Benjamin8282)  
 - Email: kangjongwoo333@gmail.com
-
----
