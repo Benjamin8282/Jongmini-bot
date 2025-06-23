@@ -9,7 +9,7 @@ import discord
 import asyncio
 
 KST = timezone(timedelta(hours=9))
-MAX_CONCURRENT_REQUESTS = 20  # 병렬 요청 제한
+MAX_CONCURRENT_REQUESTS = 50  # 병렬 요청 제한
 
 async def filter_items_level_115(timeline_rows):
     """
