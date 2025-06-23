@@ -26,5 +26,6 @@ async def today_status(interaction: Interaction):
         str(interaction.guild_id),  # 길드 ID
         start_time,
         end_time,
-        interaction=interaction
+        interaction=interaction,
+        period="일간"
     )

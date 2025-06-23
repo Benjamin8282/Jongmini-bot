@@ -300,3 +300,20 @@ async def update_last_aggregation_time(timestamp_str: str):
         logger.info("일간 집계 실행 시간 저장 성공")
     except Exception as e:
         logger.error(f"일간 집계 실행 시간 저장 실패: {e}")
+
+
+async def get_all_characters() -> list[dict]:
+    logger.info("DB에서 전체 캐릭터 조회 시도")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT * FROM characters
+                ORDER BY adventure_name, server_id, character_name
+            """)
+            rows = await cursor.fetchall()
+        logger.info(f"전체 캐릭터 조회 성공: {len(rows)}개")
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"전체 캐릭터 조회 실패: {e}")
+        return []
