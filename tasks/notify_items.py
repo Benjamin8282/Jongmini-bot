@@ -15,7 +15,7 @@ from core.db import (
 from core.logger import logger
 from core.models import ALLOWED_RARITIES  # 서버명 매핑용
 
-DEFAULT_PERIOD_MINUTES = 2
+DEFAULT_PERIOD_SEC = 20 # 타임라인 주기적 체크 주기 (초 단위)
 DEFAULT_LOOKBACK_MINUTES = 30  # 기록 없으면 최근 30분간 조회
 KST = timezone(timedelta(hours=9))
 
@@ -162,4 +162,4 @@ async def periodic_notify(bot, guild_id):
     while True:
         logger.info(f"=== DNF 타임라인 주기적 체크 시작: {datetime.now(KST)} ===")
         await notify_all_characters(bot, guild_id)
-        await asyncio.sleep(DEFAULT_PERIOD_MINUTES * 60)
+        await asyncio.sleep(DEFAULT_PERIOD_SEC)
