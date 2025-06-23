@@ -84,11 +84,30 @@ def format_rank_embed(rank_list, timestamp):
         description=f"기준 시각: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
         color=0x00ff00
     )
+
+    prev_score = None
+    prev_rank = 0
+    skip_count = 0  # 동점자 수 누적용
+
     for i, entry in enumerate(rank_list, start=1):
+        score = entry['score']
         counts = entry["counts"]
-        line = (f"점수: {entry['score']} "
+
+        if score == prev_score:
+            # 점수가 같으면 이전 순위 유지, skip_count 증가
+            rank = prev_rank
+            skip_count += 1
+        else:
+            # 점수 다르면 현재 인덱스에 skip_count만큼 빼서 순위 계산
+            rank = i + skip_count
+            prev_rank = rank
+            prev_score = score
+            skip_count = 0
+
+        line = (f"점수: {score} "
                 f"(태초:{counts.get('태초', 0)}, 에픽:{counts.get('에픽', 0)}, 레전더리:{counts.get('레전더리', 0)})")
-        embed.add_field(name=f"{i}위 {entry['adventure_name']}", value=line, inline=False)
+        embed.add_field(name=f"{rank}위 {entry['adventure_name']}", value=line, inline=False)
+
     return embed
 
 
