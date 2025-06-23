@@ -141,8 +141,11 @@ async def fetch_timeline_with_pagination(server_id: str, character_id: str, star
                 params.pop("next", None)
 
             async with session.get(url, params=params) as resp:
+                logger.info(f"fetch_timeline_with_pagination 호출: {url} - next_token={next_token}")
+                logger.info(f"응답 상태: {resp.status}")
                 if resp.status != 200:
-                    # 실패 시 None 반환 또는 예외 처리 가능
+                    data = await resp.text()  # json이 아닐 수도 있으니 텍스트로 먼저 찍기
+                    logger.warning(f"API 호출 실패 응답 내용: {data}")
                     return None
 
                 data = await resp.json()

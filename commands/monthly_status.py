@@ -32,7 +32,8 @@ async def monthly_status(interaction: Interaction):
         start_time,
         end_time,
         interaction=None,  # 실제 응답은 followup으로 보내기 때문에 None으로 넘김
-        period="월간"  # 집계 기간 표시
+        period="월간",  # 집계 기간 표시
+        need_embed=True
     )
 
     await interaction.followup.send(embed=embed)

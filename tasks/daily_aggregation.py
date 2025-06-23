@@ -20,6 +20,7 @@ MAX_RETRY_DURATION = 7 * 60 * 60  # 7시간
 RETRY_INTERVAL = 60  # 1분
 CONCURRENT_REQUEST_LIMIT = 50  # 동시 캐릭터 처리 제한
 MAX_ITEM_CONCURRENT = 50  # 아이템 레벨 조회 동시 제한
+MAX_PERIOD_DAYS = 90 # 최대 90일 단위로 분할
 
 
 async def fetch_character_timeline_all_with_long_retry(server_id, character_id, start_date, end_date):
@@ -111,16 +112,10 @@ def format_rank_embed(rank_list, timestamp, period="일간"):
     return embed
 
 
-async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=None, interaction=None, period="일간"):
-    """
-    기간(start_time~end_time) 동안 아이템 집계 및 Discord 알림
-    base_time: embed 표시 기준 시각 (지정 없으면 현재 시각)
-    """
+
+async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=None, interaction=None, period="일간", need_embed=False):
     if base_time is None:
         base_time = datetime.now(KST)
-
-    start_date_str = start_time.strftime("%Y%m%dT%H%M")
-    end_date_str = end_time.strftime("%Y%m%dT%H%M")
 
     grouped = await get_all_characters_grouped_by_adventure()
     if not grouped:
@@ -130,13 +125,44 @@ async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_t
     adventure_item_counts = defaultdict(lambda: defaultdict(int))
     semaphore = asyncio.Semaphore(CONCURRENT_REQUEST_LIMIT)
 
+    # 90일 단위 기간 분할 함수
+    def split_periods(start: datetime, end: datetime):
+        periods = []
+        current_start = start
+        while current_start < end:
+            current_end = min(current_start + timedelta(days=MAX_PERIOD_DAYS), end)
+            periods.append((current_start, current_end))
+            current_start = current_end + timedelta(seconds=1)  # 중복 방지
+        return periods
+
+    periods = split_periods(start_time, end_time)
+
+    async def process_character_multi_period(char, adventure_name):
+        for (p_start, p_end) in periods:
+            start_str = p_start.strftime("%Y%m%dT%H%M")
+            end_str = p_end.strftime("%Y%m%dT%H%M")
+            async with semaphore:
+                timeline_data = await fetch_character_timeline_all_with_long_retry(
+                    char["server_id"], char["character_id"], start_str, end_str
+                )
+                if not timeline_data:
+                    logger.warning(f"{char['character_name']} 타임라인 조회 실패 ({start_str}~{end_str})")
+                    continue
+                rows = timeline_data.get("timeline", {}).get("rows", [])
+                filtered_rows = await filter_items_level_115(rows)
+                for item in filtered_rows:
+                    rarity = item.get("data", {}).get("itemRarity")
+                    if rarity in RARITY_WEIGHTS:
+                        adventure_item_counts[adventure_name][rarity] += 1
+
     tasks = [
-        process_character(char, adventure_name, start_date_str, end_date_str, adventure_item_counts, semaphore)
+        process_character_multi_period(char, adventure_name)
         for adventure_name, characters in grouped.items()
         for char in characters
     ]
     await asyncio.gather(*tasks)
 
+    # 이후 점수 계산 및 임베드 생성은 기존과 동일
     adventure_scores = []
     for adventure_name, counts in adventure_item_counts.items():
         score = sum(RARITY_WEIGHTS.get(r, 0) * c for r, c in counts.items())
@@ -159,18 +185,10 @@ async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_t
 
     embed = format_rank_embed(adventure_scores, base_time, period=period)
     if interaction is not None:
-        # 슬래시 커맨드로 호출된 경우, interaction.response로 바로 응답
         await interaction.response.send_message(embed=embed)
     else:
-        # 기존 방식: 등록된 출력 채널에 메시지 전송
-        channel_id = await get_output_channel(guild_id)
-        if not channel_id:
-            logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
-            return
-        channel = bot.get_channel(int(channel_id))
-        if not channel:
-            logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
-            return
+        if need_embed:
+            return embed
         await channel.send(embed=embed)
         logger.info("모험단 아이템 획득량 순위 Discord에 전송 완료")
 

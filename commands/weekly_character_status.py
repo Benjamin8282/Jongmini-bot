@@ -1,5 +1,5 @@
+from datetime import timedelta, timezone
 from discord import app_commands, Interaction
-from datetime import datetime, timedelta, timezone
 
 from tasks.weekly_character_aggregation import aggregate_weekly_items_by_character
 
@@ -9,5 +9,6 @@ KST = timezone(timedelta(hours=9))
 async def weekly_character_status(interaction: Interaction):
     await aggregate_weekly_items_by_character(
         interaction.client,
-        str(interaction.guild_id)
+        str(interaction.guild_id),
+        interaction = interaction,  # Interaction 객체 전달
     )
