@@ -1,5 +1,7 @@
 import asyncio
 import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -32,10 +34,18 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 
+def get_scheduler_timezone():
+    # UTC 고정
+    utc_tz = ZoneInfo("Asia/Seoul")  # KST로 설정
+    logger.info(f"스케줄러 타임존으로 KST 고정: {utc_tz}")
+    return utc_tz
+
+
 class JongminiBot(commands.Bot):
     def __init__(self):
+        scheduler_tz = get_scheduler_timezone()
+        self.scheduler = AsyncIOScheduler(timezone=scheduler_tz)
         super().__init__(command_prefix="!", intents=discord.Intents.default())
-        self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
         logger.info("JongminiBot 인스턴스 생성됨")
 
     async def setup_hook(self):
@@ -66,6 +76,11 @@ async def on_ready():
     logger.info(f"종미니 봇 로그인 성공: {bot.user}")
     print(f"✅ 종미니 봇 로그인 성공: {bot.user}")
 
+    # 현재 시간과 타임존 로그 출력
+    now = datetime.now(tz=bot.scheduler.timezone)
+    logger.info(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
+    print(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
+
     guild_id = "374494724725145600"  # 실제 서버 ID로 교체하세요
 
     # 기존 알림 task
@@ -83,35 +98,38 @@ async def on_ready():
         bot.scheduler.start()
         logger.info("스케줄러 시작됨")
 
-    # 주간 집계: 매주 목요일 06:00 실행
+    # 스케줄러 타임존 변수
+    scheduler_tz = bot.scheduler.timezone
+
+    # 주간 집계: 매주 목요일 05:59 실행 (시간 그대로 유지)
     bot.scheduler.add_job(
         aggregate_weekly_items_and_notify,
-        trigger=CronTrigger(day_of_week="thu", hour=6, minute=0),
+        trigger=CronTrigger(day_of_week="thu", hour=5, minute=59),
         args=[bot, guild_id],
         id="weekly_aggregation_job",
         replace_existing=True
     )
-    logger.info("주간 집계 작업 스케줄 등록됨 (매주 목요일 06:00)")
+    logger.info("주간 집계 작업 스케줄 등록됨 (매주 목요일 05:59)")
 
-    # 월간 집계: 매월 1일 06:00 실행
+    # 월간 집계: 매월 1일 05:59 실행
     bot.scheduler.add_job(
         aggregate_monthly_items_and_notify,
-        trigger=CronTrigger(day=1, hour=6, minute=0),
+        trigger=CronTrigger(day=1, hour=5, minute=59),
         args=[bot, guild_id],
         id="monthly_aggregation_job",
         replace_existing=True
     )
-    logger.info("월간 집계 작업 스케줄 등록됨 (매월 1일 06:00)")
+    logger.info("월간 집계 작업 스케줄 등록됨 (매월 1일 05:59)")
 
-    # 캐릭터별 주간 집계: 매주 목요일 06:30 실행 (예시, 시간 조절 가능)
+    # 캐릭터별 주간 집계: 매주 목요일 05:59 실행
     bot.scheduler.add_job(
         aggregate_weekly_items_by_character,
-        trigger=CronTrigger(day_of_week="thu", hour=6, minute=1),
+        trigger=CronTrigger(day_of_week="thu", hour=5, minute=59),
         args=[bot, guild_id],
         id="weekly_character_aggregation_job",
         replace_existing=True
     )
-    logger.info("캐릭터별 주간 집계 작업 스케줄 등록됨 (매주 목요일 06:01)")
+    logger.info("캐릭터별 주간 집계 작업 스케줄 등록됨 (매주 목요일 05:59)")
 
 
 bot.run(TOKEN)
