@@ -104,7 +104,7 @@ async def on_ready():
     # 주간 집계: 매주 목요일 05:59 실행 (시간 그대로 유지)
     bot.scheduler.add_job(
         aggregate_weekly_items_and_notify,
-        trigger=CronTrigger(day_of_week="thu", hour=5, minute=59, timezone=scheduler_tz),
+        trigger=CronTrigger(day_of_week="thu", hour=5, minute=59),
         args=[bot, guild_id],
         id="weekly_aggregation_job",
         replace_existing=True
@@ -114,7 +114,7 @@ async def on_ready():
     # 월간 집계: 매월 1일 05:59 실행
     bot.scheduler.add_job(
         aggregate_monthly_items_and_notify,
-        trigger=CronTrigger(day=1, hour=5, minute=59, timezone=scheduler_tz),
+        trigger=CronTrigger(day=1, hour=5, minute=59),
         args=[bot, guild_id],
         id="monthly_aggregation_job",
         replace_existing=True
@@ -124,7 +124,7 @@ async def on_ready():
     # 캐릭터별 주간 집계: 매주 목요일 05:59 실행
     bot.scheduler.add_job(
         aggregate_weekly_items_by_character,
-        trigger=CronTrigger(day_of_week="thu", hour=5, minute=59, timezone=scheduler_tz),
+        trigger=CronTrigger(day_of_week="thu", hour=5, minute=59),
         args=[bot, guild_id],
         id="weekly_character_aggregation_job",
         replace_existing=True
