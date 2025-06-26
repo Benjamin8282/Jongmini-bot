@@ -36,8 +36,8 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 def get_scheduler_timezone():
     # UTC 고정
-    utc_tz = ZoneInfo("UTC")
-    logger.info(f"스케줄러 타임존으로 UTC 고정: {utc_tz}")
+    utc_tz = ZoneInfo("Asia/Seoul")  # KST로 설정
+    logger.info(f"스케줄러 타임존으로 KST 고정: {utc_tz}")
     return utc_tz
 
 
