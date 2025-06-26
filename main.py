@@ -35,15 +35,10 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 
 def get_scheduler_timezone():
-    local_tz = datetime.now().astimezone().tzinfo
-    logger.info(f"시스템 로컬 타임존: {local_tz}")
-    if str(local_tz) == "Asia/Seoul":
-        logger.info("로컬 타임존이 Asia/Seoul 이므로 scheduler timezone 지정 안 함")
-        return None  # 시스템 로컬 시간대 사용
-    else:
-        seoul_tz = ZoneInfo("Asia/Seoul")
-        logger.info("로컬 타임존이 Asia/Seoul 아님, scheduler timezone을 Asia/Seoul로 지정함")
-        return seoul_tz
+    # UTC 고정
+    utc_tz = ZoneInfo("UTC")
+    logger.info(f"스케줄러 타임존으로 UTC 고정: {utc_tz}")
+    return utc_tz
 
 
 class JongminiBot(commands.Bot):
@@ -81,6 +76,11 @@ async def on_ready():
     logger.info(f"종미니 봇 로그인 성공: {bot.user}")
     print(f"✅ 종미니 봇 로그인 성공: {bot.user}")
 
+    # 현재 시간과 타임존 로그 출력
+    now = datetime.now(tz=bot.scheduler.timezone)
+    logger.info(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
+    print(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
+
     guild_id = "374494724725145600"  # 실제 서버 ID로 교체하세요
 
     # 기존 알림 task
@@ -101,7 +101,7 @@ async def on_ready():
     # 스케줄러 타임존 변수
     scheduler_tz = bot.scheduler.timezone
 
-    # 주간 집계: 매주 목요일 06:00 실행
+    # 주간 집계: 매주 목요일 05:59 실행 (시간 그대로 유지)
     bot.scheduler.add_job(
         aggregate_weekly_items_and_notify,
         trigger=CronTrigger(day_of_week="thu", hour=5, minute=59, timezone=scheduler_tz),
@@ -111,7 +111,7 @@ async def on_ready():
     )
     logger.info("주간 집계 작업 스케줄 등록됨 (매주 목요일 05:59)")
 
-    # 월간 집계: 매월 1일 06:00 실행
+    # 월간 집계: 매월 1일 05:59 실행
     bot.scheduler.add_job(
         aggregate_monthly_items_and_notify,
         trigger=CronTrigger(day=1, hour=5, minute=59, timezone=scheduler_tz),
@@ -121,7 +121,7 @@ async def on_ready():
     )
     logger.info("월간 집계 작업 스케줄 등록됨 (매월 1일 05:59)")
 
-    # 캐릭터별 주간 집계: 매주 목요일 06:01 실행
+    # 캐릭터별 주간 집계: 매주 목요일 05:59 실행
     bot.scheduler.add_job(
         aggregate_weekly_items_by_character,
         trigger=CronTrigger(day_of_week="thu", hour=5, minute=59, timezone=scheduler_tz),
