@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
+from operator import itemgetter
 
 from core import dnf_api
 from core.db import (
@@ -86,28 +87,28 @@ def format_rank_embed(rank_list, timestamp, period="일간"):
         color=0x00ff00
     )
 
+    # 점수 내림차순 정렬
+    sorted_list = sorted(rank_list, key=itemgetter('score'), reverse=True)
+
     prev_score = None
-    prev_rank = 0
-    skip_count = 0  # 동점자 수 누적용
+    rank = 0
+    real_rank = 1  # 표시될 실제 순위
 
-    for i, entry in enumerate(rank_list, start=1):
+    for i, entry in enumerate(sorted_list):
         score = entry['score']
-        counts = entry["counts"]
+        counts = entry['counts']
 
-        if score == prev_score:
-            # 점수가 같으면 이전 순위 유지, skip_count 증가
-            rank = prev_rank
-            skip_count += 1
-        else:
-            # 점수 다르면 현재 인덱스에 skip_count만큼 빼서 순위 계산
-            rank = i + skip_count
-            prev_rank = rank
-            prev_score = score
-            skip_count = 0
+        if score != prev_score:
+            rank = real_rank  # 새로운 점수면 현재 순위를 기록
+        prev_score = score
 
-        line = (f"점수: {score} "
-                f"(태초:{counts.get('태초', 0)}, 에픽:{counts.get('에픽', 0)}, 레전더리:{counts.get('레전더리', 0)})")
+        line = (
+            f"점수: {score} "
+            f"(태초:{counts.get('태초', 0)}, 에픽:{counts.get('에픽', 0)}, 레전더리:{counts.get('레전더리', 0)})"
+        )
         embed.add_field(name=f"{rank}위 {entry['adventure_name']}", value=line, inline=False)
+
+        real_rank += 1  # 공동 순위 상관없이 반복마다 하나씩 증가
 
     return embed
 
