@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from collections import defaultdict
 from operator import itemgetter
 
@@ -14,8 +14,7 @@ from core.logger import logger
 import discord
 
 from core.models import RARITY_WEIGHTS
-
-KST = timezone(timedelta(hours=9))
+from core.time_utils import KST, get_daily_aggregation_period
 
 MAX_RETRY_DURATION = 7 * 60 * 60  # 7시간
 RETRY_INTERVAL = 60  # 1분
@@ -198,14 +197,11 @@ async def aggregate_daily_items_and_notify(bot, guild_id):
     """
     6시 정기 집계용 (전날 6시 ~ 오늘 5시 59분 59초)
     """
-    now = datetime.now(KST)
-    today_6am = now.replace(hour=6, minute=0, second=0, microsecond=0)
-    start_time = today_6am - timedelta(days=1)
-    end_time = today_6am - timedelta(seconds=1)
+    start_time, end_time = get_daily_aggregation_period()
     await aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=end_time, period="일간")
 
     # 6시 집계 결과만 DB에 기록
-    await update_last_aggregation_time(now.strftime("%Y%m%dT%H%M"))
+    await update_last_aggregation_time(datetime.now(KST).strftime("%Y%m%dT%H%M"))
 
 
 async def wait_until_next_6am():
