@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 from datetime import datetime as dt
+import traceback # traceback 모듈 추가
 
 import aiohttp
 import discord
@@ -144,22 +145,13 @@ async def notify_items_for_character(char, bot, guild_id, semaphore):
         await update_last_checked(character_id, end_date)
 
 
-async def notify_all_characters(bot, guild_id):
-    grouped = await get_all_characters_grouped_by_adventure()
-    if not grouped:
-        logger.info("DB에 등록된 캐릭터가 없습니다.")
-        return
-
-    semaphore = asyncio.Semaphore(50)  # 최대 50개 동시 실행 제한
-
-    async with aiohttp.ClientSession():
-        for adventure, characters in grouped.items():
-            tasks = [notify_items_for_character(char, bot, guild_id, semaphore) for char in characters]
-            await asyncio.gather(*tasks)
-
-
 async def periodic_notify(bot, guild_id):
     while True:
         logger.info(f"=== DNF 타임라인 주기적 체크 시작: {datetime.now(KST)} ===")
-        await notify_all_characters(bot, guild_id)
-        await asyncio.sleep(DEFAULT_PERIOD_SEC)
+        try:
+            await notify_all_characters(bot, guild_id)
+        except Exception as e:
+            logger.error(f"notify_all_characters 실행 중 오류 발생: {e}")
+            logger.error(traceback.format_exc()) # 스택 트레이스 출력
+        finally:
+            await asyncio.sleep(DEFAULT_PERIOD_SEC)
