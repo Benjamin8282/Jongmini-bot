@@ -14,9 +14,9 @@ from core.db import init_db
 
 # tasks import
 from tasks.daily_aggregation import daily_aggregation_task
-from tasks.monthly_aggregation import aggregate_monthly_items_and_notify
+from tasks.monthly_aggregation import monthly_aggregation_task
 from tasks.notify_items import periodic_notify
-from tasks.weekly_aggregation import aggregate_weekly_items_and_notify
+from tasks.weekly_aggregation import weekly_aggregation_task
 from tasks.weekly_character_aggregation import aggregate_weekly_items_by_character  # 캐릭터별 주간 집계 task
 
 # commands import
@@ -93,6 +93,16 @@ async def on_ready():
         bot.daily_aggregation_task = asyncio.create_task(daily_aggregation_task(bot, guild_id))
         logger.info("일간 모험단 집계 task 시작됨")
 
+    # 주간 집계 task
+    if not hasattr(bot, 'weekly_aggregation_task') or bot.weekly_aggregation_task.done():
+        bot.weekly_aggregation_task = asyncio.create_task(weekly_aggregation_task(bot, guild_id))
+        logger.info("주간 모험단 집계 task 시작됨")
+
+    # 월간 집계 task
+    if not hasattr(bot, 'monthly_aggregation_task') or bot.monthly_aggregation_task.done():
+        bot.monthly_aggregation_task = asyncio.create_task(monthly_aggregation_task(bot, guild_id))
+        logger.info("월간 모험단 집계 task 시작됨")
+
     # APScheduler 스케줄러 시작 및 작업 등록
     if not bot.scheduler.running:
         bot.scheduler.start()
@@ -100,26 +110,6 @@ async def on_ready():
 
     # 스케줄러 타임존 변수
     scheduler_tz = bot.scheduler.timezone
-
-    # 주간 집계: 매주 목요일 05:59 실행 (시간 그대로 유지)
-    bot.scheduler.add_job(
-        aggregate_weekly_items_and_notify,
-        trigger=CronTrigger(day_of_week="thu", hour=5, minute=59),
-        args=[bot, guild_id],
-        id="weekly_aggregation_job",
-        replace_existing=True
-    )
-    logger.info("주간 집계 작업 스케줄 등록됨 (매주 목요일 05:59)")
-
-    # 월간 집계: 매월 1일 05:59 실행
-    bot.scheduler.add_job(
-        aggregate_monthly_items_and_notify,
-        trigger=CronTrigger(day=1, hour=5, minute=59),
-        args=[bot, guild_id],
-        id="monthly_aggregation_job",
-        replace_existing=True
-    )
-    logger.info("월간 집계 작업 스케줄 등록됨 (매월 1일 05:59)")
 
     # 캐릭터별 주간 집계: 매주 목요일 05:59 실행
     bot.scheduler.add_job(
