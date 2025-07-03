@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 from datetime import datetime as dt
-import traceback # traceback 모듈 추가
+import traceback  # traceback 모듈 추가
 
 import aiohttp
 import discord
@@ -16,7 +16,7 @@ from core.db import (
 from core.logger import logger
 from core.models import ALLOWED_RARITIES  # 서버명 매핑용
 
-DEFAULT_PERIOD_SEC = 20 # 타임라인 주기적 체크 주기 (초 단위)
+DEFAULT_PERIOD_SEC = 20  # 타임라인 주기적 체크 주기 (초 단위)
 DEFAULT_LOOKBACK_MINUTES = 30  # 기록 없으면 최근 30분간 조회
 KST = timezone(timedelta(hours=9))
 
@@ -24,11 +24,13 @@ KST = timezone(timedelta(hours=9))
 last_processed_time = {}
 last_processed_lock = asyncio.Lock()
 
+
 def parse_event_date(item):
     try:
         return dt.strptime(item.get("date", ""), "%Y-%m-%d %H:%M")
     except ValueError:
         return None
+
 
 def get_rarity_color(rarity: str) -> int:
     # 등급별 16진수 색상을 int로 반환
@@ -145,6 +147,20 @@ async def notify_items_for_character(char, bot, guild_id, semaphore):
         await update_last_checked(character_id, end_date)
 
 
+async def notify_all_characters(bot, guild_id):
+    grouped = await get_all_characters_grouped_by_adventure()
+    if not grouped:
+        logger.info("DB에 등록된 캐릭터가 없습니다.")
+        return
+
+    semaphore = asyncio.Semaphore(50)  # 최대 50개 동시 실행 제한
+
+    async with aiohttp.ClientSession():
+        for adventure, characters in grouped.items():
+            tasks = [notify_items_for_character(char, bot, guild_id, semaphore) for char in characters]
+            await asyncio.gather(*tasks)
+
+
 async def periodic_notify(bot, guild_id):
     while True:
         logger.info(f"=== DNF 타임라인 주기적 체크 시작: {datetime.now(KST)} ===")
@@ -152,6 +168,6 @@ async def periodic_notify(bot, guild_id):
             await notify_all_characters(bot, guild_id)
         except Exception as e:
             logger.error(f"notify_all_characters 실행 중 오류 발생: {e}")
-            logger.error(traceback.format_exc()) # 스택 트레이스 출력
+            logger.error(traceback.format_exc())  # 스택 트레이스 출력
         finally:
             await asyncio.sleep(DEFAULT_PERIOD_SEC)
