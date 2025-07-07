@@ -69,7 +69,7 @@ def format_item_announce_embed(adventure_name, character_name, item, event_date)
     elif code == 504:  # 항아리/상자
         channel_name = data.get('channelName')
         channel_no = data.get('channelNo')
-        description += f" {channel_name} {channel_no}채널에서 항아리/상자에서 {item_name}[{item_rarity}](을)를 획득했습니다."
+        description += f" {channel_name} {channel_no}채널 항아리/상자에서 {item_name}[{item_rarity}](을)를 획득했습니다."
     elif code == 507:  # 레이드 카드 보상
         description += f" 레이드 카드 보상에서 {item_name}[{item_rarity}](을)를 획득했습니다."
     else:
