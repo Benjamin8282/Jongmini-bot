@@ -42,15 +42,42 @@ def get_rarity_color(rarity: str) -> int:
     return mapping.get(rarity, 0x000000)  # 기본 검정
 
 
-def format_item_announce_embed(adventure_name, character_name, item_name, item_rarity, event_date):
+def format_item_announce_embed(adventure_name, character_name, item, event_date):
     import datetime
     dtstrp = datetime.datetime.strptime(event_date, "%Y-%m-%d %H:%M")
     date_str = dtstrp.strftime("%Y.%m.%d(%H:%M)")
 
+    code = item.get("code")
+    data = item.get("data", {})
+    item_name = data.get("itemName", "알 수 없음")
+    item_rarity = data.get("itemRarity", "알 수 없음")
+
     color = get_rarity_color(item_rarity)
 
+    description = f"{adventure_name} 모험단의 {character_name} 모험가가"
+
+    if code == 505:  # 던전 드랍
+        channel_name = data.get('channelName')
+        channel_no = data.get('channelNo')
+        dungeon_name = data.get('dungeonName')
+        description += f" {channel_name} {channel_no}채널 {dungeon_name}에서 드랍으로 {item_name}[{item_rarity}](을)를 획득했습니다."
+    elif code == 513:  # 던전 카드 보상
+        channel_name = data.get('channelName')
+        channel_no = data.get('channelNo')
+        dungeon_name = data.get('dungeonName')
+        description += f" {channel_name} {channel_no}채널 {dungeon_name}에서 던전 카드 보상으로 {item_name}[{item_rarity}](을)를 획득했습니다."
+    elif code == 504:  # 항아리/상자
+        channel_name = data.get('channelName')
+        channel_no = data.get('channelNo')
+        description += f" {channel_name} {channel_no}채널에서 항아리/상자에서 {item_name}[{item_rarity}](을)를 획득했습니다."
+    elif code == 507:  # 레이드 카드 보상
+        description += f" 레이드 카드 보상에서 {item_name}[{item_rarity}](을)를 획득했습니다."
+    else:
+        description += f" {item_name}[{item_rarity}](을)를 획득했습니다."
+
+
     embed = discord.Embed(
-        description=f"{adventure_name} 모험단의 {character_name} 모험가가 {item_name}[{item_rarity}](을)를 획득했습니다.",
+        description=description,
         color=color
     )
     embed.set_footer(text=date_str)
@@ -132,11 +159,8 @@ async def notify_items_for_character(char, bot, guild_id, semaphore):
 
         if filtered_items:
             for item in filtered_items:
-                data = item.get("data", {})
-                item_name = data.get("itemName", "알 수 없음")
-                item_rarity = data.get("itemRarity", "알 수 없음")
                 event_date = item.get("date", "")
-                embed = format_item_announce_embed(adventure_name, character_name, item_name, item_rarity, event_date)
+                embed = format_item_announce_embed(adventure_name, character_name, item, event_date)
                 await channel.send(embed=embed)
 
         # 처리 완료한 가장 최신 시간 캐싱도 락 걸고 쓰기
