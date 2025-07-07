@@ -62,10 +62,8 @@ def format_item_announce_embed(adventure_name, character_name, item, event_date)
         dungeon_name = data.get('dungeonName')
         description += f" {channel_name} {channel_no}채널 {dungeon_name}에서 드랍으로 {item_name}[{item_rarity}](을)를 획득했습니다."
     elif code == 513:  # 던전 카드 보상
-        channel_name = data.get('channelName')
-        channel_no = data.get('channelNo')
         dungeon_name = data.get('dungeonName')
-        description += f" {channel_name} {channel_no}채널 {dungeon_name}에서 던전 카드 보상으로 {item_name}[{item_rarity}](을)를 획득했습니다."
+        description += f" {dungeon_name}에서 던전 카드 보상으로 {item_name}[{item_rarity}](을)를 획득했습니다."
     elif code == 504:  # 항아리/상자
         channel_name = data.get('channelName')
         channel_no = data.get('channelNo')
