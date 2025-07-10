@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
-from datetime import datetime as dt
 import traceback  # traceback 모듈 추가
 
 import aiohttp
@@ -27,7 +26,7 @@ last_processed_lock = asyncio.Lock()
 
 def parse_event_date(item):
     try:
-        return dt.strptime(item.get("date", ""), "%Y-%m-%d %H:%M")
+        return datetime.strptime(item.get("date", ""), "%Y-%m-%d %H:%M")
     except ValueError:
         return None
 
@@ -43,9 +42,8 @@ def get_rarity_color(rarity: str) -> int:
 
 
 def format_item_announce_embed(adventure_name, character_name, item, event_date):
-    import datetime
-    dtstrp = datetime.datetime.strptime(event_date, "%Y-%m-%d %H:%M")
-    date_str = dtstrp.strftime("%Y.%m.%d(%H:%M)")
+    dt_pastime = datetime.strptime(event_date, "%Y-%m-%d %H:%M")
+    date_str = dt_pastime.strftime("%Y.%m.%d(%H:%M)")
 
     code = item.get("code")
     data = item.get("data", {})
