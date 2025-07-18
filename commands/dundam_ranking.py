@@ -15,9 +15,12 @@ async def fetch_dundam_data(session, character):
                 data = await response.json(content_type=None)
                 for item in data.get('damageList', {}).get('vsRanking', []):
                     if item.get('name') == '총 합':
+                        damage_str = item.get('dam', '0')
+                        damage_int = int(damage_str.replace(',', ''))
                         return {
-                            "character_name": character['character_name'],
-                            "damage": item.get('dam', 0)
+                            "character_name": character.get('character_name'),
+                            "adventure_name": character.get('adventure_name'),
+                            "damage": damage_int
                         }
     except Exception as e:
         logger.error(f"던담 데이터 조회 실패: {character['character_name']} - {e}")
