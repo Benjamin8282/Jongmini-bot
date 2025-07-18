@@ -50,7 +50,7 @@ async def dundam_ranking(interaction: Interaction):
     else:
         description = ""
         for i, char in enumerate(top_20_characters):
-            description += f"{i+1}. **{char['character_name']}**: {char['damage']:,}
+            description += f"{i+1}. **{char['character_name']}** ({char['adventure_name']}) - 데미지: {char['damage']:,}
 "
         embed.description = description
 
