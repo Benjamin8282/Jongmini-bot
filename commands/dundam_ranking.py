@@ -34,8 +34,8 @@ async def dundam_ranking(interaction: Interaction):
     description = ""
     for i, char in enumerate(top_20_characters, 1):
         score_kor = format_score_korean(char['damage'])
-        description += f"**{i}위** **{char.get('character_name', '알 수 없음')}** ({char.get('adventure_name', '알 수 없음')})\n\n"
-        description += f"**점수:** {score_kor}\n"
+        description += f"**{i}위** **{char.get('character_name', '알 수 없음')}** ({char.get('adventure_name', '알 수 없음')})\n"
+        description += f"**점수:** {score_kor}\n\n"
 
     if not description:
         description = "던담 랭킹 정보를 가져올 수 있는 캐릭터가 없습니다."
