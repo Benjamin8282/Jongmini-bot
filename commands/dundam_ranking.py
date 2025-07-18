@@ -12,6 +12,10 @@ async def fetch_dundam_data(session, character, semaphore):
     try:
         async with session.get(url) as response:
             if response.status == 200:
+                pass
+            else:
+                logger.error(f"던담 데이터 조회 실패: HTTP {response.status} - {character.get('character_name')} ({character.get('character_id')}) - 응답: {await response.text()}")
+                return None
                 data = await response.json(content_type=None)
                 for item in data.get('damageList', {}).get('vsRanking', []):
                     if item.get('name') == '총 합':
