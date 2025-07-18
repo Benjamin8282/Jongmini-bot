@@ -28,7 +28,7 @@ async def fetch_dundam_data_with_retry(session, character, retries=3):
     if key in _cache:
         ts, cached_data = _cache[key]
         if now - ts < _CACHE_DURATION:
-            logger.info(f"캐시에서 던담 데이터 사용: {character['character_name']}")
+            logger.info("캐시에서 던담 데이터 사용: %s", character['character_name'])
             return cached_data
 
     url = f"https://dundam.xyz/dat/viewData.jsp?image={character['character_id']}&server={character['server_id']}"
@@ -48,28 +48,28 @@ async def fetch_dundam_data_with_retry(session, character, retries=3):
                                 "damage": damage_int
                             }
                             _cache[key] = (now, result)
-                            logger.info(f"던담 데이터 조회 성공: {character['character_name']} - 데미지: {damage_int}")
+                            logger.info("던담 데이터 조회 성공: %s - 데미지: %d", character['character_name'], damage_int)
                             return result
 
-                    logger.warning(f"총 합 항목 없음: {character['character_name']}")
+                    logger.warning("총 합 항목 없음: %s", character['character_name'])
                     return None
 
                 elif response.status in (403, 429):
                     wait = (2 ** attempt) + random.random()
-                    logger.warning(f"HTTP {response.status} 에러: {character['character_name']} - {wait:.2f}초 후 재시도")
+                    logger.warning("HTTP %d 에러: %s - %.2f초 후 재시도", response.status, character['character_name'], wait)
                     await asyncio.sleep(wait)
                 else:
                     text = await response.text()
-                    logger.error(f"HTTP {response.status} 에러: {character['character_name']} - 응답: {text}")
+                    logger.error("HTTP %d 에러: %s - 응답: %s", response.status, character['character_name'], text)
                     return None
 
         except Exception as e:
-            logger.error(f"던담 데이터 조회 실패: {character['character_name']} - {e}")
+            logger.error("던담 데이터 조회 실패: %s - %s", character['character_name'], e)
             wait = (2 ** attempt) + random.random()
-            logger.info(f"예외 발생, {wait:.2f}초 후 재시도")
+            logger.info("예외 발생, %.2f초 후 재시도", wait)
             await asyncio.sleep(wait)
 
-    logger.error(f"던담 데이터 재시도 실패: {character['character_name']}")
+    logger.error("던담 데이터 재시도 실패: %s", character['character_name'])
     return None
 
 
