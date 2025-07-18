@@ -12,10 +12,18 @@ _cache = {}
 _CACHE_DURATION = 60 * 10  # 10분 캐시 유지 (초 단위)
 
 
+def format_score_korean(num: int) -> str:
+    if num >= 100_000_000:
+        return f"{num // 100_000_000}억 {num % 100_000_000 // 10_000}만"
+    elif num >= 10_000:
+        return f"{num // 10_000}만 {num % 10_000}"
+    else:
+        return f"{num}"
+
+
 async def fetch_dundam_data_with_retry(session, character, retries=3):
     key = (character['character_id'], character['server_id'])
 
-    # 캐시 확인 (10분 이내면 캐시 사용)
     now = time.time()
     if key in _cache:
         ts, cached_data = _cache[key]
@@ -39,7 +47,7 @@ async def fetch_dundam_data_with_retry(session, character, retries=3):
                                 "adventure_name": character.get('adventure_name'),
                                 "damage": damage_int
                             }
-                            _cache[key] = (now, result)  # 캐시에 저장
+                            _cache[key] = (now, result)
                             logger.info(f"던담 데이터 조회 성공: {character['character_name']} - 데미지: {damage_int}")
                             return result
 
@@ -72,7 +80,7 @@ async def fetch_all_with_rate_limit(session, characters, limit_per_second=5):
     async def limited_fetch(char):
         async with semaphore:
             result = await fetch_dundam_data_with_retry(session, char)
-            await asyncio.sleep(1 / limit_per_second)  # 요청 간격 조절
+            await asyncio.sleep(1 / limit_per_second)
             return result
 
     tasks = [limited_fetch(char) for char in characters]
@@ -86,7 +94,6 @@ async def fetch_all_with_rate_limit(session, characters, limit_per_second=5):
 
 @app_commands.command(name="던담순위", description="등록된 모든 캐릭터의 던담 랭킹을 조회합니다.")
 async def dundam_ranking(interaction: Interaction):
-    """/던담순위 명령어 핸들러"""
     await interaction.response.defer(thinking=True)
 
     characters = await get_all_characters()
@@ -97,20 +104,20 @@ async def dundam_ranking(interaction: Interaction):
     async with aiohttp.ClientSession() as session:
         results = await fetch_all_with_rate_limit(session, characters, limit_per_second=5)
 
-    # 피해량 순으로 정렬
     ranked_characters = sorted([r for r in results if r], key=lambda x: x['damage'], reverse=True)
-
-    # 상위 20개 캐릭터만 표시
     top_20_characters = ranked_characters[:20]
 
-    embed = discord.Embed(title="던담 랭킹 (상위 20)", color=discord.Color.gold())
+    embed = discord.Embed(title="던담 데미지 순위", color=discord.Color.gold())
+    embed.set_footer(text=f"기준 시각: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    if not top_20_characters:
-        embed.description = "던담 랭킹 정보를 가져올 수 있는 캐릭터가 없습니다."
-    else:
-        description = ""
-        for i, char in enumerate(top_20_characters):
-            description += f"{i+1}. **{char.get('character_name', '알 수 없음')}** ({char.get('adventure_name', '알 수 없음')}) - 데미지: {char.get('damage', 0):,}\n"
-        embed.description = description
+    description = ""
+    for i, char in enumerate(top_20_characters, 1):
+        score_kor = format_score_korean(char['damage'])
+        description += f"**{i}위** **{char.get('character_name', '알 수 없음')}** ({char.get('adventure_name', '알 수 없음')})\n"
+        description += f"**점수:** {score_kor}\n"
 
+    if not description:
+        description = "던담 랭킹 정보를 가져올 수 있는 캐릭터가 없습니다."
+
+    embed.description = description
     await interaction.followup.send(embed=embed)
