@@ -62,7 +62,8 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(weekly_status)
         self.tree.add_command(monthly_status)
         self.tree.add_command(weekly_character_status)
-        self.tree.add_command(season_status)
+                self.tree.add_command(season_status)
+        self.tree.add_command(dundam_ranking)
 
         await self.tree.sync()
         logger.info(f"슬래시 명령어 동기화 완료: {self.tree.get_commands()}")
