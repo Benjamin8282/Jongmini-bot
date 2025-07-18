@@ -29,6 +29,7 @@ from commands.weekly_status import weekly_status
 from commands.monthly_status import monthly_status
 from commands.weekly_character_status import weekly_character_status  # 캐릭터별 주간 집계 커맨드
 from commands.season_status import season_status
+from commands.dundam_ranking import dundam_ranking
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -62,7 +63,7 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(weekly_status)
         self.tree.add_command(monthly_status)
         self.tree.add_command(weekly_character_status)
-                self.tree.add_command(season_status)
+        self.tree.add_command(season_status)
         self.tree.add_command(dundam_ranking)
 
         await self.tree.sync()
@@ -82,7 +83,7 @@ async def on_ready():
     logger.info(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
     print(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
 
-    guild_id = "374494724725145600"  # 실제 서버 ID로 교체하세요
+    guild_id = "945401168459337779"  # 실제 서버 ID로 교체하세요
 
     # 기존 알림 task
     if not hasattr(bot, 'notify_task') or bot.notify_task.done():
