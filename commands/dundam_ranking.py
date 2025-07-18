@@ -12,7 +12,7 @@ async def fetch_dundam_data(session, character):
     try:
         async with session.get(url) as response:
             if response.status == 200:
-                data = await response.json(content_type='text/html')
+                data = await response.json(content_type=None)
                 for item in data.get('damageList', {}).get('vsRanking', []):
                     if item.get('name') == '총 합':
                         return {
@@ -50,8 +50,7 @@ async def dundam_ranking(interaction: Interaction):
     else:
         description = ""
         for i, char in enumerate(top_20_characters):
-            description += f"{i+1}. **{char['character_name']}** ({char['adventure_name']}) - 데미지: {char['damage']:,}
-"
+            description += f"{i+1}. **{char['character_name']}** ({char['adventure_name']}) - 데미지: {char['damage']:,}\n"
         embed.description = description
 
     await interaction.followup.send(embed=embed)
