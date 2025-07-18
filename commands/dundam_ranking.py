@@ -17,6 +17,7 @@ async def fetch_dundam_data(session, character):
                     if item.get('name') == '총 합':
                         damage_str = item.get('dam', '0')
                         damage_int = int(damage_str.replace(',', ''))
+                        logger.info(f"던담 데이터 조회 성공: {character['character_name']} - 데미지: {damage_int}")
                         return {
                             "character_name": character.get('character_name'),
                             "adventure_name": character.get('adventure_name'),
@@ -36,8 +37,9 @@ async def dundam_ranking(interaction: Interaction):
         await interaction.followup.send("등록된 캐릭터가 없습니다.")
         return
 
+    semaphore = asyncio.Semaphore(10)
     async with aiohttp.ClientSession() as session:
-        tasks = [fetch_dundam_data(session, char) for char in characters]
+        tasks = [fetch_dundam_data(session, char, semaphore) for char in characters]
         results = await asyncio.gather(*tasks)
 
     # 피해량 순으로 정렬
