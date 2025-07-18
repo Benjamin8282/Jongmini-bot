@@ -29,10 +29,11 @@ from commands.weekly_status import weekly_status
 from commands.monthly_status import monthly_status
 from commands.weekly_character_status import weekly_character_status  # 캐릭터별 주간 집계 커맨드
 from commands.season_status import season_status
+from commands.dundam_ranking import dundam_ranking
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-
+GUILD_ID = os.getenv("GUILD_ID")  # 디폴트 값 설정
 
 def get_scheduler_timezone():
     # UTC 고정
@@ -63,6 +64,7 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(monthly_status)
         self.tree.add_command(weekly_character_status)
         self.tree.add_command(season_status)
+        self.tree.add_command(dundam_ranking)
 
         await self.tree.sync()
         logger.info(f"슬래시 명령어 동기화 완료: {self.tree.get_commands()}")
@@ -81,26 +83,24 @@ async def on_ready():
     logger.info(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
     print(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
 
-    guild_id = "374494724725145600"  # 실제 서버 ID로 교체하세요
-
     # 기존 알림 task
     if not hasattr(bot, 'notify_task') or bot.notify_task.done():
-        bot.notify_task = asyncio.create_task(periodic_notify(bot, guild_id))
+        bot.notify_task = asyncio.create_task(periodic_notify(bot, GUILD_ID))
         logger.info("타임라인 아이템 알림 task 시작됨")
 
     # 신규 일간 집계 task
     if not hasattr(bot, 'daily_aggregation_task') or bot.daily_aggregation_task.done():
-        bot.daily_aggregation_task = asyncio.create_task(daily_aggregation_task(bot, guild_id))
+        bot.daily_aggregation_task = asyncio.create_task(daily_aggregation_task(bot, GUILD_ID))
         logger.info("일간 모험단 집계 task 시작됨")
 
     # 주간 집계 task
     if not hasattr(bot, 'weekly_aggregation_task') or bot.weekly_aggregation_task.done():
-        bot.weekly_aggregation_task = asyncio.create_task(weekly_aggregation_task(bot, guild_id))
+        bot.weekly_aggregation_task = asyncio.create_task(weekly_aggregation_task(bot, GUILD_ID))
         logger.info("주간 모험단 집계 task 시작됨")
 
     # 월간 집계 task
     if not hasattr(bot, 'monthly_aggregation_task') or bot.monthly_aggregation_task.done():
-        bot.monthly_aggregation_task = asyncio.create_task(monthly_aggregation_task(bot, guild_id))
+        bot.monthly_aggregation_task = asyncio.create_task(monthly_aggregation_task(bot, GUILD_ID))
         logger.info("월간 모험단 집계 task 시작됨")
 
     # APScheduler 스케줄러 시작 및 작업 등록
@@ -115,7 +115,7 @@ async def on_ready():
     bot.scheduler.add_job(
         aggregate_weekly_items_by_character,
         trigger=CronTrigger(day_of_week="thu", hour=5, minute=59),
-        args=[bot, guild_id],
+        args=[bot, GUILD_ID],
         id="weekly_character_aggregation_job",
         replace_existing=True
     )
