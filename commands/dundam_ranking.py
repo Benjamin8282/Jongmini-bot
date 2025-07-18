@@ -6,7 +6,7 @@ from core.db import get_all_characters
 from core.logger import logger
 import aiohttp
 
-async def fetch_dundam_data(session, character):
+async def fetch_dundam_data(session, character, semaphore):
     """캐릭터의 던담 데이터를 비동기적으로 가져옵니다."""
     url = f"https://dundam.xyz/dat/viewData.jsp?image={character['character_id']}&server={character['server_id']}"
     try:
