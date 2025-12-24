@@ -112,14 +112,14 @@ async def on_ready():
     scheduler_tz = bot.scheduler.timezone
 
     # 캐릭터별 주간 집계: 매주 목요일 05:59 실행
-    bot.scheduler.add_job(
-        aggregate_weekly_items_by_character,
-        trigger=CronTrigger(day_of_week="thu", hour=5, minute=59),
-        args=[bot, GUILD_ID],
-        id="weekly_character_aggregation_job",
-        replace_existing=True
-    )
-    logger.info("캐릭터별 주간 집계 작업 스케줄 등록됨 (매주 목요일 05:59)")
+    #bot.scheduler.add_job(
+    #    aggregate_weekly_items_by_character,
+    #    trigger=CronTrigger(day_of_week="thu", hour=5, minute=59),
+    #    args=[bot, GUILD_ID],
+    #    id="weekly_character_aggregation_job",
+    #    replace_existing=True
+    #)
+    #logger.info("캐릭터별 주간 집계 작업 스케줄 등록됨 (매주 목요일 05:59)")
 
 
 bot.run(TOKEN)
