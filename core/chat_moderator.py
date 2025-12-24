@@ -45,26 +45,26 @@ class ChatModerator:
             await self._moderate_channel(message.channel)
 
     async def _should_call_api(self, channel_id: int) -> bool:
-        # 조건 1: 새로운 채팅 20개
-        if len(self.message_queues[channel_id]) >= 20:
+        # 조건 1: 새로운 채팅 15개
+        if len(self.message_queues[channel_id]) >= 15:
             last_call = self.last_api_call_time.get(channel_id)
             if not last_call or (datetime.now(timezone.utc) - last_call).total_seconds() > 10:
                 # 마지막 호출 후 20개가 쌓였는지 확인하기 위해, 큐가 꽉 찼을 때만 호출
                 if len(self.message_queues[channel_id]) == self.message_queues[channel_id].maxlen:
                      return True
-                # 처음 20개 도달
-                if len(self.message_queues[channel_id]) == 20 and not last_call:
+                # 처음 15개 도달
+                if len(self.message_queues[channel_id]) == 15 and not last_call:
                     return True
 
 
-        # 조건 2: 10초 이내 10회 이상
+        # 조건 2: 10초 이내 5회 이상
         now = datetime.now(timezone.utc)
         ten_seconds_ago = now - timedelta(seconds=10)
         recent_messages = [
             t for t in self.short_term_message_counts.get(channel_id, []) if t > ten_seconds_ago
         ]
         self.short_term_message_counts[channel_id] = recent_messages  # 오래된 메시지 정리
-        if len(recent_messages) >= 10:
+        if len(recent_messages) >= 5:
             return True
 
         return False
