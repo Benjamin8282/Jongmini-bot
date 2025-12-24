@@ -127,13 +127,29 @@ class ChatModerator:
     def _normalize_response(self, data: Dict[str, Any]) -> Dict[str, Any]:
         if "riskLevel" in data and "summary" in data:
             return data
+
+        text_to_parse = None
         if "result" in data and isinstance(data["result"], str):
+            text_to_parse = data["result"].strip()
+        elif "raw" in data and isinstance(data["raw"], str):
+            text_to_parse = data["raw"].strip()
+
+        if text_to_parse:
             try:
-                return json.loads(data["result"])
-            except json.JSONDecodeError:
-                return {"raw": data["result"]}
-        if "raw" in data:
-            return data
+                # AWS Lambda의 이중 인코딩된 JSON 문자열 처리
+                # 예: "\"{\\\"riskLevel\\\": ...}\""
+                if text_to_parse.startswith('"') and text_to_parse.endswith('"'):
+                     text_to_parse = json.loads(text_to_parse)
+
+                parsed = json.loads(text_to_parse)
+                if isinstance(parsed, dict):
+                    return parsed
+                return {"raw": text_to_parse, "_note": "parsed but not a dict"}
+            except (json.JSONDecodeError, TypeError):
+                # JSON 파싱 실패 시, 원본 raw 데이터와 노트를 반환
+                logger.warning(f"JSON 파싱 실패: {text_to_parse}")
+                return {"raw": text_to_parse, "_note": "invalid or incomplete json"}
+
         return {"_unknown_format": data}
 
     def _pretty(self, obj: Any) -> str:
