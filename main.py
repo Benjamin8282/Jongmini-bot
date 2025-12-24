@@ -8,6 +8,7 @@ from apscheduler.triggers.cron import CronTrigger
 from core.dnf_api import preload_item_cache
 from core.logger import logger
 import discord
+from core.chat_moderator import ChatModerator
 from discord.ext import commands
 from dotenv import load_dotenv
 from core.db import init_db
@@ -46,7 +47,13 @@ class JongminiBot(commands.Bot):
     def __init__(self):
         scheduler_tz = get_scheduler_timezone()
         self.scheduler = AsyncIOScheduler(timezone=scheduler_tz)
-        super().__init__(command_prefix="!", intents=discord.Intents.default())
+        
+        intents = discord.Intents.default()
+        intents.messages = True
+        intents.message_content = True
+        
+        super().__init__(command_prefix="!", intents=intents)
+        self.chat_moderator = ChatModerator()
         logger.info("JongminiBot 인스턴스 생성됨")
 
     async def setup_hook(self):
@@ -120,6 +127,17 @@ async def on_ready():
     #    replace_existing=True
     #)
     #logger.info("캐릭터별 주간 집계 작업 스케줄 등록됨 (매주 목요일 05:59)")
+
+@bot.event
+async def on_message(message: discord.Message):
+    if message.author == bot.user:
+        return
+    
+    # process commands first
+    await bot.process_commands(message)
+
+    # then handle with moderator
+    await bot.chat_moderator.handle_message(message)
 
 
 bot.run(TOKEN)
