@@ -45,15 +45,15 @@ class ChatModerator:
             await self._moderate_channel(message.channel)
 
     async def _should_call_api(self, channel_id: int) -> bool:
-        # 조건 1: 새로운 채팅 15개
-        if len(self.message_queues[channel_id]) >= 15:
+        # 조건 1: 새로운 채팅 10개
+        if len(self.message_queues[channel_id]) >= 10:
             last_call = self.last_api_call_time.get(channel_id)
             if not last_call or (datetime.now(timezone.utc) - last_call).total_seconds() > 10:
-                # 마지막 호출 후 20개가 쌓였는지 확인하기 위해, 큐가 꽉 찼을 때만 호출
+                # 마지막 호출 후 10개가 쌓였는지 확인하기 위해, 큐가 꽉 찼을 때만 호출
                 if len(self.message_queues[channel_id]) == self.message_queues[channel_id].maxlen:
                      return True
-                # 처음 15개 도달
-                if len(self.message_queues[channel_id]) == 15 and not last_call:
+                # 처음 10개 도달
+                if len(self.message_queues[channel_id]) == 10 and not last_call:
                     return True
 
 
