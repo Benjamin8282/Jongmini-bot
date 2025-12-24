@@ -2,11 +2,12 @@ import asyncio
 import json
 import os
 from collections import deque
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
 import aiohttp
 from discord import Message, TextChannel
+from core.logger import logger
 
 
 class ChatModerator:
@@ -36,8 +37,10 @@ class ChatModerator:
         self.message_queues[channel_id].append((message.id, formatted_message))
         self.short_term_message_counts[channel_id].append(message.created_at)
 
+        logger.info(f"채널({channel_id}) 큐 상태: 크기={len(self.message_queues[channel_id])}, 단기 카운트={len(self.short_term_message_counts[channel_id])}")
+
         if await self._should_call_api(channel_id):
-            self.last_api_call_time[channel_id] = datetime.now()
+            self.last_api_call_time[channel_id] = datetime.now(timezone.utc) # timezone.utc 추가
             self.short_term_message_counts[channel_id] = []
             await self._moderate_channel(message.channel)
 
@@ -45,7 +48,7 @@ class ChatModerator:
         # 조건 1: 새로운 채팅 20개
         if len(self.message_queues[channel_id]) >= 20:
             last_call = self.last_api_call_time.get(channel_id)
-            if not last_call or (datetime.now() - last_call).total_seconds() > 10:
+            if not last_call or (datetime.now(timezone.utc) - last_call).total_seconds() > 10:
                 # 마지막 호출 후 20개가 쌓였는지 확인하기 위해, 큐가 꽉 찼을 때만 호출
                 if len(self.message_queues[channel_id]) == self.message_queues[channel_id].maxlen:
                      return True
@@ -55,7 +58,7 @@ class ChatModerator:
 
 
         # 조건 2: 10초 이내 10회 이상
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         ten_seconds_ago = now - timedelta(seconds=10)
         recent_messages = [
             t for t in self.short_term_message_counts.get(channel_id, []) if t > ten_seconds_ago

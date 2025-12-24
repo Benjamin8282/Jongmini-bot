@@ -133,6 +133,8 @@ async def on_message(message: discord.Message):
     if message.author == bot.user:
         return
     
+    logger.info(f"메시지 수신: 채널 ID={message.channel.id}, 작성자={message.author.display_name}, 내용='{message.content}'")
+
     # process commands first
     await bot.process_commands(message)
 
