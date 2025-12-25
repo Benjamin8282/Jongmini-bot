@@ -26,7 +26,7 @@ class ChatModerator:
     async def handle_message(self, message: Message):
         channel_id = message.channel.id
         if channel_id not in self.message_queues:
-            self.message_queues[channel_id] = deque(maxlen=30)
+            self.message_queues[channel_id] = deque(maxlen=15)
             self.short_term_message_counts[channel_id] = []
 
         # [HH:MM] 이름: 내용 형식으로 변환
