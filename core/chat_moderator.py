@@ -79,7 +79,13 @@ class ChatModerator:
                 return
 
             if response.get("message"):
-                await channel.send(response["message"])
+                bot_message = await channel.send(response["message"])
+                formatted_bot_message = (
+                    f"<{bot_message.id}> [{bot_message.created_at.strftime('%H:%M')}] "
+                    f"{bot_message.author.display_name}: {bot_message.content}"
+                )
+                self.message_queues[channel_id].append((bot_message.id, formatted_bot_message))
+                logger.info(f"채널({channel_id})에 봇 응답 추가. 큐 크기={len(self.message_queues[channel_id])}. 내용={bot_message.author.display_name}")
 
             if response.get("deleteMessageIds"):
                 # 현재 큐에 있는 메시지 중에서만 삭제 시도
