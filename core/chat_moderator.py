@@ -1,7 +1,7 @@
+import asyncio
 import json
 import os
-import asyncio
-from collections import deque, defaultdict
+from collections import defaultdict, deque
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
@@ -11,7 +11,16 @@ from core.logger import logger
 
 
 class ChatModerator:
-    BOT_TAG = "[BOT]"  # ✅ 모델이 무시할 봇 메시지 태그
+    """
+    채널별로 최근 20개 메시지를 큐에 유지하고,
+    채널당 1초에 1번씩만(락 기반) API로 큐 전체를 전송해 moderation 결과를 받아 출력한다.
+
+    서버(Lambda)가 기대하는 로그 포맷:
+      [HH:MM:SS.mmm] <U|B> <name=...> <msg=...>
+    """
+
+    QUEUE_MAXLEN = 20
+    TICK_SEC = 1.0
 
     def __init__(self):
         self.ENDPOINT = os.getenv("MODERATE_ENDPOINT")
@@ -36,65 +45,102 @@ class ChatModerator:
         # 채널 객체 캐시 (worker가 send 가능하도록)
         self.channel_cache: Dict[int, TextChannel] = {}
 
+    # -----------------------------
+    # Helpers: formatting / escaping
+    # -----------------------------
     def _format_ts_ms(self, dt: datetime) -> str:
-        """[HH:MM:SS.mmm] 밀리초(3자리)까지"""
+        """HH:MM:SS.mmm (밀리초 3자리)"""
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         return dt.strftime("%H:%M:%S.") + dt.strftime("%f")[:3]
 
+    def _escape_for_log(self, s: str) -> str:
+        """
+        서버 파서가 <...> 태그 기반이라, 본문에 '<', '>'가 들어오면 포맷이 깨질 수 있음.
+        줄바꿈은 한 줄=한 메시지 규칙을 지키기 위해 \n 문자열로 치환.
+        """
+        return (s or "").replace("<", "＜").replace(">", "＞").replace("\n", "\\n").replace("\r", "")
+
+    def _format_line(self, who: str, name: str, msg: str, created_at: datetime) -> str:
+        """
+        who: 'U' or 'B'
+        """
+        return (
+            f"[{self._format_ts_ms(created_at)}] "
+            f"<{who}> <name={self._escape_for_log(name)}> "
+            f"<msg={self._escape_for_log(msg)}>"
+        )
+
+    # -----------------------------
+    # Channel init
+    # -----------------------------
     def _ensure_channel(self, channel_id: int):
         if channel_id not in self.message_queues:
-            self.message_queues[channel_id] = deque(maxlen=20)
+            self.message_queues[channel_id] = deque(maxlen=self.QUEUE_MAXLEN)
         if channel_id not in self.channel_events:
             self.channel_events[channel_id] = asyncio.Event()
         if channel_id not in self.channel_tasks:
             self.channel_tasks[channel_id] = asyncio.create_task(self._channel_worker(channel_id))
 
+    # -----------------------------
+    # Public entry: message handler
+    # -----------------------------
     async def handle_message(self, message: Message):
         channel_id = message.channel.id
         self._ensure_channel(channel_id)
 
+        # worker가 send할 수 있도록 채널 캐시
         if isinstance(message.channel, TextChannel):
             self.channel_cache[channel_id] = message.channel
+        else:
+            return
 
-        # 유저 메시지 (id 제거, ms 포함)
-        formatted = (
-            f"[{self._format_ts_ms(message.created_at)}] "
-            f"<U> <name={self._escape_for_log(message.author.display_name)}> "
-            f"<msg={self._escape_for_log(message.content)}>"
+        # 유저 메시지 큐 적재 (서버 포맷과 동일)
+        line = self._format_line(
+            who="U",
+            name=message.author.display_name,
+            msg=message.content or "",
+            created_at=message.created_at,
         )
-        self.message_queues[channel_id].append(formatted)
+        self.message_queues[channel_id].append(line)
 
+        # 처리 필요 이벤트 세팅
         self.channel_events[channel_id].set()
 
         logger.info(
-            f"채널({channel_id}) 큐 상태: 크기={len(self.message_queues[channel_id])}, "
+            f"채널({channel_id}) 큐 상태: size={len(self.message_queues[channel_id])}, "
             f"event={self.channel_events[channel_id].is_set()}, "
             f"locked={self.channel_locks[channel_id].locked()}"
         )
 
+    # -----------------------------
+    # Worker: 1초에 1번 처리
+    # -----------------------------
     async def _channel_worker(self, channel_id: int):
-        """채널별 1초에 1번만 처리 (락 중이면 스킵)"""
         while True:
-            await asyncio.sleep(1)
+            await asyncio.sleep(self.TICK_SEC)
 
             event = self.channel_events.get(channel_id)
             if event is None or not event.is_set():
-                continue
-
-            lock = self.channel_locks[channel_id]
-            if lock.locked():
                 continue
 
             channel = self.channel_cache.get(channel_id)
             if channel is None:
                 continue
 
-            event.clear()
+            lock = self.channel_locks[channel_id]
+            if lock.locked():
+                # 이미 API 호출 중이면 이번 tick은 스킵
+                continue
 
             async with lock:
+                # 락 안에서 clear해야, API 호출 중 들어온 메시지는 다음 tick에서 처리됨
+                event.clear()
                 await self._moderate_channel(channel)
 
+    # -----------------------------
+    # Core: send queue to API
+    # -----------------------------
     async def _moderate_channel(self, channel: TextChannel):
         channel_id = channel.id
         self._ensure_channel(channel_id)
@@ -109,28 +155,37 @@ class ChatModerator:
             if not response:
                 return
 
+            # ✅ 서버가 route=NONE이면 클라이언트는 무조건 출력 금지 (최종 안전장치)
+            route = (response.get("route") or "").strip().upper()
+            if route == "NONE":
+                return
+
             msg = (response.get("message") or "").strip()
             if not msg:
                 return
 
             bot_message = await channel.send(msg)
 
-            # ✅ 봇 메시지를 큐에 추가하되 BOT_TAG 붙여서 모델이 무시하게 함
-            bot_formatted = (
-                f"[{self._format_ts_ms(bot_message.created_at)}] "
-                f"<B> <name={self._escape_for_log(bot_message.author.display_name)}> "
-                f"<msg={self._escape_for_log(bot_message.content)}>"
+            # 봇 메시지를 큐에 추가 (서버 포맷과 동일하게 <B>)
+            bot_line = self._format_line(
+                who="B",
+                name=bot_message.author.display_name,
+                msg=bot_message.content or "",
+                created_at=bot_message.created_at,
             )
-            self.message_queues[channel_id].append(bot_formatted)
+            self.message_queues[channel_id].append(bot_line)
 
             logger.info(
-                f"채널({channel_id}) 봇 메시지 전송 + 큐 추가(BOT_TAG) 완료. "
-                f"큐 크기={len(self.message_queues[channel_id])}"
+                f"채널({channel_id}) 봇 메시지 전송 + 큐 추가 완료. "
+                f"queue_size={len(self.message_queues[channel_id])}"
             )
 
         except Exception as e:
             logger.exception(f"Error during moderation(channel={channel_id}): {e}")
 
+    # -----------------------------
+    # HTTP
+    # -----------------------------
     async def _send_to_api(self, chat_log: str) -> Dict[str, Any]:
         payload = {"chat_log": chat_log}
         headers = {self.KEY_NAME: self.API_KEY, "Accept": "application/json"}
@@ -154,8 +209,11 @@ class ChatModerator:
             logger.warning(f"ERROR: invalid json response: {e}")
         return {}
 
+    # -----------------------------
+    # Response normalize / parse safety
+    # -----------------------------
     def _normalize_response(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        if isinstance(data, dict) and ("message" in data or "riskLevel" in data or "summary" in data):
+        if isinstance(data, dict) and ("message" in data or "riskLevel" in data or "summary" in data or "route" in data):
             return data
 
         text_to_parse: Optional[str] = None
@@ -231,7 +289,3 @@ class ChatModerator:
                 return {"raw": candidate2, "_note": f"json_decode_error:{str(e2)}"}
 
         return {"raw": candidate, "_note": "invalid or incomplete json"}
-
-    def _escape_for_log(self, s: str) -> str:
-        # 로그 포맷(<...>)이 깨지지 않도록 최소한의 치환만
-        return (s or "").replace("<", "＜").replace(">", "＞").replace("\n", "\\n").replace("\r", "")
