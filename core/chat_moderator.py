@@ -1,9 +1,9 @@
-import asyncio
 import json
 import os
-from collections import deque
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+import asyncio
+from collections import deque, defaultdict
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
 import aiohttp
 from discord import Message, TextChannel
@@ -11,6 +11,8 @@ from core.logger import logger
 
 
 class ChatModerator:
+    BOT_TAG = "[BOT]"  # ✅ 모델이 무시할 봇 메시지 태그
+
     def __init__(self):
         self.ENDPOINT = os.getenv("MODERATE_ENDPOINT")
         self.API_KEY = os.getenv("MODERATE_API_KEY")
@@ -19,144 +21,211 @@ class ChatModerator:
         if not all([self.ENDPOINT, self.API_KEY, self.KEY_NAME]):
             raise ValueError("MODERATE_ENDPOINT, MODERATE_API_KEY, MODERATE_KEY_NAME 환경 변수를 설정해야 합니다.")
 
-        self.message_queues: Dict[int, deque] = {}
-        self.last_api_call_time: Dict[int, datetime] = {}
-        self.short_term_message_counts: Dict[int, List[datetime]] = {}
+        # 채널별 최근 로그 큐 (최대 20개) - 문자열만 저장
+        self.message_queues: Dict[int, deque[str]] = {}
+
+        # 채널별 "처리 필요" 이벤트
+        self.channel_events: Dict[int, asyncio.Event] = {}
+
+        # 채널별 worker task
+        self.channel_tasks: Dict[int, asyncio.Task] = {}
+
+        # 채널별 API 요청 동시성 방지 lock
+        self.channel_locks = defaultdict(asyncio.Lock)
+
+        # 채널 객체 캐시 (worker가 send 가능하도록)
+        self.channel_cache: Dict[int, TextChannel] = {}
+
+    def _format_ts_ms(self, dt: datetime) -> str:
+        """[HH:MM:SS.mmm] 밀리초(3자리)까지"""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.strftime("%H:%M:%S.") + dt.strftime("%f")[:3]
+
+    def _ensure_channel(self, channel_id: int):
+        if channel_id not in self.message_queues:
+            self.message_queues[channel_id] = deque(maxlen=20)
+        if channel_id not in self.channel_events:
+            self.channel_events[channel_id] = asyncio.Event()
+        if channel_id not in self.channel_tasks:
+            self.channel_tasks[channel_id] = asyncio.create_task(self._channel_worker(channel_id))
 
     async def handle_message(self, message: Message):
         channel_id = message.channel.id
-        if channel_id not in self.message_queues:
-            self.message_queues[channel_id] = deque(maxlen=15)
-            self.short_term_message_counts[channel_id] = []
+        self._ensure_channel(channel_id)
 
-        # [HH:MM] 이름: 내용 형식으로 변환
-        formatted_message = (
-            f"<{message.id}> [{message.created_at.strftime('%H:%M')}] "
+        if isinstance(message.channel, TextChannel):
+            self.channel_cache[channel_id] = message.channel
+
+        # 유저 메시지 (id 제거, ms 포함)
+        formatted = (
+            f"[{self._format_ts_ms(message.created_at)}] "
             f"{message.author.display_name}: {message.content}"
         )
-        self.message_queues[channel_id].append((message.id, formatted_message))
-        self.short_term_message_counts[channel_id].append(message.created_at)
+        self.message_queues[channel_id].append(formatted)
 
-        logger.info(f"채널({channel_id}) 큐 상태: 크기={len(self.message_queues[channel_id])}, 단기 카운트={len(self.short_term_message_counts[channel_id])}")
+        self.channel_events[channel_id].set()
 
-        if await self._should_call_api(channel_id):
-            self.last_api_call_time[channel_id] = datetime.now(timezone.utc) # timezone.utc 추가
-            self.short_term_message_counts[channel_id] = []
-            await self._moderate_channel(message.channel)
+        logger.info(
+            f"채널({channel_id}) 큐 상태: 크기={len(self.message_queues[channel_id])}, "
+            f"event={self.channel_events[channel_id].is_set()}, "
+            f"locked={self.channel_locks[channel_id].locked()}"
+        )
 
-    async def _should_call_api(self, channel_id: int) -> bool:
-        # 조건 1: 새로운 채팅 10개
-        if len(self.message_queues[channel_id]) >= 10:
-            last_call = self.last_api_call_time.get(channel_id)
-            if not last_call or (datetime.now(timezone.utc) - last_call).total_seconds() > 10:
-                # 마지막 호출 후 10개가 쌓였는지 확인하기 위해, 큐가 꽉 찼을 때만 호출
-                if len(self.message_queues[channel_id]) == self.message_queues[channel_id].maxlen:
-                     return True
-                # 처음 10개 도달
-                if len(self.message_queues[channel_id]) == 10 and not last_call:
-                    return True
+    async def _channel_worker(self, channel_id: int):
+        """채널별 1초에 1번만 처리 (락 중이면 스킵)"""
+        while True:
+            await asyncio.sleep(1)
 
+            event = self.channel_events.get(channel_id)
+            if event is None or not event.is_set():
+                continue
 
-        # 조건 2: 10초 이내 5회 이상
-        now = datetime.now(timezone.utc)
-        ten_seconds_ago = now - timedelta(seconds=10)
-        recent_messages = [
-            t for t in self.short_term_message_counts.get(channel_id, []) if t > ten_seconds_ago
-        ]
-        self.short_term_message_counts[channel_id] = recent_messages  # 오래된 메시지 정리
-        if len(recent_messages) >= 5:
-            return True
+            lock = self.channel_locks[channel_id]
+            if lock.locked():
+                continue
 
-        return False
+            channel = self.channel_cache.get(channel_id)
+            if channel is None:
+                continue
+
+            event.clear()
+
+            async with lock:
+                await self._moderate_channel(channel)
 
     async def _moderate_channel(self, channel: TextChannel):
         channel_id = channel.id
-        chat_log = "\n".join([msg for _, msg in self.message_queues[channel_id]])
-        
+        self._ensure_channel(channel_id)
+
+        if not self.message_queues[channel_id]:
+            return
+
+        chat_log = "\n".join(self.message_queues[channel_id])
+
         try:
-            response = await self._send_to_api(chat_log) # asyncio.to_thread 제거
+            response = await self._send_to_api(chat_log)
             if not response:
                 return
 
-            if response.get("message"):
-                bot_message = await channel.send(response["message"])
-                formatted_bot_message = (
-                    f"<{bot_message.id}> [{bot_message.created_at.strftime('%H:%M')}] "
-                    f"{bot_message.author.display_name}: {bot_message.content}"
-                )
-                self.message_queues[channel_id].append((bot_message.id, formatted_bot_message))
-                logger.info(f"채널({channel_id})에 봇 응답 추가. 큐 크기={len(self.message_queues[channel_id])}. 내용={bot_message.author.display_name}")
+            msg = (response.get("message") or "").strip()
+            if not msg:
+                return
 
-            if response.get("deleteMessageIds"):
-                # 현재 큐에 있는 메시지 중에서만 삭제 시도
-                all_message_ids_in_queue = {msg_id for msg_id, _ in self.message_queues[channel_id]}
-                messages_to_delete_ids = [
-                    msg_id for msg_id in response["deleteMessageIds"] if msg_id in all_message_ids_in_queue
-                ]
-                
-                # discord.py 는 int 리스트로 id를 받아 메시지를 삭제하는 기능이 없음
-                # bulk delete는 100개 제한, 14일 지난 메시지 삭제 불가 등의 제약이 있음
-                # 개별 메시지를 삭제하는 것으로 구현
-                for msg_id in messages_to_delete_ids:
-                    try:
-                        msg_to_delete = await channel.fetch_message(msg_id)
-                        await msg_to_delete.delete()
-                    except Exception as e:
-                        print(f"Failed to delete message {msg_id}: {e}")
+            bot_message = await channel.send(msg)
+
+            # ✅ 봇 메시지를 큐에 추가하되 BOT_TAG 붙여서 모델이 무시하게 함
+            bot_formatted = (
+                f"[{self._format_ts_ms(bot_message.created_at)}] "
+                f"{self.BOT_TAG} {bot_message.author.display_name}: {bot_message.content}"
+            )
+            self.message_queues[channel_id].append(bot_formatted)
+
+            logger.info(
+                f"채널({channel_id}) 봇 메시지 전송 + 큐 추가(BOT_TAG) 완료. "
+                f"큐 크기={len(self.message_queues[channel_id])}"
+            )
 
         except Exception as e:
-            print(f"Error during moderation: {e}")
+            logger.exception(f"Error during moderation(channel={channel_id}): {e}")
 
-    async def _send_to_api(self, chat_log: str) -> Dict[str, Any]: # async def로 변경
+    async def _send_to_api(self, chat_log: str) -> Dict[str, Any]:
         payload = {"chat_log": chat_log}
         headers = {self.KEY_NAME: self.API_KEY, "Accept": "application/json"}
-        timeout = aiohttp.ClientTimeout(total=20, connect=5) # aiohttp.ClientTimeout 사용
+        timeout = aiohttp.ClientTimeout(total=20, connect=5)
 
         try:
-            async with aiohttp.ClientSession(timeout=timeout) as session: # aiohttp.ClientSession 사용
+            async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(self.ENDPOINT, headers=headers, json=payload) as response:
                     if response.status != 200:
-                        print(f"HTTP {response.status}: {await response.text()}")
+                        logger.warning(f"HTTP {response.status}: {await response.text()}")
                         return {}
-                    
+
                     data = await response.json()
                     normalized = self._normalize_response(data)
-                    print("Moderation API response:", self._pretty(normalized))
+                    logger.info("Moderation API response:\n" + self._pretty(normalized))
                     return normalized
 
-        except aiohttp.ClientError as e: # aiohttp.ClientError 예외 처리
-            print(f"ERROR: aiohttp request failed: {e}")
-        except json.JSONDecodeError as e: # json.JSONDecodeError 예외 처리
-            print(f"ERROR: invalid json response: {e}")
+        except aiohttp.ClientError as e:
+            logger.warning(f"ERROR: aiohttp request failed: {e}")
+        except json.JSONDecodeError as e:
+            logger.warning(f"ERROR: invalid json response: {e}")
         return {}
 
     def _normalize_response(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        if "riskLevel" in data and "summary" in data:
+        if isinstance(data, dict) and ("message" in data or "riskLevel" in data or "summary" in data):
             return data
 
-        text_to_parse = None
-        if "result" in data and isinstance(data["result"], str):
-            text_to_parse = data["result"].strip()
-        elif "raw" in data and isinstance(data["raw"], str):
-            text_to_parse = data["raw"].strip()
+        text_to_parse: Optional[str] = None
+        if isinstance(data, dict):
+            if "result" in data and isinstance(data["result"], str):
+                text_to_parse = data["result"].strip()
+            elif "raw" in data and isinstance(data["raw"], str):
+                text_to_parse = data["raw"].strip()
 
         if text_to_parse:
-            try:
-                # AWS Lambda의 이중 인코딩된 JSON 문자열 처리
-                # 예: "\"{\\\"riskLevel\\\": ...}\""
-                if text_to_parse.startswith('"') and text_to_parse.endswith('"'):
-                     text_to_parse = json.loads(text_to_parse)
-
-                parsed = json.loads(text_to_parse)
-                if isinstance(parsed, dict):
-                    return parsed
-                return {"raw": text_to_parse, "_note": "parsed but not a dict"}
-            except (json.JSONDecodeError, TypeError):
-                # JSON 파싱 실패 시, 원본 raw 데이터와 노트를 반환
-                logger.warning(f"JSON 파싱 실패: {text_to_parse}")
-                return {"raw": text_to_parse, "_note": "invalid or incomplete json"}
+            return self._parse_model_json(text_to_parse)
 
         return {"_unknown_format": data}
 
     def _pretty(self, obj: Any) -> str:
         return json.dumps(obj, ensure_ascii=False, indent=2)
+
+    def _strip_control_chars(self, s: str) -> str:
+        if not isinstance(s, str):
+            return ""
+        return "".join(ch for ch in s if ch in ("\t", "\n", "\r") or ord(ch) >= 0x20)
+
+    def _extract_json_object(self, s: str) -> str:
+        if not isinstance(s, str):
+            return ""
+        start = s.find("{")
+        end = s.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            return s.strip()
+        return s[start:end + 1].strip()
+
+    def _parse_model_json(self, raw_text: str) -> Dict[str, Any]:
+        if raw_text is None:
+            return {"raw": "", "_note": "empty"}
+
+        s = raw_text
+        if not isinstance(s, str):
+            if isinstance(s, dict):
+                return s
+            return {"raw": str(s), "_note": "non_string"}
+
+        s = self._strip_control_chars(s).strip()
+        if not s:
+            return {"raw": "", "_note": "empty"}
+
+        if s.startswith('"') and s.endswith('"'):
+            try:
+                s = json.loads(s)
+                if isinstance(s, str):
+                    s = self._strip_control_chars(s).strip()
+            except Exception:
+                pass
+
+        candidate = self._extract_json_object(s)
+
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, dict):
+                return parsed
+            return {"raw": candidate, "_note": "parsed but not a dict"}
+        except json.JSONDecodeError:
+            pass
+
+        last = candidate.rfind("}")
+        if last != -1:
+            candidate2 = candidate[: last + 1].strip()
+            try:
+                parsed2 = json.loads(candidate2)
+                if isinstance(parsed2, dict):
+                    return parsed2
+                return {"raw": candidate2, "_note": "parsed but not a dict"}
+            except Exception as e2:
+                return {"raw": candidate2, "_note": f"json_decode_error:{str(e2)}"}
+
+        return {"raw": candidate, "_note": "invalid or incomplete json"}
