@@ -60,7 +60,8 @@ class ChatModerator:
         # 유저 메시지 (id 제거, ms 포함)
         formatted = (
             f"[{self._format_ts_ms(message.created_at)}] "
-            f"{message.author.display_name}: {message.content}"
+            f"<U> <name={self._escape_for_log(message.author.display_name)}> "
+            f"<msg={self._escape_for_log(message.content)}>"
         )
         self.message_queues[channel_id].append(formatted)
 
@@ -117,7 +118,8 @@ class ChatModerator:
             # ✅ 봇 메시지를 큐에 추가하되 BOT_TAG 붙여서 모델이 무시하게 함
             bot_formatted = (
                 f"[{self._format_ts_ms(bot_message.created_at)}] "
-                f"{self.BOT_TAG} {bot_message.author.display_name}: {bot_message.content}"
+                f"<B> <name={self._escape_for_log(bot_message.author.display_name)}> "
+                f"<msg={self._escape_for_log(bot_message.content)}>"
             )
             self.message_queues[channel_id].append(bot_formatted)
 
@@ -229,3 +231,7 @@ class ChatModerator:
                 return {"raw": candidate2, "_note": f"json_decode_error:{str(e2)}"}
 
         return {"raw": candidate, "_note": "invalid or incomplete json"}
+
+    def _escape_for_log(self, s: str) -> str:
+        # 로그 포맷(<...>)이 깨지지 않도록 최소한의 치환만
+        return (s or "").replace("<", "＜").replace(">", "＞").replace("\n", "\\n").replace("\r", "")
