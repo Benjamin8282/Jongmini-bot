@@ -32,6 +32,7 @@ from commands.weekly_character_status import weekly_character_status  # 캐릭�
 from commands.season_status import season_status
 from commands.dundam_ranking import dundam_ranking
 from commands.dundam_exclusion import dundam_exclusion
+from commands.adventure_dundam_ranking import adventure_dundam_ranking
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -74,6 +75,7 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(season_status)
         self.tree.add_command(dundam_ranking)
         self.tree.add_command(dundam_exclusion)
+        self.tree.add_command(adventure_dundam_ranking)
 
         await self.tree.sync()
         logger.info(f"슬래시 명령어 동기화 완료: {self.tree.get_commands()}")
