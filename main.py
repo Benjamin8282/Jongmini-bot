@@ -139,7 +139,7 @@ async def on_message(message: discord.Message):
     await bot.process_commands(message)
 
     # then handle with moderator
-    await bot.chat_moderator.handle_message(message)
+    #await bot.chat_moderator.handle_message(message)
 
 
 bot.run(TOKEN)
