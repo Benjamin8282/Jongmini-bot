@@ -2,7 +2,7 @@ import time
 import aiohttp
 import discord
 from discord import app_commands, Interaction
-from core.db import get_all_characters
+from core.db import get_active_characters
 from core.dundam_api import fetch_all_with_rate_limit
 
 def format_score_korean(num: int) -> str:
@@ -17,7 +17,7 @@ def format_score_korean(num: int) -> str:
 async def dundam_ranking(interaction: Interaction):
     await interaction.response.defer(thinking=True)
 
-    characters = await get_all_characters()
+    characters = await get_active_characters()
     if not characters:
         await interaction.followup.send("등록된 캐릭터가 없습니다.")
         return

@@ -61,6 +61,15 @@ async def init_db():
                     last_aggregation_time TEXT NOT NULL
                 )
             """)
+            # 모험단별 검색 제외 설정 테이블
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS adventure_exclusions (
+                    adventure_name TEXT NOT NULL,
+                    server_id TEXT NOT NULL,
+                    is_excluded INTEGER DEFAULT 0,
+                    PRIMARY KEY (adventure_name, server_id)
+                )
+            """)
             await conn.commit()
         logger.info("DB 초기화 완료")
     except Exception as e:
@@ -316,4 +325,98 @@ async def get_all_characters() -> list[dict]:
         return [dict(row) for row in rows]
     except Exception as e:
         logger.error(f"전체 캐릭터 조회 실패: {e}")
+        return []
+
+
+# ----- 모험단 검색 제외 관리 -----
+
+async def get_all_adventures() -> list[dict]:
+    """
+    등록된 모든 모험단 목록 반환 (중복 제거)
+    반환 형식: [{"adventure_name": str, "server_id": str, "is_excluded": int}, ...]
+    """
+    logger.info("전체 모험단 목록 조회 시도")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            # 고유한 모험단 목록 조회
+            cursor = await conn.execute("""
+                SELECT DISTINCT c.adventure_name, c.server_id,
+                       COALESCE(e.is_excluded, 0) as is_excluded
+                FROM characters c
+                LEFT JOIN adventure_exclusions e 
+                    ON c.adventure_name = e.adventure_name 
+                    AND c.server_id = e.server_id
+                ORDER BY c.adventure_name, c.server_id
+            """)
+            rows = await cursor.fetchall()
+        logger.info(f"전체 모험단 조회 성공: {len(rows)}개")
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"전체 모험단 조회 실패: {e}")
+        return []
+
+
+async def get_adventure_exclusion_status(adventure_name: str, server_id: str) -> bool:
+    """
+    특정 모험단의 검색 제외 상태 조회
+    반환: True면 제외됨, False면 포함됨
+    """
+    logger.info(f"모험단 제외 상태 조회: {adventure_name} ({server_id})")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT is_excluded FROM adventure_exclusions
+                WHERE adventure_name = ? AND server_id = ?
+            """, (adventure_name, server_id))
+            row = await cursor.fetchone()
+            if row:
+                return bool(row["is_excluded"])
+            else:
+                return False  # 기본값: 포함
+    except Exception as e:
+        logger.error(f"모험단 제외 상태 조회 실패: {e}")
+        return False
+
+
+async def set_adventure_exclusion(adventure_name: str, server_id: str, is_excluded: bool):
+    """
+    모험단의 검색 제외 상태 설정
+    """
+    logger.info(f"모험단 제외 상태 설정: {adventure_name} ({server_id}) -> {is_excluded}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("""
+                INSERT OR REPLACE INTO adventure_exclusions (adventure_name, server_id, is_excluded)
+                VALUES (?, ?, ?)
+            """, (adventure_name, server_id, 1 if is_excluded else 0))
+            await conn.commit()
+        logger.info("모험단 제외 상태 설정 성공")
+    except Exception as e:
+        logger.error(f"모험단 제외 상태 설정 실패: {e}")
+
+
+async def get_active_characters() -> list[dict]:
+    """
+    검색에서 제외되지 않은 모험단의 캐릭터만 반환
+    """
+    logger.info("활성 캐릭터 조회 시도 (제외된 모험단 필터링)")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT c.*
+                FROM characters c
+                LEFT JOIN adventure_exclusions e 
+                    ON c.adventure_name = e.adventure_name 
+                    AND c.server_id = e.server_id
+                WHERE COALESCE(e.is_excluded, 0) = 0
+                ORDER BY c.adventure_name, c.server_id, c.character_name
+            """)
+            rows = await cursor.fetchall()
+        logger.info(f"활성 캐릭터 조회 성공: {len(rows)}개")
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"활성 캐릭터 조회 실패: {e}")
         return []
