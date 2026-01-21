@@ -328,6 +328,23 @@ async def get_all_characters() -> list[dict]:
         return []
 
 
+async def update_character_name(character_id: str, new_name: str):
+    """
+    캐릭터 이름이 변경된 경우 DB 업데이트
+    """
+    logger.info(f"캐릭터 이름 업데이트 시도: {character_id} -> {new_name}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute(
+                "UPDATE characters SET character_name = ? WHERE character_id = ?",
+                (new_name, character_id)
+            )
+            await conn.commit()
+        logger.info(f"캐릭터 이름 업데이트 성공: {new_name}")
+    except Exception as e:
+        logger.error(f"캐릭터 이름 업데이트 실패: {e}")
+
+
 # ----- 모험단 검색 제외 관리 -----
 
 async def get_all_adventures() -> list[dict]:

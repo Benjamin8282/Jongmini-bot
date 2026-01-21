@@ -9,7 +9,8 @@ from core import dnf_api
 from core.db import (
     get_all_characters_grouped_by_adventure,
     get_last_checked, update_last_checked,
-    get_output_channel
+    get_output_channel,
+    update_character_name
 )
 
 from core.logger import logger
@@ -98,6 +99,17 @@ async def notify_items_for_character(char, bot, guild_id, semaphore):
         server_id = char['server_id']
         character_name = char['character_name']
         adventure_name = char.get('adventure_name', '모험단명 없음')
+
+        # === 캐릭터 이름 동기화 ===
+        # DNF API에서 최신 캐릭터 정보 조회
+        char_details = await dnf_api.get_character_details(server_id, character_id)
+        if char_details:
+            api_name = char_details.get('characterName')
+            if api_name and api_name != character_name:
+                logger.info(f"캐릭터 이름 변경 감지: {character_name} -> {api_name}")
+                await update_character_name(character_id, api_name)
+                character_name = api_name  # 로컬 변수도 업데이트하여 알림에 새 이름 사용
+        # ========================
 
         last_checked = await get_last_checked(character_id)
         now = datetime.now(KST)
