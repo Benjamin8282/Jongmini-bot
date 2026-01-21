@@ -113,6 +113,35 @@ async def fetch_timeline(server_id: str, character_id: str, start_date: str = No
             else:
                 return None
 
+async def fetch_raid_clears(server_id: str, character_id: str, start_date: str = None, end_date: str = None):
+    """
+    레이드 클리어 정보 조회 (코드 201)
+    테스트용 함수
+    """
+    url = f"{BASE_URL}/servers/{server_id}/characters/{character_id}/timeline"
+
+    if end_date is None:
+        end_date = datetime.now().strftime("%Y%m%dT%H%M")
+    if start_date is None:
+        from datetime import timedelta
+        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%dT%H%M")
+
+    params = {
+        "apikey": API_KEY,
+        "startDate": start_date,
+        "endDate": end_date,
+        "code": "201",  # 레이드 클리어 코드
+        "limit": 100
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params) as resp:
+            if resp.status == 200:
+                return await resp.json()
+            else:
+                logger.warning(f"레이드 클리어 조회 실패: HTTP {resp.status}")
+                return None
+
 async def fetch_timeline_with_pagination(server_id: str, character_id: str, start_date: str = None, end_date: str = None):
     url = f"{BASE_URL}/servers/{server_id}/characters/{character_id}/timeline"
 

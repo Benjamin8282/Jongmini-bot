@@ -19,6 +19,7 @@ from tasks.monthly_aggregation import monthly_aggregation_task
 from tasks.notify_items import periodic_notify
 from tasks.weekly_aggregation import weekly_aggregation_task
 from tasks.weekly_character_aggregation import aggregate_weekly_items_by_character  # 캐릭터별 주간 집계 task
+from tasks.raid_first_clear_task import process_raid_first_clears_task
 
 # commands import
 from commands.hello import hello_command
@@ -33,6 +34,7 @@ from commands.season_status import season_status
 from commands.dundam_ranking import dundam_ranking
 from commands.dundam_exclusion import dundam_exclusion
 from commands.adventure_dundam_ranking import adventure_dundam_ranking
+from commands.test_raid_clears import test_raid_clears
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -76,6 +78,7 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(dundam_ranking)
         self.tree.add_command(dundam_exclusion)
         self.tree.add_command(adventure_dundam_ranking)
+        #self.tree.add_command(test_raid_clears)
 
         await self.tree.sync()
         logger.info(f"슬래시 명령어 동기화 완료: {self.tree.get_commands()}")
@@ -113,6 +116,11 @@ async def on_ready():
     if not hasattr(bot, 'monthly_aggregation_task') or bot.monthly_aggregation_task.done():
         bot.monthly_aggregation_task = asyncio.create_task(monthly_aggregation_task(bot, GUILD_ID))
         logger.info("월간 모험단 집계 task 시작됨")
+    
+    # 레이드 퍼스트 클리어 task
+    if not hasattr(bot, 'raid_first_clear_task') or bot.raid_first_clear_task.done():
+        bot.raid_first_clear_task = asyncio.create_task(process_raid_first_clears_task(bot, GUILD_ID))
+        logger.info("레이드 퍼스트 클리어 task 시작됨")
 
     # APScheduler 스케줄러 시작 및 작업 등록
     if not bot.scheduler.running:

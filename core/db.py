@@ -70,6 +70,36 @@ async def init_db():
                     PRIMARY KEY (adventure_name, server_id)
                 )
             """)
+            # 레이드 퍼스트 클리어 기록 테이블
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS raid_first_clears (
+                    raid_key TEXT PRIMARY KEY,
+                    first_party_name TEXT,
+                    first_clear_date TEXT,
+                    first_members TEXT,
+                    second_party_name TEXT,
+                    second_clear_date TEXT,
+                    second_members TEXT,
+                    third_party_name TEXT,
+                    third_clear_date TEXT,
+                    third_members TEXT,
+                    last_check_date TEXT
+                )
+            """)
+            # 임시 레이드 클리어 정보 테이블 (1분 대기용)
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS temp_raid_clears (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    character_id TEXT,
+                    character_name TEXT,
+                    adventure_name TEXT,
+                    raid_party_name TEXT,
+                    clear_date TEXT,
+                    raid_name TEXT,
+                    mode_name TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             await conn.commit()
         logger.info("DB 초기화 완료")
     except Exception as e:
@@ -437,3 +467,143 @@ async def get_active_characters() -> list[dict]:
     except Exception as e:
         logger.error(f"활성 캐릭터 조회 실패: {e}")
         return []
+
+
+# ----- 레이드 퍼스트 클리어 관리 -----
+
+async def save_temp_raid_clear(clear_info: dict):
+    """임시 레이드 클리어 정보 저장"""
+    logger.info(f"임시 레이드 클리어 저장: {clear_info['character_name']} - {clear_info['raid_party_name']}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("""
+                INSERT INTO temp_raid_clears 
+                (character_id, character_name, adventure_name, raid_party_name, 
+                 clear_date, raid_name, mode_name)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                clear_info['character_id'],
+                clear_info['character_name'],
+                clear_info['adventure_name'],
+                clear_info['raid_party_name'],
+                clear_info['clear_date'],
+                clear_info['raid_name'],
+                clear_info['mode_name']
+            ))
+            await conn.commit()
+        logger.info("임시 레이드 클리어 저장 성공")
+    except Exception as e:
+        logger.error(f"임시 레이드 클리어 저장 실패: {e}")
+
+
+async def get_recent_temp_clears(minutes: int = 2) -> list[dict]:
+    """최근 N분 내 임시 클리어 조회"""
+    logger.info(f"최근 {minutes}분 내 임시 클리어 조회")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT * FROM temp_raid_clears
+                WHERE datetime(created_at) >= datetime('now', '-' || ? || ' minutes')
+                ORDER BY clear_date
+            """, (minutes,))
+            rows = await cursor.fetchall()
+        logger.info(f"임시 클리어 조회 성공: {len(rows)}개")
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"임시 클리어 조회 실패: {e}")
+        return []
+
+
+async def clear_temp_raid_clears():
+    """임시 클리어 정보 삭제"""
+    logger.info("임시 클리어 정보 삭제 시도")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("DELETE FROM temp_raid_clears")
+            await conn.commit()
+        logger.info("임시 클리어 정보 삭제 성공")
+    except Exception as e:
+        logger.error(f"임시 클리어 정보 삭제 실패: {e}")
+
+
+async def get_raid_rank(raid_key: str) -> dict | None:
+    """레이드 현재 순위 정보 조회"""
+    logger.info(f"레이드 순위 조회: {raid_key}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT * FROM raid_first_clears WHERE raid_key = ?
+            """, (raid_key,))
+            row = await cursor.fetchone()
+        if row:
+            return dict(row)
+        return None
+    except Exception as e:
+        logger.error(f"레이드 순위 조회 실패: {e}")
+        return None
+
+
+async def save_raid_first_clear(raid_key: str, rank: int, party_info: dict):
+    """레이드 퍼스트 클리어 기록"""
+    import json
+    logger.info(f"레이드 {rank}위 기록: {raid_key} - {party_info['party_name']}")
+    
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            # 기존 데이터 조회
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT * FROM raid_first_clears WHERE raid_key = ?
+            """, (raid_key,))
+            existing = await cursor.fetchone()
+            
+            members_json = json.dumps(party_info['members'], ensure_ascii=False)
+            
+            if existing:
+                # 업데이트
+                if rank == 1:
+                    await conn.execute("""
+                        UPDATE raid_first_clears 
+                        SET first_party_name = ?, first_clear_date = ?, first_members = ?
+                        WHERE raid_key = ?
+                    """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
+                elif rank == 2:
+                    await conn.execute("""
+                        UPDATE raid_first_clears 
+                        SET second_party_name = ?, second_clear_date = ?, second_members = ?
+                        WHERE raid_key = ?
+                    """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
+                elif rank == 3:
+                    await conn.execute("""
+                        UPDATE raid_first_clears 
+                        SET third_party_name = ?, third_clear_date = ?, third_members = ?
+                        WHERE raid_key = ?
+                    """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
+            else:
+                # 새 레코드 생성
+                if rank == 1:
+                    await conn.execute("""
+                        INSERT INTO raid_first_clears 
+                        (raid_key, first_party_name, first_clear_date, first_members)
+                        VALUES (?, ?, ?, ?)
+                    """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
+                elif rank == 2:
+                    await conn.execute("""
+                        INSERT INTO raid_first_clears 
+                        (raid_key, second_party_name, second_clear_date, second_members)
+                        VALUES (?, ?, ?, ?)
+                    """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
+                elif rank == 3:
+                    await conn.execute("""
+                        INSERT INTO raid_first_clears 
+                        (raid_key, third_party_name, third_clear_date, third_members)
+                        VALUES (?, ?, ?, ?)
+                    """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
+            
+            await conn.commit()
+        logger.info(f"레이드 {rank}위 기록 성공")
+    except Exception as e:
+        logger.error(f"레이드 클리어 기록 실패: {e}")
+
