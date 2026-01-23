@@ -35,8 +35,15 @@ from commands.dundam_exclusion import dundam_exclusion
 from commands.adventure_dundam_ranking import adventure_dundam_ranking
 
 load_dotenv()
+
+# 필수 환경 변수 검증
 TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD_ID = os.getenv("GUILD_ID")  # 디폴트 값 설정
+if not TOKEN:
+    raise ValueError("DISCORD_TOKEN 환경 변수가 설정되지 않았습니다.")
+
+GUILD_ID = os.getenv("GUILD_ID")
+if not GUILD_ID:
+    raise ValueError("GUILD_ID 환경 변수가 설정되지 않았습니다.")
 
 
 def get_scheduler_timezone():

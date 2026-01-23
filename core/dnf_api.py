@@ -9,7 +9,11 @@ from pathlib import Path
 from datetime import datetime
 
 load_dotenv()
+
+# 필수 환경 변수 검증
 API_KEY = os.getenv("NEOPLE_API_KEY")
+if not API_KEY:
+    raise ValueError("NEOPLE_API_KEY 환경 변수가 설정되지 않았습니다.")
 
 BASE_URL = "https://api.neople.co.kr/df"
 DB_PATH = Path("data/characters.db")
