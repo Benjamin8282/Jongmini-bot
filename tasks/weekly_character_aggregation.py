@@ -11,6 +11,7 @@ import asyncio
 KST = timezone(timedelta(hours=9))
 MAX_CONCURRENT_REQUESTS = 50  # 병렬 요청 제한
 
+
 async def filter_items_level_115(timeline_rows):
     """
     아이템 레벨 115 필터링 (비동기 병렬 처리)
@@ -29,6 +30,7 @@ async def filter_items_level_115(timeline_rows):
 
     results = await asyncio.gather(*(check_item_level(item) for item in timeline_rows))
     return [item for item in results if item is not None]
+
 
 def format_character_rank_embed(rank_list, timestamp):
     embed = discord.Embed(

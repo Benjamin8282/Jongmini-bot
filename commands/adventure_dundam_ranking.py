@@ -28,7 +28,7 @@ def format_score_korean(num: int) -> str:
 
 class AdventureDundamRankingView(View):
     """모험단 던담 랭킹 페이지네이션 View"""
-    
+
     def __init__(self, ranked_adventures: list[dict], timestamp: str):
         super().__init__(timeout=300)  # 5분 타임아웃
         self.ranked_adventures = ranked_adventures
@@ -36,14 +36,14 @@ class AdventureDundamRankingView(View):
         self.current_page = 0
         self.items_per_page = 20
         self.total_pages = (len(ranked_adventures) + self.items_per_page - 1) // self.items_per_page
-        
+
         # 버튼 추가
         self.add_item(PreviousButton())
         self.add_item(NextButton())
-        
+
         # 버튼 상태 업데이트
         self.update_buttons()
-    
+
     def update_buttons(self):
         """현재 페이지에 따라 버튼 활성화/비활성화"""
         for item in self.children:
@@ -51,40 +51,40 @@ class AdventureDundamRankingView(View):
                 item.disabled = (self.current_page == 0)
             elif isinstance(item, NextButton):
                 item.disabled = (self.current_page >= self.total_pages - 1)
-    
+
     def get_embed(self) -> discord.Embed:
         """현재 페이지의 Embed 생성"""
         start_idx = self.current_page * self.items_per_page
         end_idx = min(start_idx + self.items_per_page, len(self.ranked_adventures))
         page_adventures = self.ranked_adventures[start_idx:end_idx]
-        
+
         embed = discord.Embed(title="모험단 던담 데미지 순위", color=discord.Color.purple())
         embed.set_footer(text=f"기준 시각: {self.timestamp} | 페이지: {self.current_page + 1}/{self.total_pages}")
-        
+
         description = ""
         for i, adv in enumerate(page_adventures, start=start_idx + 1):
             score_kor = format_score_korean(adv['total_damage'])
             char_count = adv['character_count']
             description += f"**{i}위** **{adv['adventure_name']}** ({adv['server_name']})\n"
             description += f"**합산 점수:** {score_kor} (캐릭터 {char_count}개)\n\n"
-        
+
         if not description:
             description = "모험단 던담 랭킹 정보가 없습니다."
-        
+
         embed.description = description
         return embed
 
 
 class PreviousButton(Button):
     """이전 페이지 버튼"""
-    
+
     def __init__(self):
         super().__init__(
             label="◀ 이전",
             style=discord.ButtonStyle.primary,
             custom_id="previous_page"
         )
-    
+
     async def callback(self, interaction: Interaction):
         view: AdventureDundamRankingView = self.view
         if view.current_page > 0:
@@ -95,14 +95,14 @@ class PreviousButton(Button):
 
 class NextButton(Button):
     """다음 페이지 버튼"""
-    
+
     def __init__(self):
         super().__init__(
             label="다음 ▶",
             style=discord.ButtonStyle.primary,
             custom_id="next_page"
         )
-    
+
     async def callback(self, interaction: Interaction):
         view: AdventureDundamRankingView = self.view
         if view.current_page < view.total_pages - 1:
@@ -126,28 +126,28 @@ async def adventure_dundam_ranking(interaction: Interaction):
 
     # 던담 데이터가 있는 캐릭터만 필터링
     valid_results = [r for r in results if r]
-    
+
     if not valid_results:
         await interaction.followup.send("던담 랭킹 정보를 가져올 수 있는 캐릭터가 없습니다.")
         return
 
     # 모험단별로 데미지 합산
     adventure_damages = defaultdict(lambda: {'total_damage': 0, 'characters': [], 'server_id': None})
-    
+
     for result in valid_results:
         adventure_name = result.get('adventure_name', '알 수 없음')
         damage = result.get('damage', 0)
         character_name = result.get('character_name', '알 수 없음')
-        
+
         # 캐릭터 정보에서 server_id 가져오기
         char_info = next((c for c in characters if c['character_name'] == character_name), None)
         server_id = char_info['server_id'] if char_info else None
-        
+
         adventure_damages[adventure_name]['total_damage'] += damage
         adventure_damages[adventure_name]['characters'].append(character_name)
         if server_id and not adventure_damages[adventure_name]['server_id']:
             adventure_damages[adventure_name]['server_id'] = server_id
-    
+
     # 순위 리스트 생성
     ranked_adventures = []
     for adventure_name, data in adventure_damages.items():
@@ -158,12 +158,12 @@ async def adventure_dundam_ranking(interaction: Interaction):
             'total_damage': data['total_damage'],
             'character_count': len(data['characters'])
         })
-    
+
     # 합산 데미지로 정렬
     ranked_adventures.sort(key=lambda x: x['total_damage'], reverse=True)
-    
+
     timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
     view = AdventureDundamRankingView(ranked_adventures, timestamp)
     embed = view.get_embed()
-    
+
     await interaction.followup.send(embed=embed, view=view)

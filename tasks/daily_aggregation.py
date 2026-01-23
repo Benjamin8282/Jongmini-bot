@@ -20,7 +20,7 @@ MAX_RETRY_DURATION = 7 * 60 * 60  # 7시간
 RETRY_INTERVAL = 60  # 1분
 CONCURRENT_REQUEST_LIMIT = 50  # 동시 캐릭터 처리 제한
 MAX_ITEM_CONCURRENT = 50  # 아이템 레벨 조회 동시 제한
-MAX_PERIOD_DAYS = 90 # 최대 90일 단위로 분할
+MAX_PERIOD_DAYS = 90  # 최대 90일 단위로 분할
 
 
 async def fetch_character_timeline_all_with_long_retry(server_id, character_id, start_date, end_date):
@@ -110,7 +110,6 @@ def format_rank_embed(rank_list, timestamp, period="일간"):
         real_rank += 1  # 공동 순위 상관없이 반복마다 하나씩 증가
 
     return embed
-
 
 
 async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=None, interaction=None, period="일간", need_embed=False):
