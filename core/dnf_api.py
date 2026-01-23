@@ -113,6 +113,7 @@ async def fetch_timeline(server_id: str, character_id: str, start_date: str = No
             else:
                 return None
 
+
 async def fetch_raid_clears(server_id: str, character_id: str, start_date: str = None, end_date: str = None):
     """
     레이드 클리어 정보 조회 (코드 201)
@@ -142,7 +143,10 @@ async def fetch_raid_clears(server_id: str, character_id: str, start_date: str =
                 logger.warning(f"레이드 클리어 조회 실패: HTTP {resp.status}")
                 return None
 
-async def fetch_timeline_with_pagination(server_id: str, character_id: str, start_date: str = None, end_date: str = None):
+
+async def fetch_timeline_with_pagination(
+    server_id: str, character_id: str, start_date: str = None, end_date: str = None
+):
     url = f"{BASE_URL}/servers/{server_id}/characters/{character_id}/timeline"
 
     if end_date is None:
@@ -210,6 +214,8 @@ async def preload_item_cache():
 # ===============================
 # 아이템 상세 정보 조회 (캐싱 포함)
 # ===============================
+
+
 async def fetch_item_detail(item_id: str) -> int:
     """
     1. 메모리 캐시 → 2. DB → 3. API 순서로 조회, 없으면 0 반환

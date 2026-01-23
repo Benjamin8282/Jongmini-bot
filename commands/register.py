@@ -23,7 +23,10 @@ class CharacterSelect(ui.View):
         options = [
             discord.SelectOption(
                 label=char["characterName"],
-                description=f'{char["jobGrowName"]} (Lv.{char["level"]}) - {SERVER_MAP.get(char["serverId"], char["serverId"])}',
+                description=(
+                    f'{char["jobGrowName"]} (Lv.{char["level"]}) - '
+                    f'{SERVER_MAP.get(char["serverId"], char["serverId"])}'
+                ),
                 value=f'{char["serverId"]}:{char["characterId"]}'
             ) for char in characters[:25]
         ]
@@ -42,7 +45,9 @@ class CharacterSelect(ui.View):
         self.result = self.select.values[0]
         self.selected_character = self._characters_map[self.result]
         logger.info(
-            f"사용자 {interaction.user.id}가 캐릭터 선택: {self.selected_character['characterName']} ({self.selected_character['characterId']})")
+            f"사용자 {interaction.user.id}가 캐릭터 선택: "
+            f"{self.selected_character['characterName']} ({self.selected_character['characterId']})"
+        )
 
         # 모험단 정보 추가
         details = await get_character_details(
@@ -54,8 +59,9 @@ class CharacterSelect(ui.View):
         server_name_kr = SERVER_MAP.get(
             self.selected_character["serverId"], self.selected_character["serverId"]
         )
+        char = self.selected_character
         message = (
-            f"✅ `{self.selected_character['characterName']} (Lv.{self.selected_character['level']} - {self.selected_character['jobName']})`"
+            f"✅ `{char['characterName']} (Lv.{char['level']} - {char['jobName']})`"
             f" 캐릭터가 선택되었어요.\n"
             f"서버: {server_name_kr}\n"
             f"모험단: {adventure_name}"
@@ -112,7 +118,10 @@ async def register_command(interaction: Interaction, server: app_commands.Choice
         try:
             await save_character(view.selected_character)
             await register_character(interaction.user.id, view.selected_character["characterId"])
+            char = view.selected_character
             logger.info(
-                f"캐릭터 저장 성공: 사용자={interaction.user.id}, 캐릭터={view.selected_character['characterName']} ({view.selected_character['characterId']})")
+                f"캐릭터 저장 성공: 사용자={interaction.user.id}, "
+                f"캐릭터={char['characterName']} ({char['characterId']})"
+            )
         except Exception as e:
             logger.error(f"캐릭터 저장 중 오류 발생: 사용자={interaction.user.id}, 에러={e}")

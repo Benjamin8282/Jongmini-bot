@@ -4,6 +4,7 @@ KST = timezone(timedelta(hours=9))
 
 SEASON_START_DATE = datetime(2025, 1, 8, 6, 0, 0, tzinfo=KST)  # 중천 시즌 시작일 오전 6시
 
+
 def get_weekly_period():
     """한 주 단위 집계 기간을 반환합니다.
     기간: 지난 주 목요일 6시부터 이번 주 목요일 6시까지 (혹은 지금 시각까지)"""
@@ -28,10 +29,11 @@ def get_weekly_period():
 
     return start_time, end_time
 
+
 def get_monthly_period():
     """월간 집계 기간(이번 달 1일 6시 ~ 현재)을 반환합니다."""
     now = datetime.now(KST)
-    
+
     # 이번 달 1일 6시
     start_of_month = now.replace(day=1, hour=6, minute=0, second=0, microsecond=0)
 
@@ -43,8 +45,9 @@ def get_monthly_period():
         start_time = last_month_last_day.replace(day=1, hour=6, minute=0, second=0, microsecond=0)
     else:
         start_time = start_of_month
-        
+
     return start_time, now
+
 
 def get_daily_period():
     """일간 집계 기간(오늘 6시 ~ 현재)을 반환합니다."""
@@ -57,6 +60,7 @@ def get_daily_period():
     end_time = now
     return start_time, end_time
 
+
 def get_daily_aggregation_period():
     """정기 일간 집계 기간(전날 6시 ~ 오늘 5시 59분 59초)을 반환합니다."""
     now = datetime.now(KST)
@@ -64,6 +68,7 @@ def get_daily_aggregation_period():
     start_time = today_6am - timedelta(days=1)
     end_time = today_6am - timedelta(seconds=1)
     return start_time, end_time
+
 
 def get_season_period():
     """시즌 집계 기간(시즌 시작일 ~ 현재)을 반환합니다."""

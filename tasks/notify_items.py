@@ -74,7 +74,6 @@ def format_item_announce_embed(adventure_name, character_name, item, event_date)
     else:
         description += f" {item_name}[{item_rarity}](을)를 획득했습니다."
 
-
     embed = discord.Embed(
         description=description,
         color=color
@@ -179,7 +178,7 @@ async def notify_items_for_character(char, bot, guild_id, semaphore):
                 last_processed_time[character_id] = max_event_time
 
         await update_last_checked(character_id, end_date)
-        
+
         # === 레이드 클리어 체크 ===
         await check_raid_clears(char, timeline)
 
@@ -188,31 +187,31 @@ async def check_raid_clears(char, timeline_data):
     """레이드 클리어 체크 (code 201, 악연 필터링)"""
     if not timeline_data or "timeline" not in timeline_data:
         return
-    
+
     # 던담검색제외된 모험단이면 레이드 클리어도 제외
     adventure_name = char.get('adventure_name', '')
     server_id = char.get('server_id', '')
-    
+
     if adventure_name and server_id:
         is_excluded = await get_adventure_exclusion_status(adventure_name, server_id)
         if is_excluded:
             logger.info(f"제외된 모험단 레이드 클리어 무시: {adventure_name}")
             return
-    
+
     rows = timeline_data.get("timeline", {}).get("rows", [])
-    
+
     for item in rows:
         if item.get("code") != 201:
             continue
-        
+
         data = item.get("data", {})
         raid_name = data.get("raidName", "")
         mode_name = data.get("modeName", "")
-        
+
         # "악연" 필터링
         if "악연" not in raid_name and "악연" not in mode_name:
             continue
-        
+
         # 임시 클리어 저장
         clear_info = {
             "character_id": char['character_id'],
@@ -223,7 +222,7 @@ async def check_raid_clears(char, timeline_data):
             "raid_name": raid_name,
             "mode_name": mode_name
         }
-        
+
         logger.info(f"악연 클리어 감지: {char['character_name']} - {clear_info['raid_party_name']}")
         await save_temp_raid_clear(clear_info)
 

@@ -4,7 +4,6 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
 from core.dnf_api import preload_item_cache
 from core.logger import logger
 import discord
@@ -18,7 +17,7 @@ from tasks.daily_aggregation import daily_aggregation_task
 from tasks.monthly_aggregation import monthly_aggregation_task
 from tasks.notify_items import periodic_notify
 from tasks.weekly_aggregation import weekly_aggregation_task
-from tasks.weekly_character_aggregation import aggregate_weekly_items_by_character  # 캐릭터별 주간 집계 task
+# from tasks.weekly_character_aggregation import aggregate_weekly_items_by_character  # 캐릭터별 주간 집계 task (미사용)
 from tasks.raid_first_clear_task import process_raid_first_clears_task
 
 # commands import
@@ -34,11 +33,11 @@ from commands.season_status import season_status
 from commands.dundam_ranking import dundam_ranking
 from commands.dundam_exclusion import dundam_exclusion
 from commands.adventure_dundam_ranking import adventure_dundam_ranking
-from commands.test_raid_clears import test_raid_clears
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = os.getenv("GUILD_ID")  # 디폴트 값 설정
+
 
 def get_scheduler_timezone():
     # UTC 고정
@@ -51,11 +50,11 @@ class JongminiBot(commands.Bot):
     def __init__(self):
         scheduler_tz = get_scheduler_timezone()
         self.scheduler = AsyncIOScheduler(timezone=scheduler_tz)
-        
+
         intents = discord.Intents.default()
         intents.messages = True
         intents.message_content = True
-        
+
         super().__init__(command_prefix="!", intents=intents)
         self.chat_moderator = ChatModerator()
         logger.info("JongminiBot 인스턴스 생성됨")
@@ -78,7 +77,7 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(dundam_ranking)
         self.tree.add_command(dundam_exclusion)
         self.tree.add_command(adventure_dundam_ranking)
-        #self.tree.add_command(test_raid_clears)
+        # self.tree.add_command(test_raid_clears)
 
         await self.tree.sync()
         logger.info(f"슬래시 명령어 동기화 완료: {self.tree.get_commands()}")
@@ -116,7 +115,7 @@ async def on_ready():
     if not hasattr(bot, 'monthly_aggregation_task') or bot.monthly_aggregation_task.done():
         bot.monthly_aggregation_task = asyncio.create_task(monthly_aggregation_task(bot, GUILD_ID))
         logger.info("월간 모험단 집계 task 시작됨")
-    
+
     # 레이드 퍼스트 클리어 task
     if not hasattr(bot, 'raid_first_clear_task') or bot.raid_first_clear_task.done():
         bot.raid_first_clear_task = asyncio.create_task(process_raid_first_clears_task(bot, GUILD_ID))
@@ -128,30 +127,31 @@ async def on_ready():
         logger.info("스케줄러 시작됨")
 
     # 스케줄러 타임존 변수
-    scheduler_tz = bot.scheduler.timezone
+    bot.scheduler.timezone
 
     # 캐릭터별 주간 집계: 매주 목요일 05:59 실행
-    #bot.scheduler.add_job(
+    # bot.scheduler.add_job(
     #    aggregate_weekly_items_by_character,
     #    trigger=CronTrigger(day_of_week="thu", hour=5, minute=59),
     #    args=[bot, GUILD_ID],
     #    id="weekly_character_aggregation_job",
     #    replace_existing=True
-    #)
-    #logger.info("캐릭터별 주간 집계 작업 스케줄 등록됨 (매주 목요일 05:59)")
+    # )
+    # logger.info("캐릭터별 주간 집계 작업 스케줄 등록됨 (매주 목요일 05:59)")
+
 
 @bot.event
 async def on_message(message: discord.Message):
     if message.author == bot.user:
         return
-    
+
     logger.info(f"메시지 수신: 채널 ID={message.channel.id}, 작성자={message.author.display_name}, 내용='{message.content}'")
 
     # process commands first
     await bot.process_commands(message)
 
     # then handle with moderator
-    #await bot.chat_moderator.handle_message(message)
+    # await bot.chat_moderator.handle_message(message)
 
 
 bot.run(TOKEN)
