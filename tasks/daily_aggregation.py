@@ -112,7 +112,10 @@ def format_rank_embed(rank_list, timestamp, period="일간"):
     return embed
 
 
-async def aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=None, interaction=None, period="일간", need_embed=False):
+async def aggregate_items_and_notify_for_period(
+    bot, guild_id, start_time, end_time,
+    base_time=None, interaction=None, period="일간", need_embed=False
+):
     if base_time is None:
         base_time = datetime.now(KST)
 

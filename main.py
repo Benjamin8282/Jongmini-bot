@@ -17,7 +17,7 @@ from tasks.daily_aggregation import daily_aggregation_task
 from tasks.monthly_aggregation import monthly_aggregation_task
 from tasks.notify_items import periodic_notify
 from tasks.weekly_aggregation import weekly_aggregation_task
-from tasks.weekly_character_aggregation import aggregate_weekly_items_by_character  # 캐릭터별 주간 집계 task
+# from tasks.weekly_character_aggregation import aggregate_weekly_items_by_character  # 캐릭터별 주간 집계 task (미사용)
 from tasks.raid_first_clear_task import process_raid_first_clears_task
 
 # commands import

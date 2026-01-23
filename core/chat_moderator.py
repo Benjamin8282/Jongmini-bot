@@ -213,7 +213,11 @@ class ChatModerator:
     # Response normalize / parse safety
     # -----------------------------
     def _normalize_response(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        if isinstance(data, dict) and ("message" in data or "riskLevel" in data or "summary" in data or "route" in data):
+        has_expected_keys = (
+            "message" in data or "riskLevel" in data or
+            "summary" in data or "route" in data
+        )
+        if isinstance(data, dict) and has_expected_keys:
             return data
 
         text_to_parse: Optional[str] = None

@@ -395,8 +395,8 @@ async def get_all_adventures() -> list[dict]:
                 SELECT DISTINCT c.adventure_name, c.server_id,
                        COALESCE(e.is_excluded, 0) as is_excluded
                 FROM characters c
-                LEFT JOIN adventure_exclusions e 
-                    ON c.adventure_name = e.adventure_name 
+                LEFT JOIN adventure_exclusions e
+                    ON c.adventure_name = e.adventure_name
                     AND c.server_id = e.server_id
                 ORDER BY c.adventure_name, c.server_id
             """)
@@ -459,8 +459,8 @@ async def get_active_characters() -> list[dict]:
             cursor = await conn.execute("""
                 SELECT c.*
                 FROM characters c
-                LEFT JOIN adventure_exclusions e 
-                    ON c.adventure_name = e.adventure_name 
+                LEFT JOIN adventure_exclusions e
+                    ON c.adventure_name = e.adventure_name
                     AND c.server_id = e.server_id
                 WHERE COALESCE(e.is_excluded, 0) = 0
                 ORDER BY c.adventure_name, c.server_id, c.character_name
@@ -481,8 +481,8 @@ async def save_temp_raid_clear(clear_info: dict):
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
             await conn.execute("""
-                INSERT INTO temp_raid_clears 
-                (character_id, character_name, adventure_name, raid_party_name, 
+                INSERT INTO temp_raid_clears
+                (character_id, character_name, adventure_name, raid_party_name,
                  clear_date, raid_name, mode_name)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
@@ -569,19 +569,19 @@ async def save_raid_first_clear(raid_key: str, rank: int, party_info: dict):
                 # 업데이트
                 if rank == 1:
                     await conn.execute("""
-                        UPDATE raid_first_clears 
+                        UPDATE raid_first_clears
                         SET first_party_name = ?, first_clear_date = ?, first_members = ?
                         WHERE raid_key = ?
                     """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
                 elif rank == 2:
                     await conn.execute("""
-                        UPDATE raid_first_clears 
+                        UPDATE raid_first_clears
                         SET second_party_name = ?, second_clear_date = ?, second_members = ?
                         WHERE raid_key = ?
                     """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
                 elif rank == 3:
                     await conn.execute("""
-                        UPDATE raid_first_clears 
+                        UPDATE raid_first_clears
                         SET third_party_name = ?, third_clear_date = ?, third_members = ?
                         WHERE raid_key = ?
                     """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
@@ -589,19 +589,19 @@ async def save_raid_first_clear(raid_key: str, rank: int, party_info: dict):
                 # 새 레코드 생성
                 if rank == 1:
                     await conn.execute("""
-                        INSERT INTO raid_first_clears 
+                        INSERT INTO raid_first_clears
                         (raid_key, first_party_name, first_clear_date, first_members)
                         VALUES (?, ?, ?, ?)
                     """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
                 elif rank == 2:
                     await conn.execute("""
-                        INSERT INTO raid_first_clears 
+                        INSERT INTO raid_first_clears
                         (raid_key, second_party_name, second_clear_date, second_members)
                         VALUES (?, ?, ?, ?)
                     """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
                 elif rank == 3:
                     await conn.execute("""
-                        INSERT INTO raid_first_clears 
+                        INSERT INTO raid_first_clears
                         (raid_key, third_party_name, third_clear_date, third_members)
                         VALUES (?, ?, ?, ?)
                     """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))

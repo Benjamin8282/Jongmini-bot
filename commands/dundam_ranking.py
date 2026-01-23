@@ -54,7 +54,9 @@ class DundamRankingView(View):
         description = ""
         for i, char in enumerate(page_characters, start=start_idx + 1):
             score_kor = format_score_korean(char['damage'])
-            description += f"**{i}위** **{char.get('character_name', '알 수 없음')}** ({char.get('adventure_name', '알 수 없음')})\n"
+            char_name = char.get('character_name', '알 수 없음')
+            adv_name = char.get('adventure_name', '알 수 없음')
+            description += f"**{i}위** **{char_name}** ({adv_name})\n"
             description += f"**점수:** {score_kor}\n\n"
 
         if not description:
