@@ -7,6 +7,7 @@ API_KEY = os.getenv("NEOPLE_API_KEY")
 if API_KEY is None:
     raise ValueError("❌ Environment variable 'NEOPLE_API_KEY' is missing. Please set it before running the script.")
 
+
 def search_character_with_image(server_id: str, character_name: str, zoom: int = 1):
     """
         네오플 DNF API를 통해 캐릭터 정보를 검색하고,
@@ -47,6 +48,7 @@ def search_character_with_image(server_id: str, character_name: str, zoom: int =
     else:
         print(f"❌ API 오류! 상태코드: {response.status_code}")
         print(response.text)
+
 
 # 예시 실행
 if __name__ == "__main__":

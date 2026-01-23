@@ -222,6 +222,7 @@ async def get_item_available_level(item_id: str) -> int | None:
         logger.error(f"아이템 캐시 조회 실패: {e}")
         return None
 
+
 async def save_item_available_level(item_id: str, level: int):
     logger.info(f"아이템 캐시 저장 시도: {item_id} 레벨 {level}")
     try:
@@ -249,6 +250,7 @@ async def save_output_channel(guild_id: str, channel_id: str):
         logger.info("출력 채널 저장 성공")
     except Exception as e:
         logger.error(f"출력 채널 저장 실패: {e}")
+
 
 async def get_output_channel(guild_id: str) -> str | None:
     logger.info(f"출력 채널 조회 시도: guild={guild_id}")
@@ -288,6 +290,7 @@ async def get_last_checked(character_id: str) -> str | None:
         logger.error(f"캐릭터 마지막 조회시각 조회 실패: {e}")
         return None
 
+
 async def update_last_checked(character_id: str, last_checked: str):
     logger.info(f"캐릭터 마지막 조회시각 업데이트: {character_id} -> {last_checked}")
     try:
@@ -300,6 +303,7 @@ async def update_last_checked(character_id: str, last_checked: str):
         logger.info("캐릭터 마지막 조회시각 저장 성공")
     except Exception as e:
         logger.error(f"캐릭터 마지막 조회시각 저장 실패: {e}")
+
 
 async def get_last_aggregation_time() -> str | None:
     """
@@ -391,8 +395,8 @@ async def get_all_adventures() -> list[dict]:
                 SELECT DISTINCT c.adventure_name, c.server_id,
                        COALESCE(e.is_excluded, 0) as is_excluded
                 FROM characters c
-                LEFT JOIN adventure_exclusions e 
-                    ON c.adventure_name = e.adventure_name 
+                LEFT JOIN adventure_exclusions e
+                    ON c.adventure_name = e.adventure_name
                     AND c.server_id = e.server_id
                 ORDER BY c.adventure_name, c.server_id
             """)
@@ -455,8 +459,8 @@ async def get_active_characters() -> list[dict]:
             cursor = await conn.execute("""
                 SELECT c.*
                 FROM characters c
-                LEFT JOIN adventure_exclusions e 
-                    ON c.adventure_name = e.adventure_name 
+                LEFT JOIN adventure_exclusions e
+                    ON c.adventure_name = e.adventure_name
                     AND c.server_id = e.server_id
                 WHERE COALESCE(e.is_excluded, 0) = 0
                 ORDER BY c.adventure_name, c.server_id, c.character_name
@@ -477,8 +481,8 @@ async def save_temp_raid_clear(clear_info: dict):
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
             await conn.execute("""
-                INSERT INTO temp_raid_clears 
-                (character_id, character_name, adventure_name, raid_party_name, 
+                INSERT INTO temp_raid_clears
+                (character_id, character_name, adventure_name, raid_party_name,
                  clear_date, raid_name, mode_name)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
@@ -549,7 +553,7 @@ async def save_raid_first_clear(raid_key: str, rank: int, party_info: dict):
     """레이드 퍼스트 클리어 기록"""
     import json
     logger.info(f"레이드 {rank}위 기록: {raid_key} - {party_info['party_name']}")
-    
+
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
             # 기존 데이터 조회
@@ -558,26 +562,26 @@ async def save_raid_first_clear(raid_key: str, rank: int, party_info: dict):
                 SELECT * FROM raid_first_clears WHERE raid_key = ?
             """, (raid_key,))
             existing = await cursor.fetchone()
-            
+
             members_json = json.dumps(party_info['members'], ensure_ascii=False)
-            
+
             if existing:
                 # 업데이트
                 if rank == 1:
                     await conn.execute("""
-                        UPDATE raid_first_clears 
+                        UPDATE raid_first_clears
                         SET first_party_name = ?, first_clear_date = ?, first_members = ?
                         WHERE raid_key = ?
                     """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
                 elif rank == 2:
                     await conn.execute("""
-                        UPDATE raid_first_clears 
+                        UPDATE raid_first_clears
                         SET second_party_name = ?, second_clear_date = ?, second_members = ?
                         WHERE raid_key = ?
                     """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
                 elif rank == 3:
                     await conn.execute("""
-                        UPDATE raid_first_clears 
+                        UPDATE raid_first_clears
                         SET third_party_name = ?, third_clear_date = ?, third_members = ?
                         WHERE raid_key = ?
                     """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
@@ -585,25 +589,24 @@ async def save_raid_first_clear(raid_key: str, rank: int, party_info: dict):
                 # 새 레코드 생성
                 if rank == 1:
                     await conn.execute("""
-                        INSERT INTO raid_first_clears 
+                        INSERT INTO raid_first_clears
                         (raid_key, first_party_name, first_clear_date, first_members)
                         VALUES (?, ?, ?, ?)
                     """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
                 elif rank == 2:
                     await conn.execute("""
-                        INSERT INTO raid_first_clears 
+                        INSERT INTO raid_first_clears
                         (raid_key, second_party_name, second_clear_date, second_members)
                         VALUES (?, ?, ?, ?)
                     """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
                 elif rank == 3:
                     await conn.execute("""
-                        INSERT INTO raid_first_clears 
+                        INSERT INTO raid_first_clears
                         (raid_key, third_party_name, third_clear_date, third_members)
                         VALUES (?, ?, ?, ?)
                     """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
-            
+
             await conn.commit()
         logger.info(f"레이드 {rank}위 기록 성공")
     except Exception as e:
         logger.error(f"레이드 클리어 기록 실패: {e}")
-

@@ -7,6 +7,7 @@ from core.logger import logger
 _cache = {}
 _CACHE_DURATION = 60 * 10  # 10분 캐시 유지 (초 단위)
 
+
 async def fetch_dundam_data_with_retry(session, character, retries=3):
     key = (character['character_id'], character['server_id'])
 
@@ -57,6 +58,7 @@ async def fetch_dundam_data_with_retry(session, character, retries=3):
 
     logger.error("던담 데이터 재시도 실패: %s", character['character_name'])
     return None
+
 
 async def fetch_all_with_rate_limit(session, characters, limit_per_second=5):
     semaphore = asyncio.Semaphore(limit_per_second)

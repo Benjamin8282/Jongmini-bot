@@ -15,6 +15,7 @@ except (ImportError, ModuleNotFoundError, KeyError):
 log_dir = Path("logs")
 log_dir.mkdir(parents=True, exist_ok=True)
 
+
 def delete_old_logs(log_directory: Path, days: int = 14):
     cutoff_date = datetime.now(KST) - timedelta(days=days)
     for log_file in log_directory.glob("*.log*"):
@@ -26,12 +27,14 @@ def delete_old_logs(log_directory: Path, days: int = 14):
         except Exception as e:
             print(f"파일 삭제 중 오류 발생 {log_file}: {e}")
 
+
 delete_old_logs(log_dir, days=14)
 
 log_filename = log_dir / f"{datetime.now(KST).strftime('%Y-%m-%d')}.log"
 
 log_format = "[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s"
 date_format = "%Y-%m-%d %H:%M:%S.%f"
+
 
 class KSTFormatter(logging.Formatter):
     @staticmethod
@@ -44,6 +47,7 @@ class KSTFormatter(logging.Formatter):
             s = dt.strftime(datefmt)
             return s[:-3]
         return dt.isoformat()
+
 
 logger = logging.getLogger("jongmini")
 logger.setLevel(logging.DEBUG)

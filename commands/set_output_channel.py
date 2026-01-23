@@ -2,6 +2,7 @@ from discord import app_commands, Interaction
 from core.db import save_output_channel
 from core.logger import logger
 
+
 @app_commands.command(name="출력", description="이 서버에서 아이템 알림을 출력할 채널을 등록합니다")
 async def set_output_channel(interaction: Interaction):
     guild_id = str(interaction.guild_id)
