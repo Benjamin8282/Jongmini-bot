@@ -184,7 +184,7 @@ async def notify_items_for_character(char, bot, guild_id, semaphore):
 
 
 async def check_raid_clears(char, timeline_data):
-    """레이드 클리어 체크 (code 201, 악연 필터링)"""
+    """레이드 클리어 체크 (code 201, 디레지에 필터링)"""
     if not timeline_data or "timeline" not in timeline_data:
         return
 
@@ -208,8 +208,8 @@ async def check_raid_clears(char, timeline_data):
         raid_name = data.get("raidName", "")
         mode_name = data.get("modeName", "")
 
-        # "악연" 필터링
-        if "악연" not in raid_name and "악연" not in mode_name:
+        # "디레지에" 필터링
+        if "디레지에" not in raid_name and "디레지에" not in mode_name:
             continue
 
         # 임시 클리어 저장
@@ -223,7 +223,7 @@ async def check_raid_clears(char, timeline_data):
             "mode_name": mode_name
         }
 
-        logger.info(f"악연 클리어 감지: {char['character_name']} - {clear_info['raid_party_name']}")
+        logger.info(f"디레지에 클리어 감지: {char['character_name']} - {clear_info['raid_party_name']}")
         await save_temp_raid_clear(clear_info)
 
 
