@@ -27,22 +27,22 @@ async def process_raid_first_clears_task(bot, guild_id):
                 logger.info("처리할 임시 클리어 없음")
                 continue
 
-            # 악연 클리어만 필터링
-            akyeon_clears = [
+            # 디레지에 클리어만 필터링
+            diregie_clears = [
                 c for c in clears
-                if "악연" in c.get('raid_name', '') or "악연" in c.get('mode_name', '')
+                if "디레지에" in c.get('raid_name', '') or "디레지에" in c.get('mode_name', '')
             ]
 
-            if not akyeon_clears:
-                logger.info("악연 클리어 없음, 임시 데이터 삭제")
+            if not diregie_clears:
+                logger.info("디레지에 클리어 없음, 임시 데이터 삭제")
                 await clear_temp_raid_clears()
                 continue
 
-            logger.info(f"악연 클리어 {len(akyeon_clears)}개 발견")
+            logger.info(f"디레지에 클리어 {len(diregie_clears)}개 발견")
 
             # 공격대별 그룹핑
             party_groups = defaultdict(list)
-            for clear in akyeon_clears:
+            for clear in diregie_clears:
                 party_name = clear['raid_party_name']
                 party_groups[party_name].append(clear)
 
@@ -126,7 +126,7 @@ async def send_first_clear_message(bot, guild_id, rank, party_info):
     ])
 
     embed = discord.Embed(
-        title=f"🎊 {emojis[rank]} 디레지에 악연 {titles[rank]} 클리어! {emojis[rank]} 🎊",
+        title=f"🎊 {emojis[rank]} 디레지에 {titles[rank]} 클리어! {emojis[rank]} 🎊",
         description=(
             f"**공격대**: {party_info['party_name']}\n"
             f"**클리어 시각**: {party_info['clear_time']}\n\n"
