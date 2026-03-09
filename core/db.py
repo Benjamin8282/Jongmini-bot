@@ -70,35 +70,31 @@ async def init_db():
                     PRIMARY KEY (adventure_name, server_id)
                 )
             """)
-            # 레이드 퍼스트 클리어 기록 테이블
+            # 경매장 시세 감시 아이템 테이블
             await conn.execute("""
-                CREATE TABLE IF NOT EXISTS raid_first_clears (
-                    raid_key TEXT PRIMARY KEY,
-                    first_party_name TEXT,
-                    first_clear_date TEXT,
-                    first_members TEXT,
-                    second_party_name TEXT,
-                    second_clear_date TEXT,
-                    second_members TEXT,
-                    third_party_name TEXT,
-                    third_clear_date TEXT,
-                    third_members TEXT,
-                    last_check_date TEXT
+                CREATE TABLE IF NOT EXISTS auction_watch_items (
+                    item_id TEXT PRIMARY KEY,
+                    item_name TEXT NOT NULL,
+                    registered_by INTEGER NOT NULL,
+                    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            # 임시 레이드 클리어 정보 테이블 (1분 대기용)
+            # 경매장 거래 가격 이력 테이블
             await conn.execute("""
-                CREATE TABLE IF NOT EXISTS temp_raid_clears (
+                CREATE TABLE IF NOT EXISTS auction_price_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    character_id TEXT,
-                    character_name TEXT,
-                    adventure_name TEXT,
-                    raid_party_name TEXT,
-                    clear_date TEXT,
-                    raid_name TEXT,
-                    mode_name TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    item_id TEXT NOT NULL,
+                    sold_date TEXT NOT NULL,
+                    unit_price INTEGER NOT NULL,
+                    price INTEGER NOT NULL,
+                    count INTEGER NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(item_id, sold_date, unit_price, count)
                 )
+            """)
+            await conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_aph_item_sold
+                ON auction_price_history(item_id, sold_date)
             """)
             await conn.commit()
         logger.info("DB 초기화 완료")
@@ -473,140 +469,124 @@ async def get_active_characters() -> list[dict]:
         return []
 
 
-# ----- 레이드 퍼스트 클리어 관리 -----
+# ----- 경매장 시세 감시 -----
 
-async def save_temp_raid_clear(clear_info: dict):
-    """임시 레이드 클리어 정보 저장"""
-    logger.info(f"임시 레이드 클리어 저장: {clear_info['character_name']} - {clear_info['raid_party_name']}")
+async def add_watch_item(item_id: str, item_name: str, user_id: int) -> bool:
+    """감시 아이템 등록. 신규 등록이면 True, 이미 존재하면 False 반환"""
+    logger.info(f"시세 감시 아이템 등록: {item_name} ({item_id})")
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
-            await conn.execute("""
-                INSERT INTO temp_raid_clears
-                (character_id, character_name, adventure_name, raid_party_name,
-                 clear_date, raid_name, mode_name)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (
-                clear_info['character_id'],
-                clear_info['character_name'],
-                clear_info['adventure_name'],
-                clear_info['raid_party_name'],
-                clear_info['clear_date'],
-                clear_info['raid_name'],
-                clear_info['mode_name']
-            ))
+            cursor = await conn.execute("""
+                INSERT OR IGNORE INTO auction_watch_items
+                (item_id, item_name, registered_by) VALUES (?, ?, ?)
+            """, (item_id, item_name, user_id))
             await conn.commit()
-        logger.info("임시 레이드 클리어 저장 성공")
+            if cursor.rowcount == 0:
+                logger.info(f"이미 등록된 감시 아이템: {item_name}")
+                return False
+        logger.info(f"시세 감시 아이템 등록 성공: {item_name}")
+        return True
     except Exception as e:
-        logger.error(f"임시 레이드 클리어 저장 실패: {e}")
+        logger.error(f"시세 감시 아이템 등록 실패: {e}")
+        return False
 
 
-async def get_recent_temp_clears(minutes: int = 2) -> list[dict]:
-    """최근 N분 내 임시 클리어 조회"""
-    logger.info(f"최근 {minutes}분 내 임시 클리어 조회")
+async def remove_watch_item(item_id: str):
+    """감시 아이템 해제 (가격 이력은 보존)"""
+    logger.info(f"시세 감시 아이템 해제: {item_id}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute(
+                "DELETE FROM auction_watch_items WHERE item_id = ?",
+                (item_id,)
+            )
+            await conn.commit()
+        logger.info("시세 감시 아이템 해제 성공")
+    except Exception as e:
+        logger.error(f"시세 감시 아이템 해제 실패: {e}")
+
+
+async def get_all_watch_items() -> list[dict]:
+    """전체 감시 아이템 목록 반환"""
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
             conn.row_factory = aiosqlite.Row
-            cursor = await conn.execute("""
-                SELECT * FROM temp_raid_clears
-                WHERE datetime(created_at) >= datetime('now', '-' || ? || ' minutes')
-                ORDER BY clear_date
-            """, (minutes,))
+            cursor = await conn.execute(
+                "SELECT * FROM auction_watch_items ORDER BY registered_at"
+            )
             rows = await cursor.fetchall()
-        logger.info(f"임시 클리어 조회 성공: {len(rows)}개")
         return [dict(row) for row in rows]
     except Exception as e:
-        logger.error(f"임시 클리어 조회 실패: {e}")
+        logger.error(f"감시 아이템 목록 조회 실패: {e}")
         return []
 
 
-async def clear_temp_raid_clears():
-    """임시 클리어 정보 삭제"""
-    logger.info("임시 클리어 정보 삭제 시도")
+async def save_auction_prices(records: list[dict]):
+    """거래 이력 벌크 저장 (중복 자동 스킵)"""
+    if not records:
+        return
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
-            await conn.execute("DELETE FROM temp_raid_clears")
+            await conn.executemany("""
+                INSERT OR IGNORE INTO auction_price_history
+                (item_id, sold_date, unit_price, price, count)
+                VALUES (:item_id, :sold_date, :unit_price, :price, :count)
+            """, records)
             await conn.commit()
-        logger.info("임시 클리어 정보 삭제 성공")
+        logger.info(f"경매장 거래 이력 저장: {len(records)}건")
     except Exception as e:
-        logger.error(f"임시 클리어 정보 삭제 실패: {e}")
+        logger.error(f"경매장 거래 이력 저장 실패: {e}")
 
 
-async def get_raid_rank(raid_key: str) -> dict | None:
-    """레이드 현재 순위 정보 조회"""
-    logger.info(f"레이드 순위 조회: {raid_key}")
+async def get_price_history(item_id: str, start_date: str, end_date: str) -> list[dict]:
+    """기간별 가격 이력 조회"""
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("""
-                SELECT * FROM raid_first_clears WHERE raid_key = ?
-            """, (raid_key,))
+                SELECT sold_date, unit_price, price, count
+                FROM auction_price_history
+                WHERE item_id = ?
+                  AND sold_date >= ? AND sold_date <= ?
+                ORDER BY sold_date
+            """, (item_id, start_date, end_date))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"가격 이력 조회 실패: {e}")
+        return []
+
+
+async def get_watch_item_by_name(item_name: str) -> dict | None:
+    """아이템 이름으로 감시 아이템 조회"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
+                "SELECT * FROM auction_watch_items WHERE item_name = ?",
+                (item_name,)
+            )
             row = await cursor.fetchone()
         if row:
             return dict(row)
         return None
     except Exception as e:
-        logger.error(f"레이드 순위 조회 실패: {e}")
+        logger.error(f"감시 아이템 이름 조회 실패: {e}")
         return None
 
 
-async def save_raid_first_clear(raid_key: str, rank: int, party_info: dict):
-    """레이드 퍼스트 클리어 기록"""
-    import json
-    logger.info(f"레이드 {rank}위 기록: {raid_key} - {party_info['party_name']}")
-
+async def cleanup_old_price_history(days: int = 90):
+    """오래된 거래 이력 정리"""
     try:
+        modifier = f"-{int(days)} days"
         async with aiosqlite.connect(DB_PATH) as conn:
-            # 기존 데이터 조회
-            conn.row_factory = aiosqlite.Row
-            cursor = await conn.execute("""
-                SELECT * FROM raid_first_clears WHERE raid_key = ?
-            """, (raid_key,))
-            existing = await cursor.fetchone()
-
-            members_json = json.dumps(party_info['members'], ensure_ascii=False)
-
-            if existing:
-                # 업데이트
-                if rank == 1:
-                    await conn.execute("""
-                        UPDATE raid_first_clears
-                        SET first_party_name = ?, first_clear_date = ?, first_members = ?
-                        WHERE raid_key = ?
-                    """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
-                elif rank == 2:
-                    await conn.execute("""
-                        UPDATE raid_first_clears
-                        SET second_party_name = ?, second_clear_date = ?, second_members = ?
-                        WHERE raid_key = ?
-                    """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
-                elif rank == 3:
-                    await conn.execute("""
-                        UPDATE raid_first_clears
-                        SET third_party_name = ?, third_clear_date = ?, third_members = ?
-                        WHERE raid_key = ?
-                    """, (party_info['party_name'], party_info['clear_time'], members_json, raid_key))
-            else:
-                # 새 레코드 생성
-                if rank == 1:
-                    await conn.execute("""
-                        INSERT INTO raid_first_clears
-                        (raid_key, first_party_name, first_clear_date, first_members)
-                        VALUES (?, ?, ?, ?)
-                    """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
-                elif rank == 2:
-                    await conn.execute("""
-                        INSERT INTO raid_first_clears
-                        (raid_key, second_party_name, second_clear_date, second_members)
-                        VALUES (?, ?, ?, ?)
-                    """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
-                elif rank == 3:
-                    await conn.execute("""
-                        INSERT INTO raid_first_clears
-                        (raid_key, third_party_name, third_clear_date, third_members)
-                        VALUES (?, ?, ?, ?)
-                    """, (raid_key, party_info['party_name'], party_info['clear_time'], members_json))
-
+            result = await conn.execute("""
+                DELETE FROM auction_price_history
+                WHERE datetime(sold_date) < datetime('now', ?)
+            """, (modifier,))
             await conn.commit()
-        logger.info(f"레이드 {rank}위 기록 성공")
+        logger.info(f"오래된 거래 이력 정리 완료: {result.rowcount}건 삭제")
     except Exception as e:
-        logger.error(f"레이드 클리어 기록 실패: {e}")
+        logger.error(f"거래 이력 정리 실패: {e}")
+
+

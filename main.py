@@ -18,7 +18,7 @@ from tasks.monthly_aggregation import monthly_aggregation_task
 from tasks.notify_items import periodic_notify
 from tasks.weekly_aggregation import weekly_aggregation_task
 # from tasks.weekly_character_aggregation import aggregate_weekly_items_by_character  # 캐릭터별 주간 집계 task (미사용)
-from tasks.raid_first_clear_task import process_raid_first_clears_task
+from tasks.poll_auction_prices import poll_auction_prices
 
 # commands import
 from commands.hello import hello_command
@@ -33,6 +33,11 @@ from commands.season_status import season_status
 from commands.dundam_ranking import dundam_ranking
 from commands.dundam_exclusion import dundam_exclusion
 from commands.adventure_dundam_ranking import adventure_dundam_ranking
+from commands.auction_watch import (
+    auction_watch_register, auction_watch_unregister, auction_watch_list
+)
+from commands.auction_chart import auction_chart
+from commands.auction_overview import auction_overview
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -77,10 +82,12 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(dundam_ranking)
         self.tree.add_command(dundam_exclusion)
         self.tree.add_command(adventure_dundam_ranking)
-        # self.tree.add_command(test_raid_clears)
-
-        await self.tree.sync()
-        logger.info(f"슬래시 명령어 동기화 완료: {self.tree.get_commands()}")
+        self.tree.add_command(auction_watch_register)
+        self.tree.add_command(auction_watch_unregister)
+        self.tree.add_command(auction_watch_list)
+        self.tree.add_command(auction_chart)
+        self.tree.add_command(auction_overview)
+        logger.info("커맨드 등록 완료 (sync는 on_ready에서 실행)")
 
 
 bot = JongminiBot()
@@ -89,7 +96,13 @@ bot = JongminiBot()
 @bot.event
 async def on_ready():
     logger.info(f"종미니 봇 로그인 성공: {bot.user}")
-    print(f"✅ 종미니 봇 로그인 성공: {bot.user}")
+    print(f"종미니 봇 로그인 성공: {bot.user}")
+
+    # 슬래시 명령어 동기화 (최초 1회만)
+    if not hasattr(bot, '_commands_synced'):
+        await bot.tree.sync()
+        logger.info("슬래시 명령어 동기화 완료")
+        bot._commands_synced = True
 
     # 현재 시간과 타임존 로그 출력
     now = datetime.now(tz=bot.scheduler.timezone)
@@ -116,10 +129,10 @@ async def on_ready():
         bot.monthly_aggregation_task = asyncio.create_task(monthly_aggregation_task(bot, GUILD_ID))
         logger.info("월간 모험단 집계 task 시작됨")
 
-    # 레이드 퍼스트 클리어 task
-    if not hasattr(bot, 'raid_first_clear_task') or bot.raid_first_clear_task.done():
-        bot.raid_first_clear_task = asyncio.create_task(process_raid_first_clears_task(bot, GUILD_ID))
-        logger.info("레이드 퍼스트 클리어 task 시작됨")
+    # 경매장 시세 폴링 task (실시간 알림 포함)
+    if not hasattr(bot, 'auction_poll_task') or bot.auction_poll_task.done():
+        bot.auction_poll_task = asyncio.create_task(poll_auction_prices(bot, GUILD_ID))
+        logger.info("경매장 시세 폴링 task 시작됨")
 
     # APScheduler 스케줄러 시작 및 작업 등록
     if not bot.scheduler.running:
