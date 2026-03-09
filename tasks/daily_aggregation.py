@@ -11,6 +11,7 @@ from core.db import (
     update_last_aggregation_time
 )
 from core.logger import logger
+from tasks.morning_briefing import send_morning_briefing
 import discord
 
 from core.models import RARITY_WEIGHTS
@@ -204,6 +205,12 @@ async def aggregate_daily_items_and_notify(bot, guild_id):
 
     # 6시 집계 결과만 DB에 기록
     await update_last_aggregation_time(datetime.now(KST).strftime("%Y%m%dT%H%M"))
+
+    # 경제 브리핑 발송
+    try:
+        await send_morning_briefing(bot, guild_id)
+    except Exception as e:
+        logger.error(f"경제 브리핑 발송 실패: {e}")
 
 
 async def wait_until_next_6am():

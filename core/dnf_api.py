@@ -118,36 +118,6 @@ async def fetch_timeline(server_id: str, character_id: str, start_date: str = No
                 return None
 
 
-async def fetch_raid_clears(server_id: str, character_id: str, start_date: str = None, end_date: str = None):
-    """
-    레이드 클리어 정보 조회 (코드 201)
-    테스트용 함수
-    """
-    url = f"{BASE_URL}/servers/{server_id}/characters/{character_id}/timeline"
-
-    if end_date is None:
-        end_date = datetime.now().strftime("%Y%m%dT%H%M")
-    if start_date is None:
-        from datetime import timedelta
-        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%dT%H%M")
-
-    params = {
-        "apikey": API_KEY,
-        "startDate": start_date,
-        "endDate": end_date,
-        "code": "201",  # 레이드 클리어 코드
-        "limit": 100
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, params=params) as resp:
-            if resp.status == 200:
-                return await resp.json()
-            else:
-                logger.warning(f"레이드 클리어 조회 실패: HTTP {resp.status}")
-                return None
-
-
 async def fetch_timeline_with_pagination(
     server_id: str, character_id: str, start_date: str = None, end_date: str = None
 ):
@@ -273,3 +243,53 @@ async def fetch_item_detail(item_id: str) -> int:
         logger.error(f"아이템 상세 조회 예외 발생: {e}")
 
     return 0
+
+
+# ===============================
+# 경매장 시세 API
+# ===============================
+
+async def fetch_auction_sold(item_name: str) -> list[dict] | None:
+    """경매장 거래 시세 조회 (/df/auction-sold)"""
+    url = f"{BASE_URL}/auction-sold"
+    params = {
+        "itemName": item_name,
+        "limit": 400,
+        "apikey": API_KEY
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    rows = data.get("rows", [])
+                    logger.info(f"경매장 시세 조회 성공: {item_name} - {len(rows)}건")
+                    return rows
+                else:
+                    logger.warning(f"경매장 시세 조회 실패: HTTP {response.status}")
+    except Exception as e:
+        logger.error(f"경매장 시세 조회 예외: {e}")
+    return None
+
+
+async def fetch_item_search(item_name: str) -> list[dict] | None:
+    """아이템 이름으로 검색 (/df/items)"""
+    url = f"{BASE_URL}/items"
+    params = {
+        "itemName": item_name,
+        "limit": 30,
+        "apikey": API_KEY
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    rows = data.get("rows", [])
+                    logger.info(f"아이템 검색 성공: {item_name} - {len(rows)}건")
+                    return rows
+                else:
+                    logger.warning(f"아이템 검색 실패: HTTP {response.status}")
+    except Exception as e:
+        logger.error(f"아이템 검색 예외: {e}")
+    return None
