@@ -330,11 +330,24 @@ def build_alert_embed(alert: dict) -> discord.Embed:
     return embed
 
 
+ALERT_WARMUP_HOURS = 2  # 등록 후 데이터 수집 대기 시간
+
+
 async def process_alerts_for_item(
-    bot, guild_id: str, item_id: str, item_name: str
+    bot, guild_id: str, item_id: str, item_name: str,
+    registered_at: str = None
 ):
-    """아이템 알림 체크 후 채널에 발송."""
+    """아이템 알림 체크 후 채널에 발송. 등록 직후에는 스킵."""
     try:
+        # 등록 후 충분한 데이터가 쌓일 때까지 알림 스킵
+        if registered_at:
+            try:
+                reg_time = datetime.fromisoformat(registered_at).replace(tzinfo=KST)
+            except ValueError:
+                reg_time = datetime.strptime(registered_at, "%Y-%m-%d %H:%M:%S").replace(tzinfo=KST)
+            if datetime.now(KST) - reg_time < timedelta(hours=ALERT_WARMUP_HOURS):
+                return
+
         alerts = await check_price_alerts(item_id, item_name)
         if not alerts:
             return

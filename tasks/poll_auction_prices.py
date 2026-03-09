@@ -65,7 +65,8 @@ async def poll_auction_prices(bot=None, guild_id=None):
                     if bot and guild_id:
                         await process_alerts_for_item(
                             bot, guild_id,
-                            item["item_id"], item["item_name"]
+                            item["item_id"], item["item_name"],
+                            registered_at=item.get("registered_at")
                         )
                 except Exception as e:
                     logger.error(f"아이템 '{item.get('item_name', '?')}' 폴링 오류: {e}")
