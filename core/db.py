@@ -96,11 +96,27 @@ async def init_db():
                 CREATE INDEX IF NOT EXISTS idx_aph_item_sold
                 ON auction_price_history(item_id, sold_date)
             """)
-            # 봇 메타데이터 (버전 관리 등)
+            # 사용자별 알림 설정 테이블
             await conn.execute("""
-                CREATE TABLE IF NOT EXISTS bot_metadata (
-                    key TEXT PRIMARY KEY,
-                    value TEXT NOT NULL
+                CREATE TABLE IF NOT EXISTS user_alert_settings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    item_id TEXT NOT NULL,
+                    alert_type TEXT NOT NULL,
+                    threshold_value REAL NOT NULL,
+                    one_time INTEGER DEFAULT 0,
+                    enabled INTEGER DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, item_id, alert_type)
+                )
+            """)
+            # 활동지수 바스켓 아이템 테이블
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS activity_basket (
+                    item_id TEXT PRIMARY KEY,
+                    item_name TEXT NOT NULL,
+                    added_by INTEGER NOT NULL,
+                    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
             await conn.commit()
@@ -597,33 +613,194 @@ async def cleanup_old_price_history(days: int = 90):
         logger.error(f"거래 이력 정리 실패: {e}")
 
 
-# ----- 봇 메타데이터 -----
+# ----- 활동지수 바스켓 -----
 
-async def get_metadata(key: str) -> str | None:
-    """메타데이터 값 조회"""
+async def add_basket_item(item_id: str, item_name: str, user_id: int) -> bool:
+    """바스켓 아이템 등록. 신규면 True, 이미 존재하면 False"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            cursor = await conn.execute("""
+                INSERT OR IGNORE INTO activity_basket
+                (item_id, item_name, added_by) VALUES (?, ?, ?)
+            """, (item_id, item_name, user_id))
+            await conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.error(f"바스켓 아이템 등록 실패: {e}")
+        return False
+
+
+async def remove_basket_item(item_id: str):
+    """바스켓 아이템 해제"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute(
+                "DELETE FROM activity_basket WHERE item_id = ?", (item_id,)
+            )
+            await conn.commit()
+    except Exception as e:
+        logger.error(f"바스켓 아이템 해제 실패: {e}")
+
+
+async def get_basket_items() -> list[dict]:
+    """바스켓 아이템 목록 반환"""
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute(
-                "SELECT value FROM bot_metadata WHERE key = ?", (key,)
+                "SELECT * FROM activity_basket ORDER BY added_at"
             )
-            row = await cursor.fetchone()
-            return row["value"] if row else None
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
     except Exception as e:
-        logger.error(f"메타데이터 조회 실패 ({key}): {e}")
-        return None
+        logger.error(f"바스켓 아이템 목록 조회 실패: {e}")
+        return []
 
 
-async def set_metadata(key: str, value: str):
-    """메타데이터 값 저장"""
+async def get_daily_volumes(item_id: str, days: int) -> list[dict]:
+    """아이템의 일별 거래량 집계"""
     try:
+        modifier = f"-{int(days)} days"
         async with aiosqlite.connect(DB_PATH) as conn:
-            await conn.execute(
-                "INSERT OR REPLACE INTO bot_metadata (key, value) VALUES (?, ?)",
-                (key, value)
-            )
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT DATE(sold_date) as date, SUM(count) as volume
+                FROM auction_price_history
+                WHERE item_id = ?
+                  AND datetime(sold_date) >= datetime('now', ?)
+                GROUP BY DATE(sold_date)
+                ORDER BY date
+            """, (item_id, modifier))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"일별 거래량 조회 실패: {e}")
+        return []
+
+
+async def get_daily_avg_prices(item_id: str, days: int) -> list[dict]:
+    """아이템의 일별 거래량 가중 평균가 집계"""
+    try:
+        modifier = f"-{int(days)} days"
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT DATE(sold_date) as date,
+                       SUM(unit_price * count) * 1.0 / SUM(count) as avg_price,
+                       SUM(count) as volume
+                FROM auction_price_history
+                WHERE item_id = ?
+                  AND datetime(sold_date) >= datetime('now', ?)
+                GROUP BY DATE(sold_date)
+                ORDER BY date
+            """, (item_id, modifier))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"일별 평균가 조회 실패: {e}")
+        return []
+
+
+# ----- 사용자별 알림 설정 -----
+
+async def upsert_user_alert(
+    user_id: int, item_id: str, alert_type: str,
+    threshold_value: float, one_time: bool = False
+):
+    """사용자 알림 설정 저장 (있으면 업데이트)"""
+    try:
+        ot = 1 if one_time else 0
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("""
+                INSERT INTO user_alert_settings
+                (user_id, item_id, alert_type, threshold_value, one_time, enabled)
+                VALUES (?, ?, ?, ?, ?, 1)
+                ON CONFLICT(user_id, item_id, alert_type)
+                DO UPDATE SET threshold_value = ?, one_time = ?, enabled = 1
+            """, (user_id, item_id, alert_type, threshold_value, ot,
+                  threshold_value, ot))
             await conn.commit()
     except Exception as e:
-        logger.error(f"메타데이터 저장 실패 ({key}): {e}")
+        logger.error(f"사용자 알림 설정 저장 실패: {e}")
 
 
+async def get_user_alerts(
+    user_id: int, item_id: str | None = None
+) -> list[dict]:
+    """사용자의 알림 설정 조회. item_id 없으면 전체."""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            if item_id:
+                cursor = await conn.execute("""
+                    SELECT s.*, w.item_name
+                    FROM user_alert_settings s
+                    LEFT JOIN auction_watch_items w ON s.item_id = w.item_id
+                    WHERE s.user_id = ? AND s.item_id = ? AND s.enabled = 1
+                    ORDER BY s.alert_type
+                """, (user_id, item_id))
+            else:
+                cursor = await conn.execute("""
+                    SELECT s.*, w.item_name
+                    FROM user_alert_settings s
+                    LEFT JOIN auction_watch_items w ON s.item_id = w.item_id
+                    WHERE s.user_id = ? AND s.enabled = 1
+                    ORDER BY s.item_id, s.alert_type
+                """, (user_id,))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"사용자 알림 설정 조회 실패: {e}")
+        return []
+
+
+async def delete_user_alert(
+    user_id: int, item_id: str, alert_type: str | None = None
+):
+    """사용자 알림 삭제. alert_type 없으면 해당 아이템 전체."""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            if alert_type:
+                await conn.execute("""
+                    DELETE FROM user_alert_settings
+                    WHERE user_id = ? AND item_id = ? AND alert_type = ?
+                """, (user_id, item_id, alert_type))
+            else:
+                await conn.execute("""
+                    DELETE FROM user_alert_settings
+                    WHERE user_id = ? AND item_id = ?
+                """, (user_id, item_id))
+            await conn.commit()
+    except Exception as e:
+        logger.error(f"사용자 알림 삭제 실패: {e}")
+
+
+async def get_all_user_alerts_for_item(item_id: str) -> list[dict]:
+    """특정 아이템에 대한 모든 사용자의 알림 설정 조회"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT * FROM user_alert_settings
+                WHERE item_id = ? AND enabled = 1
+            """, (item_id,))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"아이템별 사용자 알림 조회 실패: {e}")
+        return []
+
+
+async def disable_user_alert(
+    user_id: int, item_id: str, alert_type: str
+):
+    """알림 비활성화 (지정가 알림 발동 후)"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("""
+                UPDATE user_alert_settings SET enabled = 0
+                WHERE user_id = ? AND item_id = ? AND alert_type = ?
+            """, (user_id, item_id, alert_type))
+            await conn.commit()
+    except Exception as e:
+        logger.error(f"사용자 알림 비활성화 실패: {e}")

@@ -130,7 +130,15 @@ class ChartControlView(ui.View):
         self.item_name = item_name
         self.interval_minutes = interval_minutes
         self.period_days = period_days
+        self.message = None  # 타임아웃 시 삭제용
         self._update_buttons()
+
+    async def on_timeout(self):
+        if self.message:
+            try:
+                await self.message.delete()
+            except Exception:
+                pass
 
     def _update_buttons(self):
         self.clear_items()
@@ -262,10 +270,11 @@ async def auction_chart(interaction: Interaction, item_name: str):
     )
 
     if isinstance(result, str):
-        await interaction.followup.send(content=result, view=view)
+        msg = await interaction.followup.send(content=result, view=view)
     else:
         embed, file, analysis_embed = result
         embeds = [embed]
         if analysis_embed:
             embeds.append(analysis_embed)
-        await interaction.followup.send(embeds=embeds, file=file, view=view)
+        msg = await interaction.followup.send(embeds=embeds, file=file, view=view)
+    view.message = msg

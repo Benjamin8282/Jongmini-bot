@@ -1,9 +1,11 @@
-import asyncio
 from datetime import datetime, timedelta, timezone
 
 import discord
 
-from core.db import get_price_history, get_output_channel
+from core.db import (
+    get_price_history, get_output_channel,
+    get_all_user_alerts_for_item, disable_user_alert,
+)
 from core.chart import aggregate_to_ohlc
 from core.analysis import calc_rsi, calc_ma_alignment
 from core.logger import logger
@@ -95,17 +97,36 @@ async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
         })
         _set_cooldown(item_id, "new_high")
 
-    # 신저가
-    past_low = min(past_prices)
-    if current_price < past_low and not _is_on_cooldown(item_id, "new_low"):
-        alerts.append({
-            "level": "major",
-            "type": "new_low",
-            "item_name": item_name,
-            "price": current_price,
-            "prev_low": past_low,
-        })
-        _set_cooldown(item_id, "new_low")
+    # 0빼기 파격세일 감지: 중앙값의 60% 이하면 실수 거래로 판단
+    sorted_prices = sorted(past_prices)
+    median_price = sorted_prices[len(sorted_prices) // 2]
+    fat_finger = False
+    if median_price > 0 and current_price < median_price * 0.6:
+        fat_finger = True
+        if not _is_on_cooldown(item_id, "fat_finger"):
+            discount = (1 - current_price / median_price) * 100
+            alerts.append({
+                "level": "fun",
+                "type": "fat_finger",
+                "item_name": item_name,
+                "price": current_price,
+                "median_price": median_price,
+                "discount": discount,
+            })
+            _set_cooldown(item_id, "fat_finger")
+
+    # 신저가 (파격세일이면 스킵 - 실수 거래는 시세에 의미 없음)
+    if not fat_finger:
+        past_low = min(past_prices)
+        if current_price < past_low and not _is_on_cooldown(item_id, "new_low"):
+            alerts.append({
+                "level": "major",
+                "type": "new_low",
+                "item_name": item_name,
+                "price": current_price,
+                "prev_low": past_low,
+            })
+            _set_cooldown(item_id, "new_low")
 
     # 거래량 폭증: 최근 1시간 vs 24시간 평균
     d1_start = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
@@ -319,6 +340,47 @@ def build_alert_embed(alert: dict) -> discord.Embed:
             color=0x2ED573
         )
 
+    elif t == "fat_finger":
+        price = alert["price"]
+        median = alert["median_price"]
+        discount = alert["discount"]
+        embed = discord.Embed(
+            title=f"🚨 [파격세일] {name} {discount:.0f}% OFF!!",
+            description=(
+                f"누군가 **{int(price):,}G**에 올렸습니다\n"
+                f"시세 중앙값 {int(median):,}G\n\n"
+                f"0 빼먹은 거 아닌지 의심됩니다...\n"
+                f"눈치 빠른 모험가에게는 로또일 수도?"
+            ),
+            color=0xFEE75C
+        )
+
+    elif t == "price_above":
+        price = alert["price"]
+        target = alert["target"]
+        embed = discord.Embed(
+            title=f"[지정가] {name} 목표가 돌파!",
+            description=(
+                f"현재가 **{int(price):,}G**\n"
+                f"설정가 {int(target):,}G 이상 도달\n\n"
+                f"이 알림은 자동으로 해제됩니다."
+            ),
+            color=0xFF6348
+        )
+
+    elif t == "price_below":
+        price = alert["price"]
+        target = alert["target"]
+        embed = discord.Embed(
+            title=f"[지정가] {name} 지지선 이탈!",
+            description=(
+                f"현재가 **{int(price):,}G**\n"
+                f"설정가 {int(target):,}G 이하로 하락\n\n"
+                f"이 알림은 자동으로 해제됩니다."
+            ),
+            color=0x3498FF
+        )
+
     else:
         embed = discord.Embed(
             title=f"{name} 시세 알림",
@@ -369,3 +431,188 @@ async def process_alerts_for_item(
 
     except Exception as e:
         logger.error(f"시세 알림 처리 오류 ({item_name}): {e}")
+
+
+# ─── 사용자별 DM 알림 ───
+
+# 사용자별 쿨다운: {(user_id, item_id, event_type): datetime}
+_user_cooldowns: dict[tuple[int, str, str], datetime] = {}
+USER_COOLDOWN_MINUTES = 60
+
+
+def _is_user_on_cooldown(user_id: int, item_id: str, event_type: str) -> bool:
+    key = (user_id, item_id, event_type)
+    last = _user_cooldowns.get(key)
+    if last is None:
+        return False
+    return datetime.now(KST) - last < timedelta(minutes=USER_COOLDOWN_MINUTES)
+
+
+def _set_user_cooldown(user_id: int, item_id: str, event_type: str):
+    _user_cooldowns[(user_id, item_id, event_type)] = datetime.now(KST)
+
+
+async def process_user_alerts_for_item(
+    bot, item_id: str, item_name: str
+):
+    """사용자별 커스텀 알림 체크 및 DM 발송"""
+    try:
+        user_alerts = await get_all_user_alerts_for_item(item_id)
+        if not user_alerts:
+            return
+
+        now = datetime.now(KST)
+        now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+
+        # 공통 데이터 1회만 조회
+        h1_start = (now - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
+        h1_records = await get_price_history(item_id, h1_start, now_str)
+
+        d14_start = (now - timedelta(days=14)).strftime("%Y-%m-%d %H:%M:%S")
+        d14_records = await get_price_history(item_id, d14_start, now_str)
+
+        d1_start = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
+        d1_records = await get_price_history(item_id, d1_start, now_str)
+
+        # 현재가
+        current_price = None
+        if d14_records:
+            current_price = d14_records[-1]["unit_price"]
+
+        # 1시간 변동률
+        change_pct = None
+        if h1_records and len(h1_records) >= 2:
+            first = h1_records[0]["unit_price"]
+            last = h1_records[-1]["unit_price"]
+            if first > 0:
+                change_pct = (last - first) / first * 100
+
+        # 가격 범위
+        all_prices = [r["unit_price"] for r in d14_records] if d14_records else []
+        past_prices = all_prices[:-1] if len(all_prices) > 1 else []
+
+        # 거래량
+        vol_1h = sum(r["count"] for r in h1_records) if h1_records else 0
+        vol_24h = sum(r["count"] for r in d1_records) if d1_records else 0
+        avg_hourly = vol_24h / 24 if vol_24h > 0 else 0
+
+        # RSI
+        rsi = None
+        if d14_records and len(d14_records) >= 10:
+            ohlc = aggregate_to_ohlc(d14_records, interval_minutes=1440)
+            if len(ohlc) >= 5:
+                rsi = calc_rsi(ohlc["close"])
+
+        # 사용자별로 그룹핑
+        user_groups = {}
+        for ua in user_alerts:
+            user_groups.setdefault(ua["user_id"], []).append(ua)
+
+        for user_id, alerts in user_groups.items():
+            dm_alerts = []
+
+            for ua in alerts:
+                at = ua["alert_type"]
+                tv = ua["threshold_value"]
+
+                if _is_user_on_cooldown(user_id, item_id, at):
+                    continue
+
+                triggered = False
+                alert_data = {"type": at, "item_name": item_name}
+
+                if at == "surge" and change_pct is not None:
+                    if change_pct >= tv:
+                        alert_data.update(change_pct=change_pct, price=current_price)
+                        triggered = True
+
+                elif at == "crash" and change_pct is not None:
+                    if change_pct <= -tv:
+                        alert_data.update(change_pct=change_pct, price=current_price)
+                        triggered = True
+
+                elif at == "new_high" and current_price and past_prices:
+                    # tv = 기간(일), d14_records에서 tv일 범위만 사용
+                    window = [r["unit_price"] for r in d14_records
+                              if r["sold_date"] >= (now - timedelta(days=int(tv))).strftime("%Y-%m-%d %H:%M:%S")]
+                    if len(window) > 1 and current_price > max(window[:-1]):
+                        alert_data.update(
+                            price=current_price,
+                            prev_high=max(window[:-1])
+                        )
+                        triggered = True
+
+                elif at == "new_low" and current_price and past_prices:
+                    window = [r["unit_price"] for r in d14_records
+                              if r["sold_date"] >= (now - timedelta(days=int(tv))).strftime("%Y-%m-%d %H:%M:%S")]
+                    if len(window) > 1 and current_price < min(window[:-1]):
+                        alert_data.update(
+                            price=current_price,
+                            prev_low=min(window[:-1])
+                        )
+                        triggered = True
+
+                elif at == "volume_spike" and avg_hourly > 0:
+                    if vol_1h >= avg_hourly * tv:
+                        alert_data.update(
+                            vol_1h=vol_1h, avg_hourly=avg_hourly
+                        )
+                        triggered = True
+
+                elif at == "rsi_upper" and rsi is not None:
+                    if rsi > tv:
+                        alert_data.update(rsi=rsi)
+                        alert_data["type"] = "rsi_overbought"
+                        triggered = True
+
+                elif at == "rsi_lower" and rsi is not None:
+                    if rsi < tv:
+                        alert_data.update(rsi=rsi)
+                        alert_data["type"] = "rsi_oversold"
+                        triggered = True
+
+                elif at == "price_above" and current_price is not None:
+                    if current_price >= tv:
+                        alert_data.update(
+                            price=current_price, target=tv
+                        )
+                        triggered = True
+
+                elif at == "price_below" and current_price is not None:
+                    if current_price <= tv:
+                        alert_data.update(
+                            price=current_price, target=tv
+                        )
+                        triggered = True
+
+                if triggered:
+                    dm_alerts.append(alert_data)
+                    _set_user_cooldown(user_id, item_id, at)
+
+                    # 1회성 알림이면 자동 해제
+                    if ua.get("one_time", 0):
+                        await disable_user_alert(user_id, item_id, at)
+
+            # DM 발송
+            if dm_alerts:
+                try:
+                    user = await bot.fetch_user(user_id)
+                    for alert in dm_alerts:
+                        embed = build_alert_embed(alert)
+                        embed.set_footer(text="개인 알림 설정 | /알림설정으로 변경")
+                        await user.send(embed=embed)
+                        logger.info(
+                            f"DM 알림 발송: user={user_id}, "
+                            f"{item_name} - {alert['type']}"
+                        )
+                except discord.Forbidden:
+                    logger.warning(
+                        f"DM 발송 실패 (DM 비활성): user={user_id}"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"DM 알림 발송 오류: user={user_id}, {e}"
+                    )
+
+    except Exception as e:
+        logger.error(f"사용자별 알림 처리 오류 ({item_name}): {e}")
