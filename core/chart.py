@@ -191,7 +191,9 @@ def generate_comparison_chart(
                       color=color_a, linewidth=2.5, label=name_a, alpha=0.9)
         ax_price.fill_between(ohlc_a.index, ohlc_a["close"],
                               alpha=0.1, color=color_a)
-    ax_price.yaxis.set_major_formatter(mticker.FuncFormatter(_gold_formatter))
+    ax_price.yaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda x, p: f"{int(x):,}")
+    )
     ax_price.tick_params(axis="y", colors=color_a)
 
     # 우측 Y축: 아이템 B
@@ -202,7 +204,9 @@ def generate_comparison_chart(
                   alpha=0.9, linestyle="--")
         ax_b.fill_between(ohlc_b.index, ohlc_b["close"],
                           alpha=0.1, color=color_b)
-    ax_b.yaxis.set_major_formatter(mticker.FuncFormatter(_gold_formatter))
+    ax_b.yaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda x, p: f"{int(x):,}")
+    )
     ax_b.tick_params(axis="y", colors=color_b)
 
     # 범례 합치기
@@ -357,7 +361,9 @@ def generate_candlestick_chart(
                      linestyle="--", alpha=0.5)
 
     # y축 골드 포맷
-    ax_price.yaxis.set_major_formatter(mticker.FuncFormatter(_gold_formatter))
+    ax_price.yaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda x, p: f"{int(x):,}")
+    )
     ax_volume.yaxis.set_major_formatter(
         mticker.FuncFormatter(lambda x, p: f"{int(x):,}")
     )

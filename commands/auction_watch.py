@@ -9,7 +9,7 @@ from core.db import (
     remove_watch_item,
     get_all_watch_items,
 )
-from core.dnf_api import fetch_item_search
+from core.dnf_api import fetch_item_search, fetch_auction_sold
 from core.logger import logger
 from tasks.poll_auction_prices import fetch_and_save_item_prices
 
@@ -151,6 +151,15 @@ async def auction_watch_register(interaction: Interaction, item_name: str):
     items = await fetch_item_search(item_name)
     if not items:
         await interaction.followup.send("아이템을 찾을 수 없습니다.")
+        return
+
+    # 경매장 거래 이력이 있는 아이템만 필터링 (거래 불가 아이템 제외)
+    sold_data = await fetch_auction_sold(item_name)
+    if sold_data:
+        tradeable_ids = {row["itemId"] for row in sold_data}
+        items = [item for item in items if item["itemId"] in tradeable_ids]
+    if not items:
+        await interaction.followup.send("경매장에서 거래 가능한 아이템이 없습니다.")
         return
 
     # 검색 결과를 이미지와 함께 embed로 보여주기

@@ -273,6 +273,7 @@ async def fetch_item_search(item_name: str) -> list[dict] | None:
     url = f"{BASE_URL}/items"
     params = {
         "itemName": item_name,
+        "wordType": "full",
         "limit": 30,
         "apikey": API_KEY
     }
