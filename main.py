@@ -40,6 +40,9 @@ from commands.auction_watch import (
 from commands.auction_chart import auction_chart
 from commands.auction_compare import auction_compare
 from commands.auction_overview import auction_overview
+from commands.activity_basket import (
+    basket_register, basket_unregister, basket_list, activity_index_cmd
+)
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -90,6 +93,10 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(auction_chart)
         self.tree.add_command(auction_compare)
         self.tree.add_command(auction_overview)
+        self.tree.add_command(basket_register)
+        self.tree.add_command(basket_unregister)
+        self.tree.add_command(basket_list)
+        self.tree.add_command(activity_index_cmd)
         logger.info("커맨드 등록 완료 (sync는 on_ready에서 실행)")
 
 

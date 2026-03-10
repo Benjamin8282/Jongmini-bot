@@ -96,6 +96,15 @@ async def init_db():
                 CREATE INDEX IF NOT EXISTS idx_aph_item_sold
                 ON auction_price_history(item_id, sold_date)
             """)
+            # 활동지수 바스켓 아이템 테이블
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS activity_basket (
+                    item_id TEXT PRIMARY KEY,
+                    item_name TEXT NOT NULL,
+                    added_by INTEGER NOT NULL,
+                    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             # 봇 메타데이터 (버전 관리 등)
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS bot_metadata (
@@ -627,3 +636,66 @@ async def set_metadata(key: str, value: str):
         logger.error(f"메타데이터 저장 실패 ({key}): {e}")
 
 
+# ----- 활동지수 바스켓 -----
+
+async def add_basket_item(item_id: str, item_name: str, user_id: int) -> bool:
+    """바스켓 아이템 등록. 신규면 True, 이미 존재하면 False"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            cursor = await conn.execute("""
+                INSERT OR IGNORE INTO activity_basket
+                (item_id, item_name, added_by) VALUES (?, ?, ?)
+            """, (item_id, item_name, user_id))
+            await conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.error(f"바스켓 아이템 등록 실패: {e}")
+        return False
+
+
+async def remove_basket_item(item_id: str):
+    """바스켓 아이템 해제"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute(
+                "DELETE FROM activity_basket WHERE item_id = ?", (item_id,)
+            )
+            await conn.commit()
+    except Exception as e:
+        logger.error(f"바스켓 아이템 해제 실패: {e}")
+
+
+async def get_basket_items() -> list[dict]:
+    """바스켓 아이템 목록 반환"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
+                "SELECT * FROM activity_basket ORDER BY added_at"
+            )
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"바스켓 아이템 목록 조회 실패: {e}")
+        return []
+
+
+async def get_daily_volumes(item_id: str, days: int) -> list[dict]:
+    """아이템의 일별 거래량 집계"""
+    try:
+        modifier = f"-{int(days)} days"
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT DATE(sold_date) as date, SUM(count) as volume
+                FROM auction_price_history
+                WHERE item_id = ?
+                  AND datetime(sold_date) >= datetime('now', ?)
+                GROUP BY DATE(sold_date)
+                ORDER BY date
+            """, (item_id, modifier))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"일별 거래량 조회 실패: {e}")
+        return []

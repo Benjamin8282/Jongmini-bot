@@ -5,8 +5,10 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.dates as mdates  # noqa: E402
 import matplotlib.ticker as mticker  # noqa: E402
 import mplfinance as mpf  # noqa: E402
+import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
 # 다크 테마 색상 팔레트
@@ -389,6 +391,74 @@ def generate_candlestick_chart(
     # 하단 볼륨 라벨
     ax_volume.set_ylabel("거래량", fontsize=9, color="#888888",
                          fontfamily=font_name)
+
+    buf = BytesIO()
+    try:
+        fig.savefig(buf, format="png", dpi=120, bbox_inches="tight",
+                    facecolor=BG_COLOR, edgecolor="none")
+        buf.seek(0)
+        return buf
+    finally:
+        plt.close(fig)
+
+
+def generate_activity_chart(
+    dates: list[str], index_values: list[float],
+    item_count: int = 0
+) -> BytesIO | None:
+    """활동지수 라인 차트 생성. 100% 기준선 포함."""
+    if not dates or not index_values:
+        return None
+
+    font_name = get_korean_font()
+    _apply_dark_theme(font_name)
+
+    fig, ax = plt.subplots(figsize=(13, 5), facecolor=BG_COLOR)
+    ax.set_facecolor(PANEL_COLOR)
+
+    x = pd.to_datetime(dates)
+    y = np.array(index_values, dtype=float)
+
+    # 100% 기준선
+    ax.axhline(y=100, color="#888888", linewidth=1, linestyle="--", alpha=0.6)
+
+    # 100% 위/아래 색분할 채우기
+    ax.fill_between(x, y, 100, where=(y >= 100),
+                    color=UP_COLOR, alpha=0.15, interpolate=True)
+    ax.fill_between(x, y, 100, where=(y < 100),
+                    color=DOWN_COLOR, alpha=0.15, interpolate=True)
+
+    # 메인 라인
+    ax.plot(x, y, color=ACCENT, linewidth=2.5, alpha=0.9)
+
+    # 현재값 점
+    if len(y) > 0:
+        last_val = y[-1]
+        dot_color = UP_COLOR if last_val >= 100 else DOWN_COLOR
+        ax.plot(x[-1], last_val, "o", color=dot_color, markersize=8, zorder=5)
+        ax.annotate(
+            f"{last_val:.1f}%",
+            xy=(x[-1], last_val),
+            xytext=(10, 10), textcoords="offset points",
+            fontsize=11, fontweight="bold", color=dot_color,
+            fontfamily=font_name
+        )
+
+    # 타이틀
+    fig.text(0.06, 0.96, "활동지수 (거래량 기반 추정)",
+             fontsize=15, fontweight="bold", fontfamily=font_name,
+             color=TEXT_COLOR, va="top")
+    fig.text(0.06, 0.91, f"바스켓 {item_count}개 아이템 | 100% = 30일 평균",
+             fontsize=10, fontfamily=font_name,
+             color="#888888", va="top")
+
+    # 축 설정
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
+    ax.grid(True, color=GRID_COLOR, linestyle="--", linewidth=0.5, alpha=0.5)
+
+    fig.subplots_adjust(left=0.08, right=0.95, top=0.85, bottom=0.12)
 
     buf = BytesIO()
     try:
