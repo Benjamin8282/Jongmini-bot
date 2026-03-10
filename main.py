@@ -37,6 +37,7 @@ from commands.auction_watch import (
     auction_watch_register, auction_watch_unregister, auction_watch_list
 )
 from commands.auction_chart import auction_chart
+from commands.auction_compare import auction_compare
 from commands.auction_overview import auction_overview
 
 load_dotenv()
@@ -86,6 +87,7 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(auction_watch_unregister)
         self.tree.add_command(auction_watch_list)
         self.tree.add_command(auction_chart)
+        self.tree.add_command(auction_compare)
         self.tree.add_command(auction_overview)
         logger.info("커맨드 등록 완료 (sync는 on_ready에서 실행)")
 
