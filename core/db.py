@@ -678,6 +678,29 @@ async def get_daily_volumes(item_id: str, days: int) -> list[dict]:
         return []
 
 
+async def get_daily_avg_prices(item_id: str, days: int) -> list[dict]:
+    """아이템의 일별 거래량 가중 평균가 집계"""
+    try:
+        modifier = f"-{int(days)} days"
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT DATE(sold_date) as date,
+                       SUM(unit_price * count) * 1.0 / SUM(count) as avg_price,
+                       SUM(count) as volume
+                FROM auction_price_history
+                WHERE item_id = ?
+                  AND datetime(sold_date) >= datetime('now', ?)
+                GROUP BY DATE(sold_date)
+                ORDER BY date
+            """, (item_id, modifier))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"일별 평균가 조회 실패: {e}")
+        return []
+
+
 # ----- 사용자별 알림 설정 -----
 
 async def upsert_user_alert(

@@ -45,6 +45,7 @@ from commands.activity_basket import (
 from commands.alert_settings import (
     alert_settings_cmd, alert_list_cmd, alert_remove_cmd
 )
+from commands.dunspy import dunspy_cmd
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -102,6 +103,7 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(alert_settings_cmd)
         self.tree.add_command(alert_list_cmd)
         self.tree.add_command(alert_remove_cmd)
+        self.tree.add_command(dunspy_cmd)
         logger.info("커맨드 등록 완료 (sync는 on_ready에서 실행)")
 
 

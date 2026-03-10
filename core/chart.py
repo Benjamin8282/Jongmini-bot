@@ -527,3 +527,99 @@ def generate_activity_chart(
         return buf
     finally:
         plt.close(fig)
+
+
+def generate_dunspy_chart(
+    dates: list[str], index_values: list[float],
+    current: float = 0, change: float = 0,
+    change_pct: float = 0, item_count: int = 0,
+    base_date: str = "",
+) -> BytesIO | None:
+    """던스피(DUNSPY) 지수 차트. 증시 스타일."""
+    if not dates or not index_values:
+        return None
+
+    font_name = get_korean_font()
+    _apply_dark_theme(font_name)
+
+    fig, ax = plt.subplots(figsize=(13, 5), facecolor=BG_COLOR)
+    ax.set_facecolor(PANEL_COLOR)
+
+    x = pd.to_datetime(dates)
+    y = np.array(index_values, dtype=float)
+
+    # 1000 기준선
+    ax.axhline(y=1000, color="#888888", linewidth=1,
+               linestyle="--", alpha=0.4)
+
+    # 그라데이션 채우기 (1000 기준 위/아래)
+    ax.fill_between(x, y, 1000, where=(y >= 1000),
+                    color=UP_COLOR, alpha=0.12, interpolate=True)
+    ax.fill_between(x, y, 1000, where=(y < 1000),
+                    color=DOWN_COLOR, alpha=0.12, interpolate=True)
+
+    # 메인 라인
+    line_color = UP_COLOR if current >= 1000 else DOWN_COLOR
+    ax.plot(x, y, color=line_color, linewidth=2.5, alpha=0.9)
+
+    # 기간 고/저
+    high_val = max(y)
+    low_val = min(y)
+    ax.axhline(y=high_val, color=UP_COLOR, linewidth=0.7,
+               linestyle=":", alpha=0.5)
+    ax.axhline(y=low_val, color=DOWN_COLOR, linewidth=0.7,
+               linestyle=":", alpha=0.5)
+    ax.text(x[0], high_val, f" H {high_val:.1f}",
+            fontsize=8, color=UP_COLOR, va="bottom",
+            fontfamily=font_name, alpha=0.7)
+    ax.text(x[0], low_val, f" L {low_val:.1f}",
+            fontsize=8, color=DOWN_COLOR, va="top",
+            fontfamily=font_name, alpha=0.7)
+
+    # 현재값 점 + 라벨
+    if len(y) > 0:
+        dot_color = UP_COLOR if change >= 0 else DOWN_COLOR
+        arrow = "▲" if change > 0 else "▼" if change < 0 else "−"
+        ax.plot(x[-1], current, "o", color=dot_color,
+                markersize=10, zorder=5)
+        ax.annotate(
+            f"{current:.1f}  {arrow}{abs(change_pct):.2f}%",
+            xy=(x[-1], current),
+            xytext=(10, 12), textcoords="offset points",
+            fontsize=12, fontweight="bold", color=dot_color,
+            fontfamily=font_name,
+            bbox=dict(boxstyle="round,pad=0.3",
+                      facecolor=PANEL_COLOR, edgecolor=dot_color,
+                      alpha=0.8)
+        )
+
+    # 타이틀
+    fig.text(0.06, 0.96, "DUNSPY 던스피 종합지수",
+             fontsize=16, fontweight="bold", fontfamily=font_name,
+             color=TEXT_COLOR, va="top")
+    subtitle = (
+        f"바스켓 {item_count}종목 | 기준일 {base_date} = 1,000"
+    )
+    fig.text(0.06, 0.91, subtitle,
+             fontsize=10, fontfamily=font_name,
+             color="#888888", va="top")
+
+    # 축 설정
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.yaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda v, p: f"{v:,.0f}")
+    )
+    ax.grid(True, color=GRID_COLOR, linestyle="--",
+            linewidth=0.5, alpha=0.5)
+
+    fig.subplots_adjust(left=0.08, right=0.92, top=0.85, bottom=0.12)
+
+    buf = BytesIO()
+    try:
+        fig.savefig(buf, format="png", dpi=120, bbox_inches="tight",
+                    facecolor=BG_COLOR, edgecolor="none")
+        buf.seek(0)
+        return buf
+    finally:
+        plt.close(fig)
