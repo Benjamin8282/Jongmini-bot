@@ -555,8 +555,8 @@ async def process_user_alerts_for_item(
                     dm_alerts.append(alert_data)
                     _set_user_cooldown(user_id, item_id, at)
 
-                    # 지정가 알림은 1회성
-                    if at in ("price_above", "price_below"):
+                    # 1회성 알림이면 자동 해제
+                    if ua.get("one_time", 0):
                         await disable_user_alert(user_id, item_id, at)
 
             # DM 발송

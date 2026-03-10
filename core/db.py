@@ -104,6 +104,7 @@ async def init_db():
                     item_id TEXT NOT NULL,
                     alert_type TEXT NOT NULL,
                     threshold_value REAL NOT NULL,
+                    one_time INTEGER DEFAULT 0,
                     enabled INTEGER DEFAULT 1,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE(user_id, item_id, alert_type)
@@ -680,19 +681,21 @@ async def get_daily_volumes(item_id: str, days: int) -> list[dict]:
 # ----- 사용자별 알림 설정 -----
 
 async def upsert_user_alert(
-    user_id: int, item_id: str, alert_type: str, threshold_value: float
+    user_id: int, item_id: str, alert_type: str,
+    threshold_value: float, one_time: bool = False
 ):
     """사용자 알림 설정 저장 (있으면 업데이트)"""
     try:
+        ot = 1 if one_time else 0
         async with aiosqlite.connect(DB_PATH) as conn:
             await conn.execute("""
                 INSERT INTO user_alert_settings
-                (user_id, item_id, alert_type, threshold_value, enabled)
-                VALUES (?, ?, ?, ?, 1)
+                (user_id, item_id, alert_type, threshold_value, one_time, enabled)
+                VALUES (?, ?, ?, ?, ?, 1)
                 ON CONFLICT(user_id, item_id, alert_type)
-                DO UPDATE SET threshold_value = ?, enabled = 1
-            """, (user_id, item_id, alert_type, threshold_value,
-                  threshold_value))
+                DO UPDATE SET threshold_value = ?, one_time = ?, enabled = 1
+            """, (user_id, item_id, alert_type, threshold_value, ot,
+                  threshold_value, ot))
             await conn.commit()
     except Exception as e:
         logger.error(f"사용자 알림 설정 저장 실패: {e}")

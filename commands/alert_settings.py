@@ -29,6 +29,12 @@ DEFAULT_THRESHOLDS = {
     "rsi_lower": 30.0,
 }
 
+# 알림 종류별 기본 1회성 여부 (지정가만 기본 1회)
+DEFAULT_ONE_TIME = {
+    "price_above": True,
+    "price_below": True,
+}
+
 # 알림 종류별 단위 & 안내
 ALERT_META = {
     "surge": {"unit": "%", "label": "변동률 (%)", "hint": "예: 15"},
@@ -55,8 +61,16 @@ def _format_value(alert_type: str, value: float) -> str:
         return f"{value:.0f}{meta['unit']}"
 
 
-def _build_settings_embed(item_name: str, user_settings: list[dict]) -> discord.Embed:
-    settings_map = {s["alert_type"]: s["threshold_value"] for s in user_settings}
+def _mode_label(one_time: bool) -> str:
+    return "1회" if one_time else "반복"
+
+
+def _build_settings_embed(
+    item_name: str, user_settings: list[dict]
+) -> discord.Embed:
+    settings_map = {
+        s["alert_type"]: s for s in user_settings
+    }
 
     embed = discord.Embed(
         title=f"알림 설정: {item_name}",
@@ -66,8 +80,10 @@ def _build_settings_embed(item_name: str, user_settings: list[dict]) -> discord.
     lines = []
     for at, label in ALERT_TYPE_LABELS.items():
         if at in settings_map:
-            val = _format_value(at, settings_map[at])
-            lines.append(f"**{label}**: {val}")
+            s = settings_map[at]
+            val = _format_value(at, s["threshold_value"])
+            mode = _mode_label(bool(s.get("one_time", 0)))
+            lines.append(f"**{label}**: {val} [{mode}]")
         elif at in DEFAULT_THRESHOLDS:
             val = _format_value(at, DEFAULT_THRESHOLDS[at])
             lines.append(f"{label}: {val} (기본값)")
@@ -75,16 +91,20 @@ def _build_settings_embed(item_name: str, user_settings: list[dict]) -> discord.
             lines.append(f"{label}: 미설정")
 
     embed.description = "\n".join(lines)
-    embed.set_footer(text="버튼을 눌러 수치를 변경하세요. 설정하면 DM으로 알림을 받습니다.")
+    embed.set_footer(
+        text="버튼을 눌러 수치를 변경하세요. "
+             "설정하면 DM으로 알림을 받습니다."
+    )
     return embed
 
 
-# ─── Modal: 수치 입력 ───
+# ─── Modal: 수치 + 알림 방식 입력 ───
 
 class ThresholdInputModal(ui.Modal):
     def __init__(
         self, alert_type: str, item_id: str,
         item_name: str, current_value: float | None,
+        current_one_time: bool | None,
         parent_view: "AlertTypeView"
     ):
         label = ALERT_TYPE_LABELS[alert_type]
@@ -97,7 +117,10 @@ class ThresholdInputModal(ui.Modal):
         meta = ALERT_META[alert_type]
         default = ""
         if current_value is not None:
-            default = str(int(current_value)) if current_value == int(current_value) else str(current_value)
+            if current_value == int(current_value):
+                default = str(int(current_value))
+            else:
+                default = str(current_value)
         elif alert_type in DEFAULT_THRESHOLDS:
             default = str(int(DEFAULT_THRESHOLDS[alert_type]))
 
@@ -110,7 +133,24 @@ class ThresholdInputModal(ui.Modal):
         )
         self.add_item(self.value_input)
 
+        # 알림 방식 선택
+        if current_one_time is not None:
+            mode_default = "1회" if current_one_time else "반복"
+        else:
+            is_default_ot = DEFAULT_ONE_TIME.get(alert_type, False)
+            mode_default = "1회" if is_default_ot else "반복"
+
+        self.mode_input = ui.TextInput(
+            label="알림 방식 (1회 또는 반복)",
+            placeholder="1회 = 한번 울리면 자동 해제 / 반복 = 계속 유지",
+            default=mode_default,
+            required=True,
+            max_length=10,
+        )
+        self.add_item(self.mode_input)
+
     async def on_submit(self, interaction: Interaction):
+        # 수치 파싱
         raw = self.value_input.value.strip().replace(",", "")
         try:
             value = float(raw)
@@ -126,22 +166,41 @@ class ThresholdInputModal(ui.Modal):
             )
             return
 
-        if self.alert_type in ("rsi_upper", "rsi_lower") and not (0 < value <= 100):
+        if self.alert_type in ("rsi_upper", "rsi_lower"):
+            if not (0 < value <= 100):
+                await interaction.response.send_message(
+                    "RSI는 1~100 사이 값을 입력해주세요.",
+                    ephemeral=True
+                )
+                return
+
+        # 알림 방식 파싱
+        mode_raw = self.mode_input.value.strip()
+        if mode_raw in ("1회", "1", "once", "한번"):
+            one_time = True
+        elif mode_raw in ("반복", "0", "repeat", "계속"):
+            one_time = False
+        else:
             await interaction.response.send_message(
-                "RSI는 1~100 사이 값을 입력해주세요.", ephemeral=True
+                "'1회' 또는 '반복'을 입력해주세요.",
+                ephemeral=True
             )
             return
 
         await upsert_user_alert(
             interaction.user.id, self.item_id,
-            self.alert_type, value
+            self.alert_type, value, one_time
         )
 
         # 부모 뷰 갱신
-        settings = await get_user_alerts(interaction.user.id, self.item_id)
+        settings = await get_user_alerts(
+            interaction.user.id, self.item_id
+        )
         embed = _build_settings_embed(self.item_name, settings)
         self.parent_view.update_buttons(settings)
-        await interaction.response.edit_message(embed=embed, view=self.parent_view)
+        await interaction.response.edit_message(
+            embed=embed, view=self.parent_view
+        )
 
 
 # ─── View: 알림 종류 버튼 그리드 ───
@@ -158,7 +217,9 @@ class AlertTypeView(ui.View):
         self._build_buttons(user_settings)
 
     def _build_buttons(self, user_settings: list[dict]):
-        settings_map = {s["alert_type"]: s["threshold_value"] for s in user_settings}
+        settings_map = {
+            s["alert_type"]: s for s in user_settings
+        }
 
         button_defs = [
             ("surge", 0, discord.ButtonStyle.danger),
@@ -174,9 +235,16 @@ class AlertTypeView(ui.View):
 
         for at, row, style in button_defs:
             label = ALERT_TYPE_LABELS[at]
+            cur_val = None
+            cur_ot = None
+
             if at in settings_map:
-                val = _format_value(at, settings_map[at])
-                label = f"{label} ({val})"
+                s = settings_map[at]
+                cur_val = s["threshold_value"]
+                cur_ot = bool(s.get("one_time", 0))
+                val = _format_value(at, cur_val)
+                mode = _mode_label(cur_ot)
+                label = f"{label} ({val}|{mode})"
             elif at in DEFAULT_THRESHOLDS:
                 val = _format_value(at, DEFAULT_THRESHOLDS[at])
                 label = f"{label} ({val})"
@@ -185,7 +253,7 @@ class AlertTypeView(ui.View):
                 label=label[:80], style=style,
                 custom_id=f"alert_{at}", row=row
             )
-            btn.callback = self._make_callback(at, settings_map.get(at))
+            btn.callback = self._make_callback(at, cur_val, cur_ot)
             self.add_item(btn)
 
         # 초기화 버튼
@@ -200,7 +268,11 @@ class AlertTypeView(ui.View):
         self.clear_items()
         self._build_buttons(user_settings)
 
-    def _make_callback(self, alert_type: str, current_value: float | None):
+    def _make_callback(
+        self, alert_type: str,
+        current_value: float | None,
+        current_one_time: bool | None
+    ):
         async def callback(interaction: Interaction):
             if interaction.user.id != self.user_id:
                 await interaction.response.send_message(
@@ -210,7 +282,7 @@ class AlertTypeView(ui.View):
                 return
             modal = ThresholdInputModal(
                 alert_type, self.item_id, self.item_name,
-                current_value, self
+                current_value, current_one_time, self
             )
             await interaction.response.send_modal(modal)
         return callback
@@ -225,7 +297,9 @@ class AlertTypeView(ui.View):
         await delete_user_alert(self.user_id, self.item_id)
         embed = _build_settings_embed(self.item_name, [])
         self.update_buttons([])
-        await interaction.response.edit_message(embed=embed, view=self)
+        await interaction.response.edit_message(
+            embed=embed, view=self
+        )
 
 
 # ─── View: 아이템 선택 ───
@@ -234,7 +308,9 @@ class ItemSelectView(ui.View):
     def __init__(self, items: list[dict], author_id: int):
         super().__init__(timeout=120)
         self.author_id = author_id
-        self._items_map = {item["item_id"]: item for item in items[:25]}
+        self._items_map = {
+            item["item_id"]: item for item in items[:25]
+        }
 
         options = [
             discord.SelectOption(
@@ -367,9 +443,12 @@ async def alert_list_cmd(interaction: Interaction):
     for item_name, alerts in grouped.items():
         lines = []
         for a in alerts:
-            label = ALERT_TYPE_LABELS.get(a["alert_type"], a["alert_type"])
+            label = ALERT_TYPE_LABELS.get(
+                a["alert_type"], a["alert_type"]
+            )
             val = _format_value(a["alert_type"], a["threshold_value"])
-            lines.append(f"**{label}**: {val}")
+            mode = _mode_label(bool(a.get("one_time", 0)))
+            lines.append(f"**{label}**: {val} [{mode}]")
 
         embed = discord.Embed(
             title=item_name,
