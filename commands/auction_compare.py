@@ -169,7 +169,15 @@ class CompareControlView(ui.View):
         self.item_name_b = item_name_b
         self.interval_minutes = interval_minutes
         self.period_days = period_days
+        self.message = None
         self._update_buttons()
+
+    async def on_timeout(self):
+        if self.message:
+            try:
+                await self.message.delete()
+            except Exception:
+                pass
 
     def _update_buttons(self):
         self.clear_items()
@@ -322,10 +330,11 @@ async def auction_compare(interaction: Interaction, item_name_a: str, item_name_
     )
 
     if isinstance(result, str):
-        await interaction.followup.send(content=result, view=view)
+        msg = await interaction.followup.send(content=result, view=view)
     else:
         embed, file, corr_embed = result
         embeds = [embed]
         if corr_embed:
             embeds.append(corr_embed)
-        await interaction.followup.send(embeds=embeds, file=file, view=view)
+        msg = await interaction.followup.send(embeds=embeds, file=file, view=view)
+    view.message = msg
