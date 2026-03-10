@@ -97,11 +97,11 @@ async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
         })
         _set_cooldown(item_id, "new_high")
 
-    # 0빼기 파격세일 감지: 중앙값의 50% 이하면 실수 거래로 판단
+    # 0빼기 파격세일 감지: 중앙값의 60% 이하면 실수 거래로 판단
     sorted_prices = sorted(past_prices)
     median_price = sorted_prices[len(sorted_prices) // 2]
     fat_finger = False
-    if median_price > 0 and current_price < median_price * 0.5:
+    if median_price > 0 and current_price < median_price * 0.6:
         fat_finger = True
         if not _is_on_cooldown(item_id, "fat_finger"):
             discount = (1 - current_price / median_price) * 100
