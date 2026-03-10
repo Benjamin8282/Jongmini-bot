@@ -50,7 +50,7 @@ async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
         if first_price > 0:
             change_pct = (last_price - first_price) / first_price * 100
 
-            if change_pct >= 10 and not _is_on_cooldown(item_id, "surge"):
+            if change_pct >= 30 and not _is_on_cooldown(item_id, "surge"):
                 alerts.append({
                     "level": "urgent",
                     "type": "surge",
@@ -61,7 +61,7 @@ async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
                 _set_cooldown(item_id, "surge")
                 _clear_cooldown(item_id, "crash")
 
-            elif change_pct <= -10 and not _is_on_cooldown(item_id, "crash"):
+            elif change_pct <= -30 and not _is_on_cooldown(item_id, "crash"):
                 alerts.append({
                     "level": "urgent",
                     "type": "crash",
@@ -73,8 +73,8 @@ async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
                 _clear_cooldown(item_id, "surge")
 
     # --- 7일 데이터: 신고가/신저가, 거래량 폭증, 기술적 시그널 ---
-    d7_start = (now - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
-    d7_records = await get_price_history(item_id, d7_start, now_str)
+    d14_start = (now - timedelta(days=14)).strftime("%Y-%m-%d %H:%M:%S")
+    d7_records = await get_price_history(item_id, d14_start, now_str)
 
     if not d7_records or len(d7_records) < 10:
         return alerts
@@ -115,7 +115,7 @@ async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
         vol_1h = sum(r["count"] for r in h1_records)
         vol_24h = sum(r["count"] for r in d1_records)
         avg_hourly = vol_24h / 24
-        if avg_hourly > 0 and vol_1h >= avg_hourly * 3:
+        if avg_hourly > 0 and vol_1h >= avg_hourly * 10:
             if not _is_on_cooldown(item_id, "volume_spike"):
                 alerts.append({
                     "level": "major",
@@ -232,11 +232,11 @@ def build_alert_embed(alert: dict) -> discord.Embed:
         price = alert["price"]
         prev = alert["prev_high"]
         embed = discord.Embed(
-            title=f"[주요] {name} 7일 신고가 갱신!",
+            title=f"[주요] {name} 14일 신고가 갱신!",
             description=(
                 f"현재가 **{int(price):,}G**\n"
                 f"이전 최고가 {int(prev):,}G\n\n"
-                f"7일 동안의 최고 가격을 돌파했습니다.\n"
+                f"14일 동안의 최고 가격을 돌파했습니다.\n"
                 f"상승 추세가 이어질 수 있지만, 저항선 근처에서는 주의하세요."
             ),
             color=0xFF6348
@@ -246,11 +246,11 @@ def build_alert_embed(alert: dict) -> discord.Embed:
         price = alert["price"]
         prev = alert["prev_low"]
         embed = discord.Embed(
-            title=f"[주요] {name} 7일 신저가 갱신!",
+            title=f"[주요] {name} 14일 신저가 갱신!",
             description=(
                 f"현재가 **{int(price):,}G**\n"
                 f"이전 최저가 {int(prev):,}G\n\n"
-                f"7일 동안의 최저 가격을 갱신했습니다.\n"
+                f"14일 동안의 최저 가격을 갱신했습니다.\n"
                 f"추가 하락 가능성이 있지만, 반등 구간이 될 수도 있습니다."
             ),
             color=0x3498FF

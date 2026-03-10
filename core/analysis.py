@@ -75,6 +75,35 @@ def calc_price_volume_divergence(closes: pd.Series, volumes: pd.Series) -> str |
     return None
 
 
+def calc_correlation(closes_a: pd.Series, closes_b: pd.Series,
+                     min_overlap: int = 10) -> dict:
+    """두 종가 시계열의 피어슨 상관계수 계산."""
+    merged = pd.concat([closes_a, closes_b], axis=1, join="inner")
+    merged.columns = ["a", "b"]
+    overlap = len(merged)
+
+    if overlap < min_overlap:
+        return {
+            "correlation": None,
+            "overlap_count": overlap,
+            "interpretation": None,
+        }
+
+    corr = merged["a"].corr(merged["b"])
+    if abs(corr) >= 0.7:
+        interp = "강한 양의 상관 (같이 오르내림)" if corr > 0 else "강한 음의 상관 (반대로 움직임)"
+    elif abs(corr) >= 0.3:
+        interp = "약한 양의 상관" if corr > 0 else "약한 음의 상관"
+    else:
+        interp = "상관 없음 (독립적으로 움직임)"
+
+    return {
+        "correlation": corr,
+        "overlap_count": overlap,
+        "interpretation": interp,
+    }
+
+
 def analyze(ohlc_df: pd.DataFrame) -> dict:
     """OHLC DataFrame을 분석하여 종합 의견 생성."""
     closes = ohlc_df["close"]

@@ -162,6 +162,118 @@ def generate_overview_chart(items_data: list[dict]) -> BytesIO | None:
         plt.close(fig)
 
 
+def generate_comparison_chart(
+    name_a: str, ohlc_a: pd.DataFrame,
+    name_b: str, ohlc_b: pd.DataFrame,
+    interval_label: str = "1시간",
+    correlation: float | None = None,
+) -> BytesIO | None:
+    """두 아이템의 종가를 듀얼 Y축 라인 차트로 비교"""
+    if ohlc_a.empty and ohlc_b.empty:
+        return None
+
+    font_name = get_korean_font()
+    _apply_dark_theme(font_name)
+
+    fig, (ax_price, ax_vol) = plt.subplots(
+        2, 1, figsize=(13, 7),
+        gridspec_kw={"height_ratios": [4, 1]},
+        facecolor=BG_COLOR
+    )
+
+    color_a = UP_COLOR       # #ff4757
+    color_b = ACCENT         # #ffd32a
+
+    # 좌측 Y축: 아이템 A
+    ax_price.set_facecolor(PANEL_COLOR)
+    if not ohlc_a.empty:
+        ax_price.plot(ohlc_a.index, ohlc_a["close"],
+                      color=color_a, linewidth=2.5, label=name_a, alpha=0.9)
+        ax_price.fill_between(ohlc_a.index, ohlc_a["close"],
+                              alpha=0.1, color=color_a)
+    ax_price.yaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda x, p: f"{int(x):,}")
+    )
+    ax_price.tick_params(axis="y", colors=color_a)
+
+    # 우측 Y축: 아이템 B
+    ax_b = ax_price.twinx()
+    if not ohlc_b.empty:
+        ax_b.plot(ohlc_b.index, ohlc_b["close"],
+                  color=color_b, linewidth=1.8, label=name_b,
+                  alpha=0.9, linestyle="--")
+        ax_b.fill_between(ohlc_b.index, ohlc_b["close"],
+                          alpha=0.1, color=color_b)
+    ax_b.yaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda x, p: f"{int(x):,}")
+    )
+    ax_b.tick_params(axis="y", colors=color_b)
+
+    # 범례 합치기
+    handles_a, labels_a = ax_price.get_legend_handles_labels()
+    handles_b, labels_b = ax_b.get_legend_handles_labels()
+    if handles_a or handles_b:
+        legend = ax_price.legend(
+            handles_a + handles_b, labels_a + labels_b,
+            loc="upper left", fontsize=9, frameon=True,
+            facecolor=PANEL_COLOR, edgecolor=GRID_COLOR,
+            labelcolor=TEXT_COLOR, framealpha=0.8
+        )
+        legend.get_frame().set_linewidth(0.5)
+
+    # 상관계수 뱃지
+    if correlation is not None:
+        badge_color = "#2ed573" if correlation >= 0.3 else "#ff4757" if correlation <= -0.3 else "#888888"
+        ax_price.text(
+            0.98, 0.95, f"r = {correlation:.2f}",
+            transform=ax_price.transAxes, fontsize=11, fontweight="bold",
+            color="white", ha="right", va="top",
+            bbox=dict(boxstyle="round,pad=0.3", facecolor=badge_color, alpha=0.8)
+        )
+
+    # 타이틀
+    fig.text(0.06, 0.96, f"{name_a}  vs  {name_b}",
+             fontsize=15, fontweight="bold", fontfamily=font_name,
+             color=TEXT_COLOR, va="top")
+    fig.text(0.06, 0.92, interval_label,
+             fontsize=10, fontfamily=font_name,
+             color="#888888", va="top")
+
+    # 하단 거래량 바
+    ax_vol.set_facecolor(PANEL_COLOR)
+    bar_width_td = pd.Timedelta(minutes=15)
+    if not ohlc_a.empty and len(ohlc_a) >= 2:
+        bar_width_td = (ohlc_a.index[-1] - ohlc_a.index[0]) / len(ohlc_a) * 0.35
+
+    if not ohlc_a.empty:
+        ax_vol.bar(ohlc_a.index - bar_width_td / 2, ohlc_a["volume"],
+                   width=bar_width_td, color=color_a, alpha=0.5, label=name_a)
+    if not ohlc_b.empty:
+        ax_vol.bar(ohlc_b.index + bar_width_td / 2, ohlc_b["volume"],
+                   width=bar_width_td, color=color_b, alpha=0.5, label=name_b)
+
+    ax_vol.yaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda x, p: f"{int(x):,}")
+    )
+    ax_vol.set_ylabel("거래량", fontsize=9, color="#888888", fontfamily=font_name)
+
+    # 그리드
+    for ax in [ax_price, ax_vol]:
+        ax.grid(True, color=GRID_COLOR, linestyle="--", linewidth=0.5, alpha=0.5)
+    ax_b.grid(False)
+
+    fig.subplots_adjust(hspace=0.15, left=0.08, right=0.92, top=0.88, bottom=0.08)
+
+    buf = BytesIO()
+    try:
+        fig.savefig(buf, format="png", dpi=120, bbox_inches="tight",
+                    facecolor=BG_COLOR, edgecolor="none")
+        buf.seek(0)
+        return buf
+    finally:
+        plt.close(fig)
+
+
 def generate_candlestick_chart(
     item_name: str,
     ohlc_df: pd.DataFrame,
@@ -249,7 +361,9 @@ def generate_candlestick_chart(
                      linestyle="--", alpha=0.5)
 
     # y축 골드 포맷
-    ax_price.yaxis.set_major_formatter(mticker.FuncFormatter(_gold_formatter))
+    ax_price.yaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda x, p: f"{int(x):,}")
+    )
     ax_volume.yaxis.set_major_formatter(
         mticker.FuncFormatter(lambda x, p: f"{int(x):,}")
     )
