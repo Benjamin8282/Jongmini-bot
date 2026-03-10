@@ -96,6 +96,19 @@ async def init_db():
                 CREATE INDEX IF NOT EXISTS idx_aph_item_sold
                 ON auction_price_history(item_id, sold_date)
             """)
+            # 사용자별 알림 설정 테이블
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS user_alert_settings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    item_id TEXT NOT NULL,
+                    alert_type TEXT NOT NULL,
+                    threshold_value REAL NOT NULL,
+                    enabled INTEGER DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, item_id, alert_type)
+                )
+            """)
             # 활동지수 바스켓 아이템 테이블
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS activity_basket (
@@ -662,3 +675,106 @@ async def get_daily_volumes(item_id: str, days: int) -> list[dict]:
     except Exception as e:
         logger.error(f"일별 거래량 조회 실패: {e}")
         return []
+
+
+# ----- 사용자별 알림 설정 -----
+
+async def upsert_user_alert(
+    user_id: int, item_id: str, alert_type: str, threshold_value: float
+):
+    """사용자 알림 설정 저장 (있으면 업데이트)"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("""
+                INSERT INTO user_alert_settings
+                (user_id, item_id, alert_type, threshold_value, enabled)
+                VALUES (?, ?, ?, ?, 1)
+                ON CONFLICT(user_id, item_id, alert_type)
+                DO UPDATE SET threshold_value = ?, enabled = 1
+            """, (user_id, item_id, alert_type, threshold_value,
+                  threshold_value))
+            await conn.commit()
+    except Exception as e:
+        logger.error(f"사용자 알림 설정 저장 실패: {e}")
+
+
+async def get_user_alerts(
+    user_id: int, item_id: str | None = None
+) -> list[dict]:
+    """사용자의 알림 설정 조회. item_id 없으면 전체."""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            if item_id:
+                cursor = await conn.execute("""
+                    SELECT s.*, w.item_name
+                    FROM user_alert_settings s
+                    LEFT JOIN auction_watch_items w ON s.item_id = w.item_id
+                    WHERE s.user_id = ? AND s.item_id = ? AND s.enabled = 1
+                    ORDER BY s.alert_type
+                """, (user_id, item_id))
+            else:
+                cursor = await conn.execute("""
+                    SELECT s.*, w.item_name
+                    FROM user_alert_settings s
+                    LEFT JOIN auction_watch_items w ON s.item_id = w.item_id
+                    WHERE s.user_id = ? AND s.enabled = 1
+                    ORDER BY s.item_id, s.alert_type
+                """, (user_id,))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"사용자 알림 설정 조회 실패: {e}")
+        return []
+
+
+async def delete_user_alert(
+    user_id: int, item_id: str, alert_type: str | None = None
+):
+    """사용자 알림 삭제. alert_type 없으면 해당 아이템 전체."""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            if alert_type:
+                await conn.execute("""
+                    DELETE FROM user_alert_settings
+                    WHERE user_id = ? AND item_id = ? AND alert_type = ?
+                """, (user_id, item_id, alert_type))
+            else:
+                await conn.execute("""
+                    DELETE FROM user_alert_settings
+                    WHERE user_id = ? AND item_id = ?
+                """, (user_id, item_id))
+            await conn.commit()
+    except Exception as e:
+        logger.error(f"사용자 알림 삭제 실패: {e}")
+
+
+async def get_all_user_alerts_for_item(item_id: str) -> list[dict]:
+    """특정 아이템에 대한 모든 사용자의 알림 설정 조회"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT * FROM user_alert_settings
+                WHERE item_id = ? AND enabled = 1
+            """, (item_id,))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"아이템별 사용자 알림 조회 실패: {e}")
+        return []
+
+
+async def disable_user_alert(
+    user_id: int, item_id: str, alert_type: str
+):
+    """알림 비활성화 (지정가 알림 발동 후)"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("""
+                UPDATE user_alert_settings SET enabled = 0
+                WHERE user_id = ? AND item_id = ? AND alert_type = ?
+            """, (user_id, item_id, alert_type))
+            await conn.commit()
+    except Exception as e:
+        logger.error(f"사용자 알림 비활성화 실패: {e}")
