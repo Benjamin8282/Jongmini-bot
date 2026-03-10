@@ -105,13 +105,6 @@ async def init_db():
                     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            # 봇 메타데이터 (버전 관리 등)
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS bot_metadata (
-                    key TEXT PRIMARY KEY,
-                    value TEXT NOT NULL
-                )
-            """)
             await conn.commit()
         logger.info("DB 초기화 완료")
     except Exception as e:
@@ -604,36 +597,6 @@ async def cleanup_old_price_history(days: int = 90):
         logger.info(f"오래된 거래 이력 정리 완료: {result.rowcount}건 삭제")
     except Exception as e:
         logger.error(f"거래 이력 정리 실패: {e}")
-
-
-# ----- 봇 메타데이터 -----
-
-async def get_metadata(key: str) -> str | None:
-    """메타데이터 값 조회"""
-    try:
-        async with aiosqlite.connect(DB_PATH) as conn:
-            conn.row_factory = aiosqlite.Row
-            cursor = await conn.execute(
-                "SELECT value FROM bot_metadata WHERE key = ?", (key,)
-            )
-            row = await cursor.fetchone()
-            return row["value"] if row else None
-    except Exception as e:
-        logger.error(f"메타데이터 조회 실패 ({key}): {e}")
-        return None
-
-
-async def set_metadata(key: str, value: str):
-    """메타데이터 값 저장"""
-    try:
-        async with aiosqlite.connect(DB_PATH) as conn:
-            await conn.execute(
-                "INSERT OR REPLACE INTO bot_metadata (key, value) VALUES (?, ?)",
-                (key, value)
-            )
-            await conn.commit()
-    except Exception as e:
-        logger.error(f"메타데이터 저장 실패 ({key}): {e}")
 
 
 # ----- 활동지수 바스켓 -----

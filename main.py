@@ -10,8 +10,7 @@ import discord
 from core.chat_moderator import ChatModerator
 from discord.ext import commands
 from dotenv import load_dotenv
-from core.db import init_db, get_output_channel, get_metadata, set_metadata
-from core.version import VERSION, CHANGELOG
+from core.db import init_db
 
 # tasks import
 from tasks.daily_aggregation import daily_aggregation_task
@@ -103,69 +102,6 @@ class JongminiBot(commands.Bot):
 bot = JongminiBot()
 
 
-async def notify_patch_notes(bot_instance, guild_id):
-    """버전이 변경되었으면 패치 노트를 출력 채널에 발송"""
-    try:
-        last_version = await get_metadata("last_notified_version")
-        if last_version == VERSION:
-            return
-
-        channel_id = await get_output_channel(guild_id)
-        if not channel_id:
-            logger.warning("패치 노트 발송 실패: 출력 채널 미설정")
-            return
-
-        channel = bot_instance.get_channel(int(channel_id))
-        if not channel:
-            return
-
-        changelog = CHANGELOG.get(VERSION)
-        if not changelog:
-            await set_metadata("last_notified_version", VERSION)
-            return
-
-        type_emoji = {"new": "+", "improved": "^", "fixed": "!"}
-        type_label = {"new": "신규", "improved": "개선", "fixed": "수정"}
-
-        embeds = []
-        header = discord.Embed(
-            title=f"종미니 봇 v{VERSION} 업데이트",
-            description=f"{changelog.get('date', '')}",
-            color=0x2ECC71
-        )
-        embeds.append(header)
-
-        for section in changelog.get("sections", []):
-            s_type = section.get("type", "new")
-            label = type_label.get(s_type, "기타")
-            emoji = type_emoji.get(s_type, "-")
-
-            embed = discord.Embed(
-                title=f"[{label}] {section['title']}",
-                color=0x2ECC71 if s_type == "new"
-                else 0x3498DB if s_type == "improved"
-                else 0xE67E22,
-            )
-            embed.add_field(
-                name="변경 내용",
-                value=section["description"],
-                inline=False,
-            )
-            embed.add_field(
-                name="배경",
-                value=section.get("reason", ""),
-                inline=False,
-            )
-            embeds.append(embed)
-
-        await channel.send(content="@here", embeds=embeds[:10])
-        await set_metadata("last_notified_version", VERSION)
-        logger.info(f"패치 노트 발송 완료: v{VERSION}")
-
-    except Exception as e:
-        logger.error(f"패치 노트 발송 오류: {e}")
-
-
 @bot.event
 async def on_ready():
     logger.info(f"종미니 봇 로그인 성공: {bot.user}")
@@ -206,9 +142,6 @@ async def on_ready():
     if not hasattr(bot, 'auction_poll_task') or bot.auction_poll_task.done():
         bot.auction_poll_task = asyncio.create_task(poll_auction_prices(bot, GUILD_ID))
         logger.info("경매장 시세 폴링 task 시작됨")
-
-    # 패치 노트 공지
-    await notify_patch_notes(bot, GUILD_ID)
 
     # APScheduler 스케줄러 시작 및 작업 등록
     if not bot.scheduler.running:
