@@ -97,17 +97,36 @@ async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
         })
         _set_cooldown(item_id, "new_high")
 
-    # 신저가
-    past_low = min(past_prices)
-    if current_price < past_low and not _is_on_cooldown(item_id, "new_low"):
-        alerts.append({
-            "level": "major",
-            "type": "new_low",
-            "item_name": item_name,
-            "price": current_price,
-            "prev_low": past_low,
-        })
-        _set_cooldown(item_id, "new_low")
+    # 0빼기 파격세일 감지: 중앙값의 50% 이하면 실수 거래로 판단
+    sorted_prices = sorted(past_prices)
+    median_price = sorted_prices[len(sorted_prices) // 2]
+    fat_finger = False
+    if median_price > 0 and current_price < median_price * 0.5:
+        fat_finger = True
+        if not _is_on_cooldown(item_id, "fat_finger"):
+            discount = (1 - current_price / median_price) * 100
+            alerts.append({
+                "level": "fun",
+                "type": "fat_finger",
+                "item_name": item_name,
+                "price": current_price,
+                "median_price": median_price,
+                "discount": discount,
+            })
+            _set_cooldown(item_id, "fat_finger")
+
+    # 신저가 (파격세일이면 스킵 - 실수 거래는 시세에 의미 없음)
+    if not fat_finger:
+        past_low = min(past_prices)
+        if current_price < past_low and not _is_on_cooldown(item_id, "new_low"):
+            alerts.append({
+                "level": "major",
+                "type": "new_low",
+                "item_name": item_name,
+                "price": current_price,
+                "prev_low": past_low,
+            })
+            _set_cooldown(item_id, "new_low")
 
     # 거래량 폭증: 최근 1시간 vs 24시간 평균
     d1_start = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
@@ -319,6 +338,21 @@ def build_alert_embed(alert: dict) -> discord.Embed:
                 "바닥 매수를 고려해볼 수 있는 구간입니다."
             ),
             color=0x2ED573
+        )
+
+    elif t == "fat_finger":
+        price = alert["price"]
+        median = alert["median_price"]
+        discount = alert["discount"]
+        embed = discord.Embed(
+            title=f"🚨 [파격세일] {name} {discount:.0f}% OFF!!",
+            description=(
+                f"누군가 **{int(price):,}G**에 올렸습니다\n"
+                f"시세 중앙값 {int(median):,}G\n\n"
+                f"0 빼먹은 거 아닌지 의심됩니다...\n"
+                f"눈치 빠른 모험가에게는 로또일 수도?"
+            ),
+            color=0xFEE75C
         )
 
     elif t == "price_above":
