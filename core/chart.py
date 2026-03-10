@@ -109,7 +109,6 @@ def generate_overview_chart(items_data: list[dict]) -> BytesIO | None:
         prices = item["prices"]
         pct = item["change_pct"]
         color = UP_COLOR if pct > 0 else DOWN_COLOR if pct < 0 else "#888888"
-        fill = UP_FILL if pct > 0 else DOWN_FILL if pct < 0 else "#88888820"
         arrow = "▲" if pct > 0 else "▼" if pct < 0 else "−"
 
         ax.set_facecolor(PANEL_COLOR)
@@ -404,9 +403,15 @@ def generate_candlestick_chart(
 
 def generate_activity_chart(
     dates: list[str], index_values: list[float],
-    item_count: int = 0
+    item_count: int = 0,
+    changepoints: list[str] | None = None,
+    outlier_dates: list[str] | None = None,
+    raw_index: list[float] | None = None,
 ) -> BytesIO | None:
-    """활동지수 라인 차트 생성. 100% 기준선 포함."""
+    """
+    활동지수 라인 차트 생성.
+    100% 기준선, 변화점 수직선, 이상치 마커, 원본 비교선 포함.
+    """
     if not dates or not index_values:
         return None
 
@@ -419,8 +424,33 @@ def generate_activity_chart(
     x = pd.to_datetime(dates)
     y = np.array(index_values, dtype=float)
 
+    # 변화점 수직선 + 체제 배경색
+    if changepoints:
+        cp_dates = pd.to_datetime(changepoints)
+        regime_colors = ["#2a2a4a", "#1e3a2a"]
+        boundaries = [x[0]] + sorted(cp_dates) + [x[-1]]
+        for i in range(len(boundaries) - 1):
+            color = regime_colors[i % len(regime_colors)]
+            ax.axvspan(boundaries[i], boundaries[i + 1],
+                       alpha=0.3, color=color, zorder=0)
+        for cp in cp_dates:
+            ax.axvline(x=cp, color="#ff6348", linewidth=1.5,
+                       linestyle="--", alpha=0.7, zorder=3)
+            ax.text(cp, ax.get_ylim()[1] if ax.get_ylim()[1] > 100
+                    else 120, "CP",
+                    fontsize=8, color="#ff6348", ha="center",
+                    fontfamily=font_name, fontweight="bold",
+                    zorder=4)
+
     # 100% 기준선
-    ax.axhline(y=100, color="#888888", linewidth=1, linestyle="--", alpha=0.6)
+    ax.axhline(y=100, color="#888888", linewidth=1,
+               linestyle="--", alpha=0.6)
+
+    # 원본 지수 (정제 전) 반투명 라인
+    if raw_index and len(raw_index) == len(dates):
+        y_raw = np.array(raw_index, dtype=float)
+        ax.plot(x, y_raw, color="#888888", linewidth=1,
+                alpha=0.35, linestyle=":", label="원본 (정제 전)")
 
     # 100% 위/아래 색분할 채우기
     ax.fill_between(x, y, 100, where=(y >= 100),
@@ -429,13 +459,25 @@ def generate_activity_chart(
                     color=DOWN_COLOR, alpha=0.15, interpolate=True)
 
     # 메인 라인
-    ax.plot(x, y, color=ACCENT, linewidth=2.5, alpha=0.9)
+    ax.plot(x, y, color=ACCENT, linewidth=2.5, alpha=0.9,
+            label="정제된 지수")
+
+    # 이상치 마커
+    if outlier_dates:
+        ol_dates = pd.to_datetime(outlier_dates)
+        for od in ol_dates:
+            idx_match = np.where(x == od)[0]
+            if len(idx_match) > 0:
+                idx = idx_match[0]
+                ax.plot(x[idx], y[idx], "v", color="#ff6348",
+                        markersize=7, zorder=5, alpha=0.8)
 
     # 현재값 점
     if len(y) > 0:
         last_val = y[-1]
         dot_color = UP_COLOR if last_val >= 100 else DOWN_COLOR
-        ax.plot(x[-1], last_val, "o", color=dot_color, markersize=8, zorder=5)
+        ax.plot(x[-1], last_val, "o", color=dot_color,
+                markersize=8, zorder=5)
         ax.annotate(
             f"{last_val:.1f}%",
             xy=(x[-1], last_val),
@@ -448,15 +490,32 @@ def generate_activity_chart(
     fig.text(0.06, 0.96, "활동지수 (거래량 기반 추정)",
              fontsize=15, fontweight="bold", fontfamily=font_name,
              color=TEXT_COLOR, va="top")
-    fig.text(0.06, 0.91, f"바스켓 {item_count}개 아이템 | 100% = 30일 평균",
+
+    subtitle = f"바스켓 {item_count}개 아이템 | 100% = 30일 평균"
+    if changepoints:
+        subtitle += f" | 체제 전환 {len(changepoints)}건"
+    fig.text(0.06, 0.91, subtitle,
              fontsize=10, fontfamily=font_name,
              color="#888888", va="top")
+
+    # 범례
+    handles, labels = ax.get_legend_handles_labels()
+    if handles:
+        legend = ax.legend(
+            loc="upper right", fontsize=8, frameon=True,
+            facecolor=PANEL_COLOR, edgecolor=GRID_COLOR,
+            labelcolor=TEXT_COLOR, framealpha=0.8
+        )
+        legend.get_frame().set_linewidth(0.5)
 
     # 축 설정
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
     ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
-    ax.grid(True, color=GRID_COLOR, linestyle="--", linewidth=0.5, alpha=0.5)
+    ax.yaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda v, p: f"{v:.0f}%")
+    )
+    ax.grid(True, color=GRID_COLOR, linestyle="--",
+            linewidth=0.5, alpha=0.5)
 
     fig.subplots_adjust(left=0.08, right=0.95, top=0.85, bottom=0.12)
 

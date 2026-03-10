@@ -219,7 +219,10 @@ async def activity_index_cmd(interaction: Interaction, days: int = 30):
         return
 
     chart_buf = generate_activity_chart(
-        result["dates"], result["index"], result["item_count"]
+        result["dates"], result["index"], result["item_count"],
+        changepoints=result.get("changepoints"),
+        outlier_dates=list(result.get("outliers", {}).keys()),
+        raw_index=result.get("raw_index"),
     )
     if not chart_buf:
         await interaction.followup.send("차트 생성에 실패했습니다.")
@@ -255,6 +258,36 @@ async def activity_index_cmd(interaction: Interaction, days: int = 30):
     )
     embed.set_image(url="attachment://activity_index.png")
 
+    # Hampel 필터 통계
+    hampel = result.get("hampel_stats", {})
+    if hampel.get("total_replaced", 0) > 0:
+        hampel_text = (
+            f"스파이크 교체: {hampel['total_replaced']}건\n"
+        )
+        item_details = ", ".join(
+            f"{name}({cnt}건)"
+            for name, cnt in hampel.get("items", {}).items()
+        )
+        if item_details:
+            hampel_text += item_details
+        embed.add_field(
+            name="노이즈 제거 (Hampel)",
+            value=hampel_text[:1024],
+            inline=True
+        )
+
+    # 변화점 정보
+    changepoints = result.get("changepoints", [])
+    if changepoints:
+        cp_text = "\n".join(
+            f"**{cp}**" for cp in changepoints[-3:]
+        )
+        embed.add_field(
+            name="체제 전환 감지 (PELT)",
+            value=cp_text[:1024],
+            inline=True
+        )
+
     # 이상치 정보
     outliers = result.get("outliers", {})
     if outliers:
@@ -264,13 +297,16 @@ async def activity_index_cmd(interaction: Interaction, days: int = 30):
             for date, items in recent.items()
         )
         embed.add_field(
-            name="업데이트 영향 감지 (이상치)",
+            name="이상치 감지 (MAD)",
             value=outlier_text[:1024],
             inline=False
         )
 
     embed.set_footer(
-        text="거래량 기반 추정치이며, 실제 접속자 수와 다를 수 있습니다."
+        text=(
+            "Hampel→STL→MAD→PELT 파이프라인 적용 | "
+            "거래량 기반 추정치이며, 실제 접속자 수와 다를 수 있습니다."
+        )
     )
 
     await interaction.followup.send(embed=embed, file=file)
