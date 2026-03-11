@@ -4,7 +4,7 @@ import discord
 from discord import app_commands, Interaction
 
 from core.db import get_all_watch_items, get_price_history
-from core.chart import generate_overview_chart
+from core.chart import generate_overview_chart, filter_price_outliers
 from core.logger import logger
 
 KST = timezone(timedelta(hours=9))
@@ -31,6 +31,8 @@ async def auction_overview(interaction: Interaction):
         if not records or len(records) < 2:
             continue
 
+        # 이상치 제거 후 가격 추출
+        records = filter_price_outliers(records)
         prices = [r["unit_price"] for r in records]
         first_price = prices[0]
         current_price = prices[-1]
