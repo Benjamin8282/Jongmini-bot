@@ -85,21 +85,56 @@ async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
     current_price = all_prices[-1]
     past_prices = all_prices[:-1]
 
-    # 신고가
-    past_high = max(past_prices)
-    if current_price > past_high and not _is_on_cooldown(item_id, "new_high"):
-        alerts.append({
-            "level": "major",
-            "type": "new_high",
-            "item_name": item_name,
-            "price": current_price,
-            "prev_high": past_high,
-        })
-        _set_cooldown(item_id, "new_high")
-
-    # 0빼기 파격세일 감지: 중앙값의 60% 이하면 실수 거래로 판단
+    # 이상치 필터링을 위한 통계 계산
     sorted_prices = sorted(past_prices)
     median_price = sorted_prices[len(sorted_prices) // 2]
+
+    # IQR 기반 이상치 경계 계산
+    n = len(sorted_prices)
+    q1 = sorted_prices[n // 4]
+    q3 = sorted_prices[3 * n // 4]
+    iqr = q3 - q1
+    if iqr > 0:
+        upper_bound = q3 + 3 * iqr
+    elif median_price > 0:
+        upper_bound = median_price * 5.0
+    else:
+        upper_bound = float("inf")
+
+    # 비정상 고가 감지 (0 추가 실수 등): 이상치 경계 초과
+    fat_finger_high = False
+    if median_price > 0 and current_price > upper_bound:
+        fat_finger_high = True
+        if not _is_on_cooldown(item_id, "fat_finger_high"):
+            overprice = (current_price / median_price - 1) * 100
+            alerts.append({
+                "level": "fun",
+                "type": "fat_finger_high",
+                "item_name": item_name,
+                "price": current_price,
+                "median_price": median_price,
+                "overprice": overprice,
+            })
+            _set_cooldown(item_id, "fat_finger_high")
+
+    # 신고가 (이상치 가격이면 스킵)
+    if not fat_finger_high:
+        # 과거 가격에서도 이상치 제거 후 비교
+        clean_past = [p for p in past_prices if p <= upper_bound]
+        if not clean_past:
+            clean_past = past_prices
+        past_high = max(clean_past)
+        if current_price > past_high and not _is_on_cooldown(item_id, "new_high"):
+            alerts.append({
+                "level": "major",
+                "type": "new_high",
+                "item_name": item_name,
+                "price": current_price,
+                "prev_high": past_high,
+            })
+            _set_cooldown(item_id, "new_high")
+
+    # 0빼기 파격세일 감지: 중앙값의 60% 이하면 실수 거래로 판단
     fat_finger = False
     if median_price > 0 and current_price < median_price * 0.6:
         fat_finger = True
@@ -338,6 +373,21 @@ def build_alert_embed(alert: dict) -> discord.Embed:
                 "바닥 매수를 고려해볼 수 있는 구간입니다."
             ),
             color=0x2ED573
+        )
+
+    elif t == "fat_finger_high":
+        price = alert["price"]
+        median = alert["median_price"]
+        overprice = alert["overprice"]
+        embed = discord.Embed(
+            title=f"[비정상 고가] {name} +{overprice:.0f}%",
+            description=(
+                f"**{int(price):,}G**에 거래가 잡혔습니다\n"
+                f"시세 중앙값 {int(median):,}G\n\n"
+                f"0을 더 붙인 실수이거나 비정상 거래로 보입니다.\n"
+                f"이 가격은 시세 분석에서 자동 제외됩니다."
+            ),
+            color=0xFF6348
         )
 
     elif t == "fat_finger":

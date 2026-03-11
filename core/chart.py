@@ -56,6 +56,47 @@ def _gold_formatter(x, pos):
     return f"{int(x)}"
 
 
+def filter_price_outliers(
+    records: list[dict], multiplier: float = 3.0
+) -> list[dict]:
+    """
+    IQR 기반 이상치 거래 기록 제거.
+
+    unit_price 기준으로 Q1 - multiplier*IQR ~ Q3 + multiplier*IQR 범위를
+    벗어나는 기록을 제거한다. 데이터가 10건 미만이면 필터링하지 않음.
+    """
+    if len(records) < 10:
+        return records
+
+    prices = sorted(r["unit_price"] for r in records)
+    n = len(prices)
+    q1 = prices[n // 4]
+    q3 = prices[3 * n // 4]
+    iqr = q3 - q1
+
+    if iqr == 0:
+        # 대부분 같은 가격 → 중앙값 기반 필터
+        median = prices[n // 2]
+        if median == 0:
+            return records
+        lower_bound = median * 0.2
+        upper_bound = median * 5.0
+    else:
+        lower_bound = q1 - multiplier * iqr
+        upper_bound = q3 + multiplier * iqr
+
+    filtered = [
+        r for r in records
+        if lower_bound <= r["unit_price"] <= upper_bound
+    ]
+
+    # 필터링 결과가 원본의 절반 미만이면 원본 반환 (안전장치)
+    if len(filtered) < len(records) * 0.5:
+        return records
+
+    return filtered
+
+
 def aggregate_to_ohlc(records: list[dict], interval_minutes: int = 60) -> pd.DataFrame:
     """
     원본 거래 기록을 시간대별 OHLC로 집계
@@ -66,6 +107,9 @@ def aggregate_to_ohlc(records: list[dict], interval_minutes: int = 60) -> pd.Dat
     """
     if not records:
         return pd.DataFrame()
+
+    # 이상치 제거 후 집계
+    records = filter_price_outliers(records)
 
     df = pd.DataFrame(records)
     df["datetime"] = pd.to_datetime(df["sold_date"])
