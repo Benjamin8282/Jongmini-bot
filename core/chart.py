@@ -74,9 +74,10 @@ def filter_price_outliers(
     q3 = prices[3 * n // 4]
     iqr = q3 - q1
 
+    median = prices[n // 2]
+
     if iqr == 0:
         # 대부분 같은 가격 → 중앙값 기반 필터
-        median = prices[n // 2]
         if median == 0:
             return records
         lower_bound = median * 0.2
@@ -84,6 +85,11 @@ def filter_price_outliers(
     else:
         lower_bound = q1 - multiplier * iqr
         upper_bound = q3 + multiplier * iqr
+        # IQR이 너무 작으면 정상 변동도 이상치로 판정되므로
+        # 중앙값 기반 최소 범위 보장 (중앙값의 0.2배 ~ 5배)
+        if median > 0:
+            lower_bound = min(lower_bound, median * 0.2)
+            upper_bound = max(upper_bound, median * 5.0)
 
     filtered = [
         r for r in records
