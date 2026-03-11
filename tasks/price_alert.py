@@ -96,6 +96,10 @@ async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
     iqr = q3 - q1
     if iqr > 0:
         upper_bound = q3 + 3 * iqr
+        # IQR이 너무 작으면 정상 변동도 이상치로 판정되므로
+        # 최소 중앙값의 3배 이상만 이상치로 판정
+        if median_price > 0:
+            upper_bound = max(upper_bound, median_price * 3.0)
     elif median_price > 0:
         upper_bound = median_price * 5.0
     else:
