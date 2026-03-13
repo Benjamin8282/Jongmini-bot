@@ -139,9 +139,24 @@ pip install -r requirements.txt
 2. Docker Hub push
 3. Portainer API로 컨테이너 자동 재생성 (20초 대기 후 recreate)
 
-### 릴리즈 버전
+### 릴리즈 버전 관리
 
-버전 브랜치(`release/v1.x.x`)로 릴리즈 이력 관리. 현재 v1.3.1까지.
+현재 버전: **v2.0.0**
+
+Semantic Versioning 규칙:
+- **MAJOR (x.0.0)**: 대규모 기능 추가, 기존 커맨드명/DB 스키마 변경 등 breaking change
+- **MINOR (0.x.0)**: 새 커맨드 추가, 기존 기능 확장 (하위 호환)
+- **PATCH (0.0.x)**: 버그 수정, 성능 개선, 문서 업데이트
+
+릴리즈 절차:
+1. `release/latest`에서 `release/vX.Y.Z` 브랜치 생성 및 push
+2. `gh release create vX.Y.Z --target release/vX.Y.Z` 로 GitHub 릴리즈 + 노트 작성
+3. 릴리즈 노트는 카테고리별로 정리 (feat/fix/refactor/docs/infra)
+
+릴리즈 시점 기준:
+- **feat 커밋 3개 이상** 누적 시 MINOR 릴리즈 권장
+- **breaking change** 발생 시 MAJOR 릴리즈 필수
+- 긴급 버그 수정은 즉시 PATCH 릴리즈
 
 ## Conventions
 
