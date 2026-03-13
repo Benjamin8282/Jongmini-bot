@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-종미니 봇(Jongmini Bot) - 던전앤파이터(DNF) 오픈 API를 활용한 실시간 득템 알림 디스코드 봇.
+종미니 봇(Jongmini Bot) - 던전앤파이터(DNF) 오픈 API를 활용한 실시간 득템 알림 및 경매장 시세 분석 디스코드 봇.
 Python 3.11+, discord.py 2.x 기반의 완전 비동기(async/await) 아키텍처.
 
 ## Commands
@@ -32,22 +32,85 @@ pip install -r requirements.txt
   - `db.py` - aiosqlite 기반 SQLite 데이터 접근 계층 (DB 파일: `data/characters.db`)
   - `dnf_api.py` - 네오플 DNF API 래퍼 (aiohttp, 세마포어 기반 동시성 제어)
   - `dundam_api.py` - 던담 외부 랭킹 API
+  - `chart.py` - matplotlib/mplfinance 기반 캔들스틱, 스파크라인, 오버뷰 차트 생성
+  - `analysis.py` - 통계 분석 (IQR 이상치 필터링, Hampel 필터 등)
+  - `activity_index.py` - 활동지수 계산 (바스켓 기반 거래량 가중 평균)
+  - `dunspy_index.py` - 던스피(DUNSPY) 종합지수 산출
   - `models.py` - 서버 매핑, 희귀도 가중치 등 상수
   - `time_utils.py` - KST 기준 기간 계산 유틸리티
   - `chat_moderator.py` - 콘텐츠 모더레이션 (현재 비활성)
   - `logger.py` - 로깅 설정 (1MB 로테이션, 14일 보존)
 - **`tasks/`**: 백그라운드 태스크 (asyncio.create_task로 실행)
-  - `notify_items.py` - 20초 간격 타임라인 모니터링 및 득템 알림
-  - `daily/weekly/monthly_aggregation.py` - 정기 통계 집계 (KST 06:00 기준)
+  - `notify_items.py` - 20초 간격 타임라인 모니터링 및 득템 알림 → **아이템 채널**
+  - `daily/weekly/monthly_aggregation.py` - 정기 통계 집계 (KST 06:00 기준) → **아이템 채널**
   - `poll_auction_prices.py` - 5분 간격 경매장 시세 폴링
+  - `price_alert.py` - 시세 급등/급락 감지 및 채널/DM 알림 → **경제 채널**
+  - `morning_briefing.py` - 매일 06:00 경제 브리핑 발송 → **경제 채널**
+  - `weekly_character_aggregation.py` - 캐릭터별 주간 아이템 집계 → **아이템 채널**
+
+### 슬래시 커맨드 전체 목록
+
+| 카테고리 | 커맨드 | 설명 | 파일 |
+|---------|--------|------|------|
+| 일반 | `/hello` | 봇 인사 | `hello.py` |
+| 캐릭터 | `/등록` | DNF 캐릭터 등록 | `register.py` |
+| 캐릭터 | `/전체조회` | 등록 캐릭터 모험단별 조회 | `total.py` |
+| 현황 | `/오늘현황` | 일간 아이템 획득량 | `today_status.py` |
+| 현황 | `/주간현황` | 주간 아이템 획득량 | `weekly_status.py` |
+| 현황 | `/주간캐릭터현황` | 캐릭터별 주간 획득량 | `weekly_character_status.py` |
+| 현황 | `/월간현황` | 월간 아이템 획득량 | `monthly_status.py` |
+| 현황 | `/시즌현황` | 시즌 아이템 획득량 | `season_status.py` |
+| 던담 | `/던담순위` | 전체 캐릭터 던담 랭킹 | `dundam_ranking.py` |
+| 던담 | `/모험단던담순위` | 모험단별 던담 합산 순위 | `adventure_dundam_ranking.py` |
+| 던담 | `/던담검색제외` | 던담순위 검색 모험단 필터 | `dundam_exclusion.py` |
+| 시세 | `/시세등록` | 경매장 시세 추적 아이템 등록 | `auction_watch.py` |
+| 시세 | `/시세해제` | 시세 추적 해제 | `auction_watch.py` |
+| 시세 | `/시세목록` | 추적 중인 아이템 목록 | `auction_watch.py` |
+| 시세 | `/시세차트` | 캔들스틱 차트 조회 | `auction_chart.py` |
+| 시세 | `/시세비교` | 아이템 간 시세 비교 차트 | `auction_compare.py` |
+| 시세 | `/시세현황` | 24시간 시세 변동 요약 | `auction_overview.py` |
+| 시세알림 | `/시세알림` | 개인 DM 시세 알림 설정 | `alert_settings.py` |
+| 시세알림 | `/시세알림목록` | 내 시세 알림 목록 | `alert_settings.py` |
+| 시세알림 | `/시세알림해제` | 시세 알림 해제 | `alert_settings.py` |
+| 활동지수 | `/바스켓등록` | 활동지수 바스켓 아이템 등록 | `activity_basket.py` |
+| 활동지수 | `/바스켓해제` | 바스켓 아이템 해제 | `activity_basket.py` |
+| 활동지수 | `/바스켓목록` | 바스켓 아이템 목록 | `activity_basket.py` |
+| 활동지수 | `/활동지수` | 활동지수 차트 조회 | `activity_basket.py` |
+| 활동지수 | `/던스피` | DUNSPY 종합지수 차트 | `dunspy.py` |
+| 설정 | `/출력채널` | 아이템/경제 알림 출력 채널 분리 설정 | `set_output_channel.py` |
+
+### 알림 채널 구조
+
+`output_channels` 테이블에서 아이템/경제 알림을 별도 채널로 분리 설정 가능:
+- **아이템 채널** (`item_channel_id`): 득템 알림, 일간/주간/월간 랭킹
+- **경제 채널** (`economy_channel_id`): 시세 급등/급락 알림, 모닝 브리핑
+- 타입별 채널 미설정 시 기존 `channel_id`로 폴백 (하위 호환)
 
 ### 핵심 패턴
 
 - **비동기 세마포어**: `dnf_api.py`에서 동시 API 요청 수 제한 (캐릭터 50, 아이템 50)
 - **기간 분할**: 90일 초과 기간은 자동으로 분할하여 API 호출
 - **인메모리 캐시**: `ITEM_DETAIL_MEMCACHE` (아이템 상세), 던담 API (10분 캐시)
-- **커맨드 등록**: `setup_hook()`에서 `self.tree.add_command()`로 등록 후 `tree.sync()`
+- **커맨드 등록**: `setup_hook()`에서 `tree.add_command()` 등록, `on_ready()`에서 길드별 즉시 sync
+- **커맨드 동기화**: 글로벌 sync 대신 길드별 sync로 배포 시 즉시 반영 (추방/재초대 불필요)
 - **스케줄링**: APScheduler는 KST 타임존 고정. 봇 부팅 시 미실행 집계 감지 후 즉시 실행
+- **IQR 이상치 필터링**: 차트 스케일 왜곡 및 허위 신고가 알림 방지
+
+## DB 테이블
+
+| 테이블 | 용도 |
+|--------|------|
+| `characters` | 등록된 DNF 캐릭터 정보 |
+| `registrations` | 사용자-캐릭터 매핑 |
+| `item_cache` | 아이템 장착 레벨 캐시 |
+| `output_channels` | 길드별 출력 채널 설정 (아이템/경제 분리) |
+| `character_last_checked` | 캐릭터별 마지막 타임라인 체크 시간 |
+| `daily_aggregation_log` | 일간 집계 실행 이력 |
+| `adventure_exclusions` | 모험단 검색 제외 설정 |
+| `auction_watch_items` | 경매장 시세 감시 아이템 |
+| `auction_price_history` | 경매장 거래 가격 이력 |
+| `user_alert_settings` | 사용자별 DM 시세 알림 설정 |
+| `activity_basket` | 활동지수 바스켓 아이템 |
 
 ## Environment Variables (.env)
 

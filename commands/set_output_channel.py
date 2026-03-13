@@ -12,7 +12,7 @@ class NotificationChannelView(discord.ui.View):
     @discord.ui.select(
         cls=discord.ui.ChannelSelect,
         placeholder="아이템 알림 채널 선택",
-        channel_types=[discord.ChannelType.text],
+        channel_types=[discord.ChannelType.text, discord.ChannelType.news],
         min_values=1, max_values=1,
         row=0
     )
@@ -30,7 +30,7 @@ class NotificationChannelView(discord.ui.View):
     @discord.ui.select(
         cls=discord.ui.ChannelSelect,
         placeholder="경제 알림 채널 선택",
-        channel_types=[discord.ChannelType.text],
+        channel_types=[discord.ChannelType.text, discord.ChannelType.news],
         min_values=1, max_values=1,
         row=1
     )
