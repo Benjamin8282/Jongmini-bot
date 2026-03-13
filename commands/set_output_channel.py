@@ -4,53 +4,10 @@ from core.db import save_typed_output_channel, get_all_output_channels
 from core.logger import logger
 
 
-class NotificationChannelView(discord.ui.View):
-    def __init__(self, guild_id: str):
-        super().__init__(timeout=120)
-        self.guild_id = guild_id
-
-    @discord.ui.select(
-        cls=discord.ui.ChannelSelect,
-        placeholder="아이템 알림 채널 선택",
-        channel_types=[discord.ChannelType.text, discord.ChannelType.news],
-        min_values=1, max_values=1,
-        row=0
-    )
-    async def item_channel_select(self, interaction: Interaction, select: discord.ui.ChannelSelect):
-        channel = select.values[0]
-        await save_typed_output_channel(self.guild_id, 'item', str(channel.id))
-        logger.info(f"아이템 알림 채널 설정: guild={self.guild_id}, channel={channel.id}")
-
-        # 현재 설정 갱신 표시
-        settings = await get_all_output_channels(self.guild_id)
-        embed = build_settings_embed(settings)
-        embed.set_footer(text=f"아이템 알림 채널이 #{channel.name}(으)로 설정되었습니다.")
-        await interaction.response.edit_message(embed=embed, view=self)
-
-    @discord.ui.select(
-        cls=discord.ui.ChannelSelect,
-        placeholder="경제 알림 채널 선택",
-        channel_types=[discord.ChannelType.text, discord.ChannelType.news],
-        min_values=1, max_values=1,
-        row=1
-    )
-    async def economy_channel_select(self, interaction: Interaction, select: discord.ui.ChannelSelect):
-        channel = select.values[0]
-        await save_typed_output_channel(self.guild_id, 'economy', str(channel.id))
-        logger.info(f"경제 알림 채널 설정: guild={self.guild_id}, channel={channel.id}")
-
-        # 현재 설정 갱신 표시
-        settings = await get_all_output_channels(self.guild_id)
-        embed = build_settings_embed(settings)
-        embed.set_footer(text=f"경제 알림 채널이 #{channel.name}(으)로 설정되었습니다.")
-        await interaction.response.edit_message(embed=embed, view=self)
-
-
 def build_settings_embed(settings: dict | None) -> discord.Embed:
     embed = discord.Embed(
         title="알림 채널 설정",
-        description="아이템 알림과 경제 알림을 각각 다른 채널로 보낼 수 있습니다.\n"
-                    "아래 드롭다운에서 원하는 채널을 선택하세요.",
+        description="아이템 알림과 경제 알림을 각각 다른 채널로 보낼 수 있습니다.",
         color=0x3498db
     )
 
@@ -79,17 +36,46 @@ def build_settings_embed(settings: dict | None) -> discord.Embed:
     return embed
 
 
-@app_commands.command(name="출력채널", description="아이템/경제 알림 출력 채널을 각각 설정합니다")
-async def set_output_channel(interaction: Interaction):
+@app_commands.command(name="출력채널", description="아이템/경제 알림 출력 채널을 각각 설정합니다 (관리자 전용)")
+@app_commands.default_permissions(administrator=True)
+@app_commands.describe(
+    아이템="아이템 알림을 보낼 채널 (득템, 랭킹)",
+    경제="경제 알림을 보낼 채널 (시세 변동, 모닝 브리핑)"
+)
+async def set_output_channel(
+    interaction: Interaction,
+    아이템: discord.TextChannel = None,
+    경제: discord.TextChannel = None
+):
     guild_id = str(interaction.guild_id)
     logger.info(f"/출력채널 명령 호출됨: guild_id={guild_id}, user={interaction.user.id}")
 
     try:
+        # 파라미터 없으면 현재 설정만 표시
+        if 아이템 is None and 경제 is None:
+            settings = await get_all_output_channels(guild_id)
+            embed = build_settings_embed(settings)
+            embed.set_footer(text="사용법: /출력채널 아이템:#채널 경제:#채널")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        results = []
+
+        if 아이템 is not None:
+            await save_typed_output_channel(guild_id, 'item', str(아이템.id))
+            results.append(f"아이템 알림 → <#{아이템.id}>")
+            logger.info(f"아이템 알림 채널 설정: guild={guild_id}, channel={아이템.id}")
+
+        if 경제 is not None:
+            await save_typed_output_channel(guild_id, 'economy', str(경제.id))
+            results.append(f"경제 알림 → <#{경제.id}>")
+            logger.info(f"경제 알림 채널 설정: guild={guild_id}, channel={경제.id}")
+
         settings = await get_all_output_channels(guild_id)
         embed = build_settings_embed(settings)
-        view = NotificationChannelView(guild_id)
+        embed.set_footer(text="변경 완료: " + ", ".join(results))
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
     except Exception as e:
         logger.error(f"출력채널 커맨드 실패: guild_id={guild_id}, error={e}")
         await interaction.response.send_message(
