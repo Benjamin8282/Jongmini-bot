@@ -124,8 +124,15 @@ async def on_ready():
 
     # 슬래시 명령어 동기화 (최초 1회만)
     if not hasattr(bot, '_commands_synced'):
+        # 길드별 즉시 sync
+        for guild in bot.guilds:
+            bot.tree.copy_global_to(guild=guild)
+            await bot.tree.sync(guild=guild)
+            logger.info(f"슬래시 명령어 길드 동기화 완료: {guild.name} ({guild.id})")
+        # 기존 글로벌 커맨드 제거 (중복 방지)
+        bot.tree.clear_commands(guild=None)
         await bot.tree.sync()
-        logger.info("슬래시 명령어 동기화 완료")
+        logger.info("글로벌 커맨드 정리 완료")
         bot._commands_synced = True
 
     # 현재 시간과 타임존 로그 출력

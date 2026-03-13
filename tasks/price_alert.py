@@ -468,7 +468,7 @@ async def process_alerts_for_item(
         if not alerts:
             return
 
-        channel_id = await get_output_channel(guild_id)
+        channel_id = await get_output_channel(guild_id, 'economy')
         if not channel_id:
             return
 
@@ -653,7 +653,7 @@ async def process_user_alerts_for_item(
                     user = await bot.fetch_user(user_id)
                     for alert in dm_alerts:
                         embed = build_alert_embed(alert)
-                        embed.set_footer(text="개인 알림 설정 | /알림설정으로 변경")
+                        embed.set_footer(text="개인 알림 설정 | /시세알림으로 변경")
                         await user.send(embed=embed)
                         logger.info(
                             f"DM 알림 발송: user={user_id}, "

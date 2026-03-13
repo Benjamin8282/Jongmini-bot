@@ -207,7 +207,7 @@ async def send_morning_briefing(bot, guild_id: str):
     chart_data = sorted(items_data, key=lambda x: abs(x["change_pct"]), reverse=True)
     chart_buf = generate_overview_chart(chart_data)
 
-    channel_id = await get_output_channel(guild_id)
+    channel_id = await get_output_channel(guild_id, 'economy')
     if not channel_id:
         logger.warning("브리핑 발송 채널 없음")
         return

@@ -395,11 +395,11 @@ class AlertRemoveSelectView(ui.View):
 # ─── 슬래시 커맨드 ───
 
 @app_commands.command(
-    name="알림설정",
+    name="시세알림",
     description="아이템별 시세 알림을 내 기준에 맞게 설정합니다 (DM 알림)"
 )
 async def alert_settings_cmd(interaction: Interaction):
-    logger.info(f"/알림설정 호출: 사용자={interaction.user.id}")
+    logger.info(f"/시세알림 호출: 사용자={interaction.user.id}")
     await interaction.response.defer(thinking=True, ephemeral=True)
 
     items = await get_all_watch_items()
@@ -419,16 +419,16 @@ async def alert_settings_cmd(interaction: Interaction):
 
 
 @app_commands.command(
-    name="알림목록",
-    description="내 알림 설정 목록을 확인합니다"
+    name="시세알림목록",
+    description="내 시세 알림 설정 목록을 확인합니다"
 )
 async def alert_list_cmd(interaction: Interaction):
-    logger.info(f"/알림목록 호출: 사용자={interaction.user.id}")
+    logger.info(f"/시세알림목록 호출: 사용자={interaction.user.id}")
 
     settings = await get_user_alerts(interaction.user.id)
     if not settings:
         await interaction.response.send_message(
-            "설정된 알림이 없습니다. `/알림설정`으로 추가해보세요.",
+            "설정된 알림이 없습니다. `/시세알림`으로 추가해보세요.",
             ephemeral=True
         )
         return
@@ -465,11 +465,11 @@ async def alert_list_cmd(interaction: Interaction):
 
 
 @app_commands.command(
-    name="알림해제",
-    description="아이템의 알림 설정을 해제합니다"
+    name="시세알림해제",
+    description="아이템의 시세 알림 설정을 해제합니다"
 )
 async def alert_remove_cmd(interaction: Interaction):
-    logger.info(f"/알림해제 호출: 사용자={interaction.user.id}")
+    logger.info(f"/시세알림해제 호출: 사용자={interaction.user.id}")
     await interaction.response.defer(thinking=True, ephemeral=True)
 
     settings = await get_user_alerts(interaction.user.id)
