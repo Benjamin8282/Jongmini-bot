@@ -44,9 +44,20 @@ async def init_db():
                 CREATE TABLE IF NOT EXISTS output_channels (
                     guild_id TEXT PRIMARY KEY,
                     channel_id TEXT NOT NULL,
+                    item_channel_id TEXT,
+                    economy_channel_id TEXT,
                     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            # 기존 테이블에 새 컬럼 추가 (마이그레이션)
+            try:
+                await conn.execute("ALTER TABLE output_channels ADD COLUMN item_channel_id TEXT")
+            except Exception:
+                pass  # 이미 존재하면 무시
+            try:
+                await conn.execute("ALTER TABLE output_channels ADD COLUMN economy_channel_id TEXT")
+            except Exception:
+                pass  # 이미 존재하면 무시
             # 캐릭터별 마지막 타임라인 체크 시간 기록 테이블
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS character_last_checked (
@@ -271,22 +282,72 @@ async def save_output_channel(guild_id: str, channel_id: str):
         logger.error(f"출력 채널 저장 실패: {e}")
 
 
-async def get_output_channel(guild_id: str) -> str | None:
-    logger.info(f"출력 채널 조회 시도: guild={guild_id}")
+async def get_output_channel(guild_id: str, channel_type: str | None = None) -> str | None:
+    """
+    출력 채널 조회.
+    channel_type: 'item' | 'economy' | None
+    - 지정된 타입의 채널이 설정되어 있으면 해당 채널 반환
+    - 없으면 기본 channel_id로 폴백 (하위 호환)
+    """
+    logger.info(f"출력 채널 조회 시도: guild={guild_id}, type={channel_type}")
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute(
-                "SELECT channel_id FROM output_channels WHERE guild_id = ?",
+                "SELECT channel_id, item_channel_id, economy_channel_id FROM output_channels WHERE guild_id = ?",
+                (guild_id,)
+            )
+            row = await cursor.fetchone()
+            if not row:
+                return None
+
+            if channel_type == 'item' and row['item_channel_id']:
+                return row['item_channel_id']
+            elif channel_type == 'economy' and row['economy_channel_id']:
+                return row['economy_channel_id']
+            else:
+                return row['channel_id']
+    except Exception as e:
+        logger.error(f"출력 채널 조회 실패: {e}")
+        return None
+
+
+async def save_typed_output_channel(guild_id: str, channel_type: str, channel_id: str):
+    """타입별 출력 채널 저장 (item / economy)"""
+    column = 'item_channel_id' if channel_type == 'item' else 'economy_channel_id'
+    logger.info(f"타입별 출력 채널 저장 시도: guild={guild_id}, type={channel_type}, channel={channel_id}")
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            # 행이 없으면 기본값으로 생성
+            await conn.execute(
+                "INSERT OR IGNORE INTO output_channels (guild_id, channel_id) VALUES (?, ?)",
+                (guild_id, channel_id)
+            )
+            await conn.execute(
+                f"UPDATE output_channels SET {column} = ? WHERE guild_id = ?",
+                (channel_id, guild_id)
+            )
+            await conn.commit()
+        logger.info(f"타입별 출력 채널 저장 성공: {channel_type} -> {channel_id}")
+    except Exception as e:
+        logger.error(f"타입별 출력 채널 저장 실패: {e}")
+
+
+async def get_all_output_channels(guild_id: str) -> dict | None:
+    """길드의 모든 출력 채널 설정 조회"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
+                "SELECT channel_id, item_channel_id, economy_channel_id FROM output_channels WHERE guild_id = ?",
                 (guild_id,)
             )
             row = await cursor.fetchone()
             if row:
-                return row["channel_id"]
-            else:
-                return None
+                return dict(row)
+            return None
     except Exception as e:
-        logger.error(f"출력 채널 조회 실패: {e}")
+        logger.error(f"전체 출력 채널 조회 실패: {e}")
         return None
 
 

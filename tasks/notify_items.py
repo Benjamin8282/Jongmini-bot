@@ -155,7 +155,7 @@ async def notify_items_for_character(char, bot, guild_id, semaphore):
         filtered_items = new_filtered_items
 
         # 디스코드 채널 조회
-        channel_id = await get_output_channel(guild_id)
+        channel_id = await get_output_channel(guild_id, 'item')
         if not channel_id:
             logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
             return

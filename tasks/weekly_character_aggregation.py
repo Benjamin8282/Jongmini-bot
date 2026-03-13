@@ -143,7 +143,7 @@ async def aggregate_weekly_items_by_character(bot, guild_id, interaction=None):
             await interaction.followup.send(embed=embed)
     else:
         # 기존처럼 등록된 출력 채널에 메시지 전송
-        channel_id = await get_output_channel(guild_id)
+        channel_id = await get_output_channel(guild_id, 'item')
         if not channel_id:
             logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
             return

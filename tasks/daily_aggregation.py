@@ -177,7 +177,7 @@ async def aggregate_items_and_notify_for_period(
 
     adventure_scores.sort(key=lambda x: x["score"], reverse=True)
 
-    channel_id = await get_output_channel(guild_id)
+    channel_id = await get_output_channel(guild_id, 'item')
     if not channel_id:
         logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
         return
