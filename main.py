@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from core.dnf_api import preload_item_cache
+from core.dundam_queue import DundamQueueManager
 from core.logger import logger
 import discord
 from core.chat_moderator import ChatModerator
@@ -70,6 +71,7 @@ class JongminiBot(commands.Bot):
 
         super().__init__(command_prefix="!", intents=intents)
         self.chat_moderator = ChatModerator()
+        self.dundam_queue = DundamQueueManager.get_instance()
         logger.info("JongminiBot 인스턴스 생성됨")
 
     async def setup_hook(self):
@@ -158,11 +160,15 @@ async def on_ready():
         bot.auction_poll_task = asyncio.create_task(poll_auction_prices(bot, GUILD_ID))
         logger.info("경매장 시세 폴링 task 시작됨")
 
+    # 던담 큐 매니저 시작
+    await bot.dundam_queue.start()
+
     # APScheduler 스케줄러 시작 및 작업 등록
     if not bot.scheduler.running:
         bot.scheduler.start()
         logger.info("스케줄러 시작됨")
 
+    # 던담 API 일일 사용량 자정(KST) 리셋 — 별도 리셋 불필요 (날짜별 카운트)
     # 스케줄러 타임존 변수
     bot.scheduler.timezone
 

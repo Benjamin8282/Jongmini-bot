@@ -30,6 +30,8 @@ async def fetch_dundam_data_with_retry(session, character, retries=3):
                             damage_str = item.get('dam', '0')
                             damage_int = int(damage_str.replace(',', ''))
                             result = {
+                                "character_id": character.get('character_id'),
+                                "server_id": character.get('server_id'),
                                 "character_name": character.get('character_name'),
                                 "adventure_name": character.get('adventure_name'),
                                 "damage": damage_int
@@ -91,6 +93,8 @@ async def fetch_dundam_buffer_with_retry(session, character, retries=3):
                     buff_score = int(str(buff_score_raw).replace(',', ''))
 
                     result = {
+                        "character_id": character.get('character_id'),
+                        "server_id": character.get('server_id'),
                         "character_name": character.get('character_name'),
                         "adventure_name": character.get('adventure_name'),
                         "buff_score": buff_score

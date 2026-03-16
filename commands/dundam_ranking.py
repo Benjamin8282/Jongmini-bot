@@ -3,8 +3,12 @@ import aiohttp
 import discord
 from discord import app_commands, Interaction
 from discord.ui import View, Button
-from core.db import get_active_characters
+from core.db import (
+    get_active_characters,
+    save_dundam_ranking_cache, get_dundam_ranking_cache, get_dundam_ranking_cache_timestamp,
+)
 from core.dundam_api import fetch_all_with_rate_limit, fetch_all_buffers_with_rate_limit
+from core.logger import logger
 
 KST = timezone(timedelta(hours=9))
 
@@ -136,27 +140,65 @@ class NextButton(Button):
 async def dundam_ranking(interaction: Interaction, 유형: app_commands.Choice[str]):
     await interaction.response.defer(thinking=True)
     mode = 유형.value
-
-    characters = await get_active_characters()
-    if not characters:
-        await interaction.followup.send("등록된 캐릭터가 없습니다.")
-        return
-
-    async with aiohttp.ClientSession() as session:
-        if mode == "딜러":
-            results = await fetch_all_with_rate_limit(session, characters, limit_per_second=5)
-            ranked = sorted([r for r in results if r], key=lambda x: x['damage'], reverse=True)
-        else:
-            results = await fetch_all_buffers_with_rate_limit(session, characters, limit_per_second=5)
-            ranked = sorted([r for r in results if r], key=lambda x: x['buff_score'], reverse=True)
-
+    db_mode = 'dealer' if mode == '딜러' else 'buffer'
     config = MODE_CONFIG[mode]
-    if not ranked:
-        await interaction.followup.send(config["empty_msg"])
+    score_key = config['score_key']
+
+    # 캐시 우선 조회
+    cached = await get_dundam_ranking_cache(db_mode)
+    cached_ts = await get_dundam_ranking_cache_timestamp(db_mode)
+
+    # API에서 실시간 갱신 시도
+    characters = await get_active_characters()
+    ranked = None
+
+    if characters:
+        try:
+            async with aiohttp.ClientSession() as session:
+                if mode == "딜러":
+                    results = await fetch_all_with_rate_limit(session, characters, limit_per_second=5)
+                    ranked = sorted([r for r in results if r], key=lambda x: x['damage'], reverse=True)
+                else:
+                    results = await fetch_all_buffers_with_rate_limit(session, characters, limit_per_second=5)
+                    ranked = sorted([r for r in results if r], key=lambda x: x['buff_score'], reverse=True)
+
+            # 캐시에 저장
+            if ranked:
+                now_str = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
+                cache_entries = []
+                for r in ranked:
+                    cache_entries.append({
+                        'character_id': r.get('character_id', ''),
+                        'server_id': r.get('server_id', ''),
+                        'mode': db_mode,
+                        'character_name': r.get('character_name', ''),
+                        'adventure_name': r.get('adventure_name', ''),
+                        'score': r.get(score_key, 0),
+                        'updated_at': now_str,
+                    })
+                await save_dundam_ranking_cache(cache_entries)
+                logger.info(f"던담순위 캐시 갱신 완료: {db_mode} {len(cache_entries)}건")
+        except Exception as e:
+            logger.warning(f"던담순위 실시간 조회 실패, 캐시 사용: {e}")
+            ranked = None
+
+    # 실시간 실패 시 캐시 사용
+    if not ranked and cached:
+        ranked = [{
+            'character_name': c['character_name'],
+            'adventure_name': c['adventure_name'],
+            score_key: c['score'],
+        } for c in cached]
+        timestamp = f"{cached_ts} (캐시)"
+    elif ranked:
+        timestamp = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        if not characters:
+            await interaction.followup.send("등록된 캐릭터가 없습니다.")
+        else:
+            await interaction.followup.send(config["empty_msg"])
         return
 
-    timestamp = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
     view = DundamRankingView(ranked, timestamp, mode)
     embed = view.get_embed()
-
     await interaction.followup.send(embed=embed, view=view)
