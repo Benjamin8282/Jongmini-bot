@@ -1,4 +1,10 @@
+import logging
+from datetime import datetime, timedelta, timezone
+
+import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def calc_rsi(closes: pd.Series, period: int = 14) -> float | None:
@@ -310,5 +316,119 @@ def format_analysis_text(result: dict) -> str:
             "지금은 관망하면서 바닥 신호(RSI 30 이하, 거래량 급증)를\n"
             "기다리는 것이 안전합니다."
         )
+
+    return "\n".join(lines)
+
+
+def recommend_prices(records: list[dict]) -> dict | None:
+    """
+    거래 기록 기반 판매 추천 가격 산출.
+
+    최근 거래 데이터에서 거래량 가중 백분위수로 3단계 가격을 추천:
+    - safe (P60): 팔릴만한 중간 가격
+    - optimal (P80): 팔릴만한 최대 가격
+    - ambitious (P95): 걸어볼만한 가격
+    """
+    if not records:
+        return None
+
+    KST = timezone(timedelta(hours=9))
+    now = datetime.now(KST)
+
+    # 최근 데이터 우선, 부족 시 점진적 확장
+    used_hours = 0
+    recent = []
+    for hours in [24, 48, 96, 168]:
+        cutoff = (now - timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
+        recent = [r for r in records if r["sold_date"] >= cutoff]
+        used_hours = hours
+        if len(recent) >= 20:
+            break
+
+    if len(recent) < 10:
+        recent = records
+        used_hours = 0  # 전체 데이터 사용
+
+    if len(recent) < 10:
+        return None
+
+    # IQR 이상치 제거 (numpy 기반으로 정확한 사분위수 계산)
+    price_arr = np.array([r["unit_price"] for r in recent], dtype=float)
+    q1 = float(np.percentile(price_arr, 25))
+    q3 = float(np.percentile(price_arr, 75))
+    iqr = q3 - q1
+    median_val = float(np.median(price_arr))
+
+    if iqr > 0:
+        lower = q1 - 1.5 * iqr
+        upper = q3 + 1.5 * iqr
+    elif median_val > 0:
+        lower = median_val * 0.5
+        upper = median_val * 2.0
+    else:
+        lower, upper = 0, float("inf")
+
+    # 거래량(count) 가중 가격 배열 (price == 0 제외)
+    weighted_prices = []
+    for r in recent:
+        p = r["unit_price"]
+        if p > 0 and lower <= p <= upper:
+            count = max(r.get("count", 1), 1)
+            weighted_prices.extend([p] * count)
+
+    if len(weighted_prices) < 10:
+        logger.debug(
+            "추천가 산출 불가: 필터 후 거래량 %d건 (원본 %d건)",
+            len(weighted_prices), len(recent)
+        )
+        return None
+
+    arr = np.array(weighted_prices)
+
+    return {
+        "safe": int(np.percentile(arr, 60)),
+        "optimal": int(np.percentile(arr, 80)),
+        "ambitious": int(np.percentile(arr, 95)),
+        "median": int(np.median(arr)),
+        "sample_size": len(recent),
+        "total_volume": len(weighted_prices),
+        "used_hours": used_hours,
+    }
+
+
+def format_recommendation_text(rec: dict) -> str:
+    """추천 가격을 한국어 텍스트로 포맷."""
+    lines = []
+
+    lines.append(f"**팔릴만한 중간 가격: {rec['safe']:,}**")
+    lines.append(
+        "→ 최근 거래의 상위 40% 수준.\n"
+        "　 빠르게 팔고 싶을 때 적정한 가격입니다."
+    )
+    lines.append("")
+
+    lines.append(f"**팔릴만한 최대 가격: {rec['optimal']:,}**")
+    lines.append(
+        "→ 상위 20% 수준.\n"
+        "　 조금 기다리면 충분히 팔릴 가격입니다."
+    )
+    lines.append("")
+
+    lines.append(f"**걸어볼만한 가격: {rec['ambitious']:,}**")
+    lines.append(
+        "→ 상위 5% 수준.\n"
+        "　 안 팔릴 수도 있지만 걸어볼 만합니다."
+    )
+    lines.append("")
+
+    # 데이터 기반 정보
+    if rec["used_hours"] > 0:
+        period_text = f"최근 {rec['used_hours']}시간"
+    else:
+        period_text = "전체 기간"
+    lines.append(
+        f"*{period_text} 거래 {rec['sample_size']}건"
+        f" (총 {rec['total_volume']:,}개) 기반*"
+    )
 
     return "\n".join(lines)

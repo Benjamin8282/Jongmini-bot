@@ -5,7 +5,7 @@ from discord import app_commands, Interaction, ui
 
 from core.db import get_price_history, get_watch_item_by_name, get_all_watch_items
 from core.chart import aggregate_to_ohlc, generate_candlestick_chart
-from core.analysis import analyze, format_analysis_text
+from core.analysis import analyze, format_analysis_text, recommend_prices, format_recommendation_text
 from core.logger import logger
 
 KST = timezone(timedelta(hours=9))
@@ -40,7 +40,7 @@ def _save_user_pref(user_id: int, interval: int = None, period: int = None):
 
 
 async def _build_chart(item_id: str, item_name: str, interval_minutes: int, period_days: int):
-    """차트 생성 후 (embed, file) 또는 에러 메시지 str 반환"""
+    """차트 생성 후 (embed, file, analysis_embed, recommend_embed) 또는 에러 메시지 str 반환"""
     end_dt = datetime.now(KST)
     start_dt = end_dt - timedelta(days=period_days)
     start_str = start_dt.strftime("%Y-%m-%d %H:%M:%S")
@@ -118,7 +118,21 @@ async def _build_chart(item_id: str, item_name: str, interval_minutes: int, peri
             text="이 분석은 기술적 지표 기반 참고용이며, 투자 조언이 아닙니다."
         )
 
-    return embed, file, analysis_embed
+    # 추천 판매가 embed
+    recommend_embed = None
+    rec = recommend_prices(records)
+    if rec:
+        rec_text = format_recommendation_text(rec)
+        recommend_embed = discord.Embed(
+            title="추천 판매가",
+            description=rec_text,
+            color=0x2ECC71
+        )
+        recommend_embed.set_footer(
+            text="거래량 가중 백분위수 기반 추천이며, 실제 판매를 보장하지 않습니다."
+        )
+
+    return embed, file, analysis_embed, recommend_embed
 
 
 class ChartControlView(ui.View):
@@ -195,10 +209,12 @@ class ChartControlView(ui.View):
                 content=result, embed=None, attachments=[], view=self
             )
         else:
-            embed, file, analysis_embed = result
+            embed, file, analysis_embed, recommend_embed = result
             embeds = [embed]
             if analysis_embed:
                 embeds.append(analysis_embed)
+            if recommend_embed:
+                embeds.append(recommend_embed)
             await interaction.edit_original_response(
                 content=None, embeds=embeds, attachments=[file], view=self
             )
@@ -272,9 +288,11 @@ async def auction_chart(interaction: Interaction, item_name: str):
     if isinstance(result, str):
         msg = await interaction.followup.send(content=result, view=view)
     else:
-        embed, file, analysis_embed = result
+        embed, file, analysis_embed, recommend_embed = result
         embeds = [embed]
         if analysis_embed:
             embeds.append(analysis_embed)
+        if recommend_embed:
+            embeds.append(recommend_embed)
         msg = await interaction.followup.send(embeds=embeds, file=file, view=view)
     view.message = msg
