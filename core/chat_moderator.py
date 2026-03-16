@@ -116,31 +116,39 @@ class ChatModerator:
     # -----------------------------
     # Worker: 1초에 1번 처리
     # -----------------------------
+    def _should_skip_tick(self, channel_id: int) -> bool:
+        """현재 tick에서 처리를 건너뛸지 판단."""
+        event = self.channel_events.get(channel_id)
+        if event is None or not event.is_set():
+            return True
+        if self.channel_cache.get(channel_id) is None:
+            return True
+        return self.channel_locks[channel_id].locked()
+
     async def _channel_worker(self, channel_id: int):
         while True:
             await asyncio.sleep(self.TICK_SEC)
 
-            event = self.channel_events.get(channel_id)
-            if event is None or not event.is_set():
+            if self._should_skip_tick(channel_id):
                 continue
 
             channel = self.channel_cache.get(channel_id)
-            if channel is None:
-                continue
-
-            lock = self.channel_locks[channel_id]
-            if lock.locked():
-                # 이미 API 호출 중이면 이번 tick은 스킵
-                continue
-
-            async with lock:
+            async with self.channel_locks[channel_id]:
                 # 락 안에서 clear해야, API 호출 중 들어온 메시지는 다음 tick에서 처리됨
-                event.clear()
+                self.channel_events[channel_id].clear()
                 await self._moderate_channel(channel)
 
     # -----------------------------
     # Core: send queue to API
     # -----------------------------
+    def _should_suppress_response(self, response: dict) -> bool:
+        """서버 응답이 출력을 억제해야 하는지 판단."""
+        route = (response.get("route") or "").strip().upper()
+        if route == "NONE":
+            return True
+        msg = (response.get("message") or "").strip()
+        return not msg
+
     async def _moderate_channel(self, channel: TextChannel):
         channel_id = channel.id
         self._ensure_channel(channel_id)
@@ -152,36 +160,30 @@ class ChatModerator:
 
         try:
             response = await self._send_to_api(chat_log)
-            if not response:
+            if not response or self._should_suppress_response(response):
                 return
 
-            # ✅ 서버가 route=NONE이면 클라이언트는 무조건 출력 금지 (최종 안전장치)
-            route = (response.get("route") or "").strip().upper()
-            if route == "NONE":
-                return
-
-            msg = (response.get("message") or "").strip()
-            if not msg:
-                return
-
+            msg = response.get("message", "").strip()
             bot_message = await channel.send(msg)
-
-            # 봇 메시지를 큐에 추가 (서버 포맷과 동일하게 <B>)
-            bot_line = self._format_line(
-                who="B",
-                name=bot_message.author.display_name,
-                msg=bot_message.content or "",
-                created_at=bot_message.created_at,
-            )
-            self.message_queues[channel_id].append(bot_line)
-
-            logger.info(
-                f"채널({channel_id}) 봇 메시지 전송 + 큐 추가 완료. "
-                f"queue_size={len(self.message_queues[channel_id])}"
-            )
+            self._append_bot_message(channel_id, bot_message)
 
         except Exception as e:
             logger.exception(f"Error during moderation(channel={channel_id}): {e}")
+
+    def _append_bot_message(self, channel_id: int, bot_message):
+        """봇 메시지를 큐에 추가 (서버 포맷과 동일하게 <B>)."""
+        bot_line = self._format_line(
+            who="B",
+            name=bot_message.author.display_name,
+            msg=bot_message.content or "",
+            created_at=bot_message.created_at,
+        )
+        self.message_queues[channel_id].append(bot_line)
+
+        logger.info(
+            f"채널({channel_id}) 봇 메시지 전송 + 큐 추가 완료. "
+            f"queue_size={len(self.message_queues[channel_id])}"
+        )
 
     # -----------------------------
     # HTTP
@@ -212,23 +214,26 @@ class ChatModerator:
     # -----------------------------
     # Response normalize / parse safety
     # -----------------------------
+    def _has_expected_keys(self, data: dict) -> bool:
+        """응답에 기대하는 키가 있는지 확인."""
+        return any(k in data for k in ("message", "riskLevel", "summary", "route"))
+
+    def _extract_text_to_parse(self, data: dict) -> Optional[str]:
+        """파싱할 텍스트를 data에서 추출. 없으면 None."""
+        if "result" in data and isinstance(data["result"], str):
+            return data["result"].strip()
+        if "raw" in data and isinstance(data["raw"], str):
+            return data["raw"].strip()
+        return None
+
     def _normalize_response(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        has_expected_keys = (
-            "message" in data or "riskLevel" in data
-            or "summary" in data or "route" in data
-        )
-        if isinstance(data, dict) and has_expected_keys:
+        if isinstance(data, dict) and self._has_expected_keys(data):
             return data
 
-        text_to_parse: Optional[str] = None
         if isinstance(data, dict):
-            if "result" in data and isinstance(data["result"], str):
-                text_to_parse = data["result"].strip()
-            elif "raw" in data and isinstance(data["raw"], str):
-                text_to_parse = data["raw"].strip()
-
-        if text_to_parse:
-            return self._parse_model_json(text_to_parse)
+            text_to_parse = self._extract_text_to_parse(data)
+            if text_to_parse:
+                return self._parse_model_json(text_to_parse)
 
         return {"_unknown_format": data}
 
@@ -249,47 +254,65 @@ class ChatModerator:
             return s.strip()
         return s[start:end + 1].strip()
 
-    def _parse_model_json(self, raw_text: str) -> Dict[str, Any]:
-        if raw_text is None:
-            return {"raw": "", "_note": "empty"}
+    def _try_parse_json_dict(self, candidate: str) -> Optional[Dict[str, Any]]:
+        """JSON 문자열을 파싱하여 dict이면 반환, 아니면 None."""
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+        return None
 
-        s = raw_text
-        if not isinstance(s, str):
-            if isinstance(s, dict):
-                return s
-            return {"raw": str(s), "_note": "non_string"}
+    def _try_parse_truncated_json(self, candidate: str) -> Dict[str, Any]:
+        """마지막 '}'까지 잘라서 JSON 파싱 시도."""
+        last = candidate.rfind("}")
+        if last == -1:
+            return {"raw": candidate, "_note": "invalid or incomplete json"}
+
+        candidate2 = candidate[:last + 1].strip()
+        result = self._try_parse_json_dict(candidate2)
+        if result is not None:
+            return result
+
+        return {"raw": candidate2, "_note": "json_decode_error"}
+
+    def _unwrap_double_quoted(self, s: str) -> str:
+        """이중 따옴표로 감싼 JSON 문자열 언래핑."""
+        if not (s.startswith('"') and s.endswith('"')):
+            return s
+        try:
+            inner = json.loads(s)
+            if isinstance(inner, str):
+                return self._strip_control_chars(inner).strip()
+        except Exception:
+            pass
+        return s
+
+    def _coerce_to_string(self, raw_text) -> tuple[str | None, Dict[str, Any] | None]:
+        """raw_text를 문자열로 변환. (str, None) 또는 (None, early_return_dict)."""
+        if raw_text is None:
+            return None, {"raw": "", "_note": "empty"}
+        if isinstance(raw_text, dict):
+            return None, raw_text
+        if not isinstance(raw_text, str):
+            return None, {"raw": str(raw_text), "_note": "non_string"}
+        return raw_text, None
+
+    def _parse_model_json(self, raw_text: str) -> Dict[str, Any]:
+        s, early = self._coerce_to_string(raw_text)
+        if early is not None:
+            return early
 
         s = self._strip_control_chars(s).strip()
         if not s:
             return {"raw": "", "_note": "empty"}
 
-        if s.startswith('"') and s.endswith('"'):
-            try:
-                s = json.loads(s)
-                if isinstance(s, str):
-                    s = self._strip_control_chars(s).strip()
-            except Exception:
-                pass
-
+        s = self._unwrap_double_quoted(s)
         candidate = self._extract_json_object(s)
 
-        try:
-            parsed = json.loads(candidate)
-            if isinstance(parsed, dict):
-                return parsed
-            return {"raw": candidate, "_note": "parsed but not a dict"}
-        except json.JSONDecodeError:
-            pass
+        result = self._try_parse_json_dict(candidate)
+        if result is not None:
+            return result
 
-        last = candidate.rfind("}")
-        if last != -1:
-            candidate2 = candidate[: last + 1].strip()
-            try:
-                parsed2 = json.loads(candidate2)
-                if isinstance(parsed2, dict):
-                    return parsed2
-                return {"raw": candidate2, "_note": "parsed but not a dict"}
-            except Exception as e2:
-                return {"raw": candidate2, "_note": f"json_decode_error:{str(e2)}"}
-
-        return {"raw": candidate, "_note": "invalid or incomplete json"}
+        return self._try_parse_truncated_json(candidate)

@@ -39,6 +39,102 @@ def _save_user_pref(user_id: int, interval: int = None, period: int = None):
         pref["period"] = period
 
 
+def _get_interval_label(interval_minutes: int) -> str:
+    return next(
+        (i["label"] for i in INTERVALS if i["minutes"] == interval_minutes),
+        f"{interval_minutes}분봉"
+    )
+
+
+def _calc_change_text(close_price: int, prev) -> str:
+    if prev is None:
+        return ""
+    prev_close = int(prev["close"])
+    diff = close_price - prev_close
+    pct = (diff / prev_close * 100) if prev_close else 0
+    arrow = "▲" if diff > 0 else "▼" if diff < 0 else "−"
+    return f"{arrow} {abs(diff):,} ({abs(pct):.1f}%)"
+
+
+def _embed_color(close_price: int, prev) -> int:
+    if prev is None:
+        return 0x2ECC71
+    prev_close = int(prev["close"])
+    if close_price > prev_close:
+        return 0xE74C3C
+    if close_price < prev_close:
+        return 0x3498DB
+    return 0x2ECC71
+
+
+def _build_price_embed(
+    item_name: str, item_id: str, ohlc_df, records: list,
+    period_days: int, interval_label: str,
+) -> discord.Embed:
+    latest = ohlc_df.iloc[-1]
+    prev = ohlc_df.iloc[-2] if len(ohlc_df) >= 2 else None
+    close_price = int(latest["close"])
+    change_text = _calc_change_text(close_price, prev)
+    color = _embed_color(close_price, prev)
+
+    embed = discord.Embed(
+        title=f"{item_name} 시세 차트",
+        description=(
+            f"기간: {period_days}일 | 간격: {interval_label}\n"
+            f"거래 기록: {len(records)}건 | 캔들: {len(ohlc_df)}개"
+        ),
+        color=color
+    )
+    embed.add_field(name="시가", value=f"{int(latest['open']):,}", inline=True)
+    embed.add_field(name="고가", value=f"{int(latest['high']):,}", inline=True)
+    embed.add_field(name="저가", value=f"{int(latest['low']):,}", inline=True)
+    embed.add_field(name="종가", value=f"{close_price:,}", inline=True)
+    embed.add_field(name="거래량", value=f"{int(latest['volume']):,}", inline=True)
+    if change_text:
+        embed.add_field(name="전봉대비", value=change_text, inline=True)
+    embed.set_image(url="attachment://auction_chart.png")
+    embed.set_thumbnail(url=ITEM_IMAGE_URL.format(item_id=item_id))
+    return embed
+
+
+def _build_analysis_embed(ohlc_df) -> discord.Embed | None:
+    if len(ohlc_df) < 5:
+        return None
+    result = analyze(ohlc_df)
+    analysis_text = format_analysis_text(result)
+    score = result["score"]
+    analysis_color = (
+        0xE74C3C if score >= 1
+        else 0x3498DB if score <= -1
+        else 0x95A5A6
+    )
+    embed = discord.Embed(
+        title="분석 의견",
+        description=analysis_text,
+        color=analysis_color
+    )
+    embed.set_footer(
+        text="이 분석은 기술적 지표 기반 참고용이며, 투자 조언이 아닙니다."
+    )
+    return embed
+
+
+def _build_recommend_embed(records: list) -> discord.Embed | None:
+    rec = recommend_prices(records)
+    if not rec:
+        return None
+    rec_text = format_recommendation_text(rec)
+    embed = discord.Embed(
+        title="추천 판매가",
+        description=rec_text,
+        color=0x2ECC71
+    )
+    embed.set_footer(
+        text="거래량 가중 백분위수 기반 추천이며, 실제 판매를 보장하지 않습니다."
+    )
+    return embed
+
+
 async def _build_chart(item_id: str, item_name: str, interval_minutes: int, period_days: int):
     """차트 생성 후 (embed, file, analysis_embed, recommend_embed) 또는 에러 메시지 str 반환"""
     end_dt = datetime.now(KST)
@@ -50,11 +146,7 @@ async def _build_chart(item_id: str, item_name: str, interval_minutes: int, peri
     if not records:
         return f"해당 기간({period_days}일) 거래 기록이 없습니다."
 
-    interval_label = next(
-        (i["label"] for i in INTERVALS if i["minutes"] == interval_minutes),
-        f"{interval_minutes}분봉"
-    )
-
+    interval_label = _get_interval_label(interval_minutes)
     ohlc_df = aggregate_to_ohlc(records, interval_minutes)
     if ohlc_df.empty:
         return "OHLC 데이터를 생성할 수 없습니다."
@@ -63,74 +155,10 @@ async def _build_chart(item_id: str, item_name: str, interval_minutes: int, peri
     if not chart_buf:
         return "차트 생성에 실패했습니다."
 
-    # 최근 캔들 OHLCV 정보
-    latest = ohlc_df.iloc[-1]
-    prev = ohlc_df.iloc[-2] if len(ohlc_df) >= 2 else None
-
-    close_price = int(latest["close"])
-    change_text = ""
-    if prev is not None:
-        prev_close = int(prev["close"])
-        diff = close_price - prev_close
-        pct = (diff / prev_close * 100) if prev_close else 0
-        arrow = "▲" if diff > 0 else "▼" if diff < 0 else "−"
-        change_text = f"{arrow} {abs(diff):,} ({abs(pct):.1f}%)"
-
     file = discord.File(chart_buf, filename="auction_chart.png")
-    embed = discord.Embed(
-        title=f"{item_name} 시세 차트",
-        description=(
-            f"기간: {period_days}일 | 간격: {interval_label}\n"
-            f"거래 기록: {len(records)}건 | 캔들: {len(ohlc_df)}개"
-        ),
-        color=0xE74C3C if (prev is not None and close_price > int(prev["close"]))
-        else 0x3498DB if (prev is not None and close_price < int(prev["close"]))
-        else 0x2ECC71
-    )
-    embed.add_field(name="시가", value=f"{int(latest['open']):,}", inline=True)
-    embed.add_field(name="고가", value=f"{int(latest['high']):,}", inline=True)
-    embed.add_field(name="저가", value=f"{int(latest['low']):,}", inline=True)
-    embed.add_field(name="종가", value=f"{close_price:,}", inline=True)
-    embed.add_field(name="거래량", value=f"{int(latest['volume']):,}", inline=True)
-    if change_text:
-        embed.add_field(name="전봉대비", value=change_text, inline=True)
-    embed.set_image(url="attachment://auction_chart.png")
-    embed.set_thumbnail(url=ITEM_IMAGE_URL.format(item_id=item_id))
-
-    # 분석 의견 embed
-    analysis_embed = None
-    if len(ohlc_df) >= 5:
-        result = analyze(ohlc_df)
-        analysis_text = format_analysis_text(result)
-
-        score = result["score"]
-        analysis_color = (
-            0xE74C3C if score >= 1
-            else 0x3498DB if score <= -1
-            else 0x95A5A6
-        )
-        analysis_embed = discord.Embed(
-            title="분석 의견",
-            description=analysis_text,
-            color=analysis_color
-        )
-        analysis_embed.set_footer(
-            text="이 분석은 기술적 지표 기반 참고용이며, 투자 조언이 아닙니다."
-        )
-
-    # 추천 판매가 embed
-    recommend_embed = None
-    rec = recommend_prices(records)
-    if rec:
-        rec_text = format_recommendation_text(rec)
-        recommend_embed = discord.Embed(
-            title="추천 판매가",
-            description=rec_text,
-            color=0x2ECC71
-        )
-        recommend_embed.set_footer(
-            text="거래량 가중 백분위수 기반 추천이며, 실제 판매를 보장하지 않습니다."
-        )
+    embed = _build_price_embed(item_name, item_id, ohlc_df, records, period_days, interval_label)
+    analysis_embed = _build_analysis_embed(ohlc_df)
+    recommend_embed = _build_recommend_embed(records)
 
     return embed, file, analysis_embed, recommend_embed
 
@@ -220,26 +248,69 @@ class ChartControlView(ui.View):
             )
 
 
+def _filter_watch_items(items: list[dict], current: str) -> list[dict]:
+    if not current:
+        return items[:25]
+    current_lower = current.lower()
+    return [item for item in items if current_lower in item["item_name"].lower()][:25]
+
+
 async def item_name_autocomplete(
     interaction: Interaction,
     current: str
 ) -> list[app_commands.Choice[str]]:
     """등록된 감시 아이템 목록에서 자동완성 제공"""
     items = await get_all_watch_items()
-    if not current:
-        return [
-            app_commands.Choice(name=item["item_name"], value=item["item_name"])
-            for item in items[:25]
-        ]
-    current_lower = current.lower()
-    matches = [
-        item for item in items
-        if current_lower in item["item_name"].lower()
-    ]
+    filtered = _filter_watch_items(items, current)
     return [
         app_commands.Choice(name=item["item_name"], value=item["item_name"])
-        for item in matches[:25]
+        for item in filtered
     ]
+
+
+def _find_partial_matches(all_items: list[dict], item_name: str) -> list[dict]:
+    """부분 일치하는 아이템 목록 반환."""
+    return [
+        item for item in all_items
+        if item_name.lower() in item["item_name"].lower()
+    ]
+
+
+async def _send_match_error(interaction: Interaction, matches: list[dict]):
+    """매칭 결과에 따른 에러 메시지 전송."""
+    if matches:
+        names = "\n".join(f"- {item['item_name']}" for item in matches)
+        await interaction.followup.send(
+            f"여러 아이템이 일치합니다. 자동완성에서 선택해주세요:\n{names}"
+        )
+    else:
+        await interaction.followup.send(
+            "등록되지 않은 아이템입니다. `/시세등록`으로 먼저 등록해주세요."
+        )
+
+
+async def _resolve_watch_item(interaction: Interaction, item_name: str):
+    """감시 아이템 조회. watch_item dict 또는 None (응답 전송 포함)."""
+    watch_item = await get_watch_item_by_name(item_name)
+    if watch_item:
+        return watch_item
+
+    all_items = await get_all_watch_items()
+    matches = _find_partial_matches(all_items, item_name)
+    if len(matches) == 1:
+        return matches[0]
+    await _send_match_error(interaction, matches)
+    return None
+
+
+def _collect_embeds(result) -> list[discord.Embed]:
+    embed, file, analysis_embed, recommend_embed = result
+    embeds = [embed]
+    if analysis_embed:
+        embeds.append(analysis_embed)
+    if recommend_embed:
+        embeds.append(recommend_embed)
+    return embeds
 
 
 @app_commands.command(name="시세차트", description="아이템 경매장 시세를 캔들스틱 차트로 조회합니다")
@@ -249,27 +320,9 @@ async def auction_chart(interaction: Interaction, item_name: str):
     logger.info(f"/시세차트 호출: 사용자={interaction.user.id}, 아이템={item_name}")
     await interaction.response.defer(thinking=True)
 
-    # 감시 목록에서 아이템 확인
-    watch_item = await get_watch_item_by_name(item_name)
+    watch_item = await _resolve_watch_item(interaction, item_name)
     if not watch_item:
-        all_items = await get_all_watch_items()
-        matches = [
-            item for item in all_items
-            if item_name.lower() in item["item_name"].lower()
-        ]
-        if len(matches) == 1:
-            watch_item = matches[0]
-        elif len(matches) > 1:
-            names = "\n".join(f"- {item['item_name']}" for item in matches)
-            await interaction.followup.send(
-                f"여러 아이템이 일치합니다. 자동완성에서 선택해주세요:\n{names}"
-            )
-            return
-        else:
-            await interaction.followup.send(
-                "등록되지 않은 아이템입니다. `/시세등록`으로 먼저 등록해주세요."
-            )
-            return
+        return
 
     pref = _user_prefs.get(interaction.user.id, {})
     interval = pref.get("interval", 60)
@@ -288,11 +341,6 @@ async def auction_chart(interaction: Interaction, item_name: str):
     if isinstance(result, str):
         msg = await interaction.followup.send(content=result, view=view)
     else:
-        embed, file, analysis_embed, recommend_embed = result
-        embeds = [embed]
-        if analysis_embed:
-            embeds.append(analysis_embed)
-        if recommend_embed:
-            embeds.append(recommend_embed)
-        msg = await interaction.followup.send(embeds=embeds, file=file, view=view)
+        embeds = _collect_embeds(result)
+        msg = await interaction.followup.send(embeds=embeds, file=result[1], view=view)
     view.message = msg

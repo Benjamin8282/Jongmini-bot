@@ -60,6 +60,44 @@ def get_scheduler_timezone():
     return utc_tz
 
 
+# 백그라운드 task 정의: (속성명, 팩토리 함수, 로그 메시지)
+_BACKGROUND_TASKS = [
+    ("notify_task", lambda b, g: periodic_notify(b, g), "타임라인 아이템 알림 task 시작됨"),
+    ("daily_aggregation_task", lambda b, g: daily_aggregation_task(b, g), "일간 모험단 집계 task 시작됨"),
+    ("weekly_aggregation_task", lambda b, g: weekly_aggregation_task(b, g), "주간 모험단 집계 task 시작됨"),
+    ("monthly_aggregation_task", lambda b, g: monthly_aggregation_task(b, g), "월간 모험단 집계 task 시작됨"),
+    ("auction_poll_task", lambda b, g: poll_auction_prices(b, g), "경매장 시세 폴링 task 시작됨"),
+]
+
+
+def _should_start_task(bot, attr_name):
+    """task 속성이 없거나 완료된 경우 True 반환"""
+    return not hasattr(bot, attr_name) or getattr(bot, attr_name).done()
+
+
+def _ensure_background_tasks(bot, guild_id):
+    """필요한 백그라운드 task들을 시작"""
+    for attr_name, factory, log_msg in _BACKGROUND_TASKS:
+        if _should_start_task(bot, attr_name):
+            setattr(bot, attr_name, asyncio.create_task(factory(bot, guild_id)))
+            logger.info(log_msg)
+
+
+async def _sync_guild_commands(bot):
+    """길드별 슬래시 명령어 동기화 (최초 1회)"""
+    if hasattr(bot, '_commands_synced'):
+        return
+    for guild in bot.guilds:
+        bot.tree.copy_global_to(guild=guild)
+        await bot.tree.sync(guild=guild)
+        logger.info(f"슬래시 명령어 길드 동기화 완료: {guild.name} ({guild.id})")
+    # 기존 글로벌 커맨드 제거 (중복 방지)
+    bot.tree.clear_commands(guild=None)
+    await bot.tree.sync()
+    logger.info("글로벌 커맨드 정리 완료")
+    bot._commands_synced = True
+
+
 class JongminiBot(commands.Bot):
     def __init__(self):
         scheduler_tz = get_scheduler_timezone()
@@ -118,47 +156,15 @@ async def on_ready():
     print(f"종미니 봇 로그인 성공: {bot.user}")
 
     # 슬래시 명령어 동기화 (최초 1회만)
-    if not hasattr(bot, '_commands_synced'):
-        # 길드별 즉시 sync
-        for guild in bot.guilds:
-            bot.tree.copy_global_to(guild=guild)
-            await bot.tree.sync(guild=guild)
-            logger.info(f"슬래시 명령어 길드 동기화 완료: {guild.name} ({guild.id})")
-        # 기존 글로벌 커맨드 제거 (중복 방지)
-        bot.tree.clear_commands(guild=None)
-        await bot.tree.sync()
-        logger.info("글로벌 커맨드 정리 완료")
-        bot._commands_synced = True
+    await _sync_guild_commands(bot)
 
     # 현재 시간과 타임존 로그 출력
     now = datetime.now(tz=bot.scheduler.timezone)
     logger.info(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
     print(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
 
-    # 기존 알림 task
-    if not hasattr(bot, 'notify_task') or bot.notify_task.done():
-        bot.notify_task = asyncio.create_task(periodic_notify(bot, GUILD_ID))
-        logger.info("타임라인 아이템 알림 task 시작됨")
-
-    # 신규 일간 집계 task
-    if not hasattr(bot, 'daily_aggregation_task') or bot.daily_aggregation_task.done():
-        bot.daily_aggregation_task = asyncio.create_task(daily_aggregation_task(bot, GUILD_ID))
-        logger.info("일간 모험단 집계 task 시작됨")
-
-    # 주간 집계 task
-    if not hasattr(bot, 'weekly_aggregation_task') or bot.weekly_aggregation_task.done():
-        bot.weekly_aggregation_task = asyncio.create_task(weekly_aggregation_task(bot, GUILD_ID))
-        logger.info("주간 모험단 집계 task 시작됨")
-
-    # 월간 집계 task
-    if not hasattr(bot, 'monthly_aggregation_task') or bot.monthly_aggregation_task.done():
-        bot.monthly_aggregation_task = asyncio.create_task(monthly_aggregation_task(bot, GUILD_ID))
-        logger.info("월간 모험단 집계 task 시작됨")
-
-    # 경매장 시세 폴링 task (실시간 알림 포함)
-    if not hasattr(bot, 'auction_poll_task') or bot.auction_poll_task.done():
-        bot.auction_poll_task = asyncio.create_task(poll_auction_prices(bot, GUILD_ID))
-        logger.info("경매장 시세 폴링 task 시작됨")
+    # 백그라운드 task 시작
+    _ensure_background_tasks(bot, GUILD_ID)
 
     # 던담 큐 매니저 시작
     await bot.dundam_queue.start()

@@ -82,6 +82,27 @@ class BasketRemoveSelect(ui.View):
         self.stop()
 
 
+async def _get_available_items() -> tuple[list[dict] | None, str | None]:
+    """바스켓 등록 가능한 아이템 목록 반환. (items, error_msg)."""
+    watch_items = await get_all_watch_items()
+    if not watch_items:
+        return None, (
+            "시세 추적 중인 아이템이 없습니다. "
+            "`/시세등록`으로 먼저 아이템을 등록해주세요."
+        )
+    available = await _exclude_basket_items(watch_items)
+    return (available, None) if available else (
+        None, "시세 추적 중인 아이템이 모두 바스켓에 등록되어 있습니다."
+    )
+
+
+async def _exclude_basket_items(watch_items: list[dict]) -> list[dict]:
+    """바스켓에 이미 등록된 아이템을 제외."""
+    basket_items = await get_basket_items()
+    basket_ids = {item["item_id"] for item in basket_items}
+    return [i for i in watch_items if i["item_id"] not in basket_ids]
+
+
 @app_commands.command(
     name="바스켓등록",
     description="시세 추적 중인 아이템을 활동지수 바스켓에 추가합니다"
@@ -90,23 +111,9 @@ async def basket_register(interaction: Interaction):
     logger.info(f"/바스켓등록 호출: 사용자={interaction.user.id}")
     await interaction.response.defer(thinking=True)
 
-    watch_items = await get_all_watch_items()
-    if not watch_items:
-        await interaction.followup.send(
-            "시세 추적 중인 아이템이 없습니다. "
-            "`/시세등록`으로 먼저 아이템을 등록해주세요."
-        )
-        return
-
-    # 이미 바스켓에 있는 아이템 제외
-    basket_items = await get_basket_items()
-    basket_ids = {item["item_id"] for item in basket_items}
-    available = [i for i in watch_items if i["item_id"] not in basket_ids]
-
-    if not available:
-        await interaction.followup.send(
-            "시세 추적 중인 아이템이 모두 바스켓에 등록되어 있습니다."
-        )
+    available, err = await _get_available_items()
+    if err:
+        await interaction.followup.send(err)
         return
 
     view = BasketAddSelect(available, interaction.user.id)
@@ -190,6 +197,99 @@ async def basket_list(interaction: Interaction):
     )
 
 
+async def _send_insufficient_data(interaction: Interaction):
+    """데이터 부족 시 적절한 안내 메시지 전송."""
+    basket = await get_basket_items()
+    if len(basket) < 3:
+        await interaction.followup.send(
+            f"바스켓에 최소 3개 아이템이 필요합니다. "
+            f"(현재 {len(basket)}개)\n"
+            f"`/바스켓등록`으로 범용 소비재를 추가해주세요."
+        )
+    else:
+        await interaction.followup.send(
+            "데이터가 부족합니다. "
+            "거래량이 충분히 쌓일 때까지 기다려주세요.\n"
+            "(최소 15일 이상의 거래 기록 필요)"
+        )
+
+
+def _status_info(current: float) -> tuple[str, int]:
+    """활동지수 상태 문자열과 색상 반환."""
+    if current >= 110:
+        return "활발", 0xFF4757
+    if current >= 90:
+        return "보통", 0x2ECC71
+    return "저조", 0x3498FF
+
+
+def _build_activity_embed(result: dict, days: int) -> discord.Embed:
+    current = result["index"][-1] if result["index"] else 0
+    prev = result["index"][-2] if len(result["index"]) >= 2 else current
+    diff = current - prev
+    arrow = "▲" if diff > 0 else "▼" if diff < 0 else "−"
+    status, color = _status_info(current)
+
+    embed = discord.Embed(
+        title="게임 활동지수",
+        description=(
+            f"**현재: {current:.1f}%** ({arrow} {abs(diff):.1f}%p)\n"
+            f"상태: **{status}**\n\n"
+            f"기간: {days}일 | 바스켓: {result['item_count']}개 아이템\n"
+            f"100% = 최근 30일 평균 거래량 기준"
+        ),
+        color=color
+    )
+    embed.set_image(url="attachment://activity_index.png")
+    return embed
+
+
+def _add_hampel_field(embed: discord.Embed, result: dict):
+    hampel = result.get("hampel_stats", {})
+    if hampel.get("total_replaced", 0) <= 0:
+        return
+    hampel_text = f"스파이크 교체: {hampel['total_replaced']}건\n"
+    item_details = ", ".join(
+        f"{name}({cnt}건)"
+        for name, cnt in hampel.get("items", {}).items()
+    )
+    if item_details:
+        hampel_text += item_details
+    embed.add_field(
+        name="노이즈 제거 (Hampel)",
+        value=hampel_text[:1024],
+        inline=True
+    )
+
+
+def _add_changepoint_field(embed: discord.Embed, result: dict):
+    changepoints = result.get("changepoints", [])
+    if not changepoints:
+        return
+    cp_text = "\n".join(f"**{cp}**" for cp in changepoints[-3:])
+    embed.add_field(
+        name="체제 전환 감지 (PELT)",
+        value=cp_text[:1024],
+        inline=True
+    )
+
+
+def _add_outlier_field(embed: discord.Embed, result: dict):
+    outliers = result.get("outliers", {})
+    if not outliers:
+        return
+    recent = dict(list(outliers.items())[-3:])
+    outlier_text = "\n".join(
+        f"**{date}**: {', '.join(items)}"
+        for date, items in recent.items()
+    )
+    embed.add_field(
+        name="이상치 감지 (MAD)",
+        value=outlier_text[:1024],
+        inline=False
+    )
+
+
 @app_commands.command(
     name="활동지수",
     description="바스켓 아이템 거래량 기반 게임 활동지수를 조회합니다"
@@ -203,19 +303,7 @@ async def activity_index_cmd(interaction: Interaction, days: int = 30):
 
     result = await calc_activity_index(display_days=days)
     if not result:
-        basket = await get_basket_items()
-        if len(basket) < 3:
-            await interaction.followup.send(
-                f"바스켓에 최소 3개 아이템이 필요합니다. "
-                f"(현재 {len(basket)}개)\n"
-                f"`/바스켓등록`으로 범용 소비재를 추가해주세요."
-            )
-        else:
-            await interaction.followup.send(
-                "데이터가 부족합니다. "
-                "거래량이 충분히 쌓일 때까지 기다려주세요.\n"
-                "(최소 15일 이상의 거래 기록 필요)"
-            )
+        await _send_insufficient_data(interaction)
         return
 
     chart_buf = generate_activity_chart(
@@ -229,78 +317,10 @@ async def activity_index_cmd(interaction: Interaction, days: int = 30):
         return
 
     file = discord.File(chart_buf, filename="activity_index.png")
-
-    # 현재 지수
-    current = result["index"][-1] if result["index"] else 0
-    prev = result["index"][-2] if len(result["index"]) >= 2 else current
-    diff = current - prev
-    arrow = "▲" if diff > 0 else "▼" if diff < 0 else "−"
-
-    if current >= 110:
-        status = "활발"
-        color = 0xFF4757
-    elif current >= 90:
-        status = "보통"
-        color = 0x2ECC71
-    else:
-        status = "저조"
-        color = 0x3498FF
-
-    embed = discord.Embed(
-        title="게임 활동지수",
-        description=(
-            f"**현재: {current:.1f}%** ({arrow} {abs(diff):.1f}%p)\n"
-            f"상태: **{status}**\n\n"
-            f"기간: {days}일 | 바스켓: {result['item_count']}개 아이템\n"
-            f"100% = 최근 30일 평균 거래량 기준"
-        ),
-        color=color
-    )
-    embed.set_image(url="attachment://activity_index.png")
-
-    # Hampel 필터 통계
-    hampel = result.get("hampel_stats", {})
-    if hampel.get("total_replaced", 0) > 0:
-        hampel_text = (
-            f"스파이크 교체: {hampel['total_replaced']}건\n"
-        )
-        item_details = ", ".join(
-            f"{name}({cnt}건)"
-            for name, cnt in hampel.get("items", {}).items()
-        )
-        if item_details:
-            hampel_text += item_details
-        embed.add_field(
-            name="노이즈 제거 (Hampel)",
-            value=hampel_text[:1024],
-            inline=True
-        )
-
-    # 변화점 정보
-    changepoints = result.get("changepoints", [])
-    if changepoints:
-        cp_text = "\n".join(
-            f"**{cp}**" for cp in changepoints[-3:]
-        )
-        embed.add_field(
-            name="체제 전환 감지 (PELT)",
-            value=cp_text[:1024],
-            inline=True
-        )
-
-    # 이상치 정보
-    outliers = result.get("outliers", {})
-    if outliers:
-        recent = dict(list(outliers.items())[-3:])
-        outlier_text = "\n".join(
-            f"**{date}**: {', '.join(items)}"
-            for date, items in recent.items()
-        )
-        embed.add_field(
-            name="이상치 감지 (MAD)",
-            value=outlier_text[:1024],
-            inline=False
-        )
+    embed = _build_activity_embed(result, days)
+    _add_hampel_field(embed, result)
+    _add_changepoint_field(embed, result)
+    _add_outlier_field(embed, result)
 
     embed.set_footer(
         text=(

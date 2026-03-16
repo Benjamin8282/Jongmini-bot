@@ -142,70 +142,81 @@ def _rarity_color(rarity: str) -> int:
     return mapping.get(rarity, 0x888888)
 
 
+def _filter_by_tradeable(items: list[dict], sold_data: list[dict] | None) -> list[dict]:
+    """거래 기록이 있는 아이템만 필터링."""
+    if not sold_data:
+        return items
+    tradeable_ids = {row["itemId"] for row in sold_data}
+    return [item for item in items if item["itemId"] in tradeable_ids]
+
+
+async def _search_tradeable_items(item_name: str) -> list[dict] | None:
+    """아이템 검색 후 거래 가능한 아이템만 필터링. None이면 검색 결과 없음."""
+    items = await fetch_item_search(item_name)
+    if not items:
+        return None
+    items = _filter_by_tradeable(items, await fetch_auction_sold(item_name))
+    return items or None
+
+
+async def _register_single_item(interaction: Interaction, item: dict, embeds: list[discord.Embed]):
+    """단일 검색 결과 아이템을 바로 등록."""
+    is_new = await add_watch_item(item["itemId"], item["itemName"], interaction.user.id)
+    if is_new:
+        count = await fetch_and_save_item_prices(item["itemId"], item["itemName"])
+        embeds[0].set_footer(text=f"시세 추적 등록 완료 | 최초 수집: {count}건")
+        await interaction.followup.send(
+            content=f"'{item['itemName']}' 시세 추적을 시작합니다.",
+            embed=embeds[0]
+        )
+    else:
+        await interaction.followup.send(
+            f"'{item['itemName']}'은(는) 이미 추적 중인 아이템입니다."
+        )
+
+
+async def _register_selected_item(interaction: Interaction, item: dict):
+    """사용자가 선택한 아이템을 등록."""
+    is_new = await add_watch_item(item["itemId"], item["itemName"], interaction.user.id)
+    if is_new:
+        count = await fetch_and_save_item_prices(item["itemId"], item["itemName"])
+        await interaction.followup.send(
+            f"'{item['itemName']}' 시세 추적 등록 완료 (최초 수집: {count}건)",
+            ephemeral=True
+        )
+    else:
+        await interaction.followup.send(
+            f"'{item['itemName']}'은(는) 이미 추적 중인 아이템입니다.",
+            ephemeral=True
+        )
+
+
 @app_commands.command(name="시세등록", description="경매장 시세를 추적할 아이템을 등록합니다")
 @app_commands.describe(item_name="추적할 아이템 이름 (부분 입력 가능)")
 async def auction_watch_register(interaction: Interaction, item_name: str):
     logger.info(f"/시세등록 호출: 사용자={interaction.user.id}, 아이템={item_name}")
     await interaction.response.defer(thinking=True)
 
-    items = await fetch_item_search(item_name)
-    if not items:
-        await interaction.followup.send("아이템을 찾을 수 없습니다.")
-        return
-
-    # 경매장 거래 이력이 있는 아이템만 필터링 (거래 불가 아이템 제외)
-    sold_data = await fetch_auction_sold(item_name)
-    if sold_data:
-        tradeable_ids = {row["itemId"] for row in sold_data}
-        items = [item for item in items if item["itemId"] in tradeable_ids]
+    items = await _search_tradeable_items(item_name)
     if not items:
         await interaction.followup.send("경매장에서 거래 가능한 아이템이 없습니다.")
         return
 
-    # 검색 결과를 이미지와 함께 embed로 보여주기
     embeds = await _build_item_embeds(items)
 
     if len(items) == 1:
-        # 1개만 검색됨 - 확인용으로 이미지와 함께 바로 등록
-        item = items[0]
-        is_new = await add_watch_item(item["itemId"], item["itemName"], interaction.user.id)
-        if is_new:
-            count = await fetch_and_save_item_prices(item["itemId"], item["itemName"])
-            embeds[0].set_footer(text=f"시세 추적 등록 완료 | 최초 수집: {count}건")
-            await interaction.followup.send(
-                content=f"'{item['itemName']}' 시세 추적을 시작합니다.",
-                embed=embeds[0]
-            )
-        else:
-            await interaction.followup.send(
-                f"'{item['itemName']}'은(는) 이미 추적 중인 아이템입니다."
-            )
+        await _register_single_item(interaction, items[0], embeds)
         return
 
-    # 여러 개 검색됨 - 이미지 embed + 선택 UI
     view = ItemSelectView(items, interaction.user.id)
     await interaction.followup.send(
         content=f"{len(items)}개의 아이템이 검색되었습니다. 아래에서 선택해주세요.",
-        embeds=embeds,
-        view=view,
-        ephemeral=True
+        embeds=embeds, view=view, ephemeral=True
     )
 
     await view.wait()
     if view.selected_item:
-        item = view.selected_item
-        is_new = await add_watch_item(item["itemId"], item["itemName"], interaction.user.id)
-        if is_new:
-            count = await fetch_and_save_item_prices(item["itemId"], item["itemName"])
-            await interaction.followup.send(
-                f"'{item['itemName']}' 시세 추적 등록 완료 (최초 수집: {count}건)",
-                ephemeral=True
-            )
-        else:
-            await interaction.followup.send(
-                f"'{item['itemName']}'은(는) 이미 추적 중인 아이템입니다.",
-                ephemeral=True
-            )
+        await _register_selected_item(interaction, view.selected_item)
 
 
 @app_commands.command(name="시세해제", description="시세 추적 중인 아이템을 해제합니다")

@@ -114,18 +114,15 @@ async def fetch_timeline(server_id: str, character_id: str, start_date: str = No
                 return None
 
 
-async def fetch_timeline_with_pagination(
-    server_id: str, character_id: str, start_date: str = None, end_date: str = None
-):
-    url = f"{BASE_URL}/servers/{server_id}/characters/{character_id}/timeline"
-
+def _build_timeline_params(start_date: str | None, end_date: str | None) -> dict:
+    """타임라인 API 파라미터 구성 (기본값 적용)."""
     if end_date is None:
         end_date = datetime.now().strftime("%Y%m%dT%H%M")
     if start_date is None:
         from datetime import timedelta
         start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%dT%H%M")
 
-    params = {
+    return {
         "apikey": API_KEY,
         "startDate": start_date,
         "endDate": end_date,
@@ -133,32 +130,47 @@ async def fetch_timeline_with_pagination(
         "limit": 100
     }
 
+
+async def _fetch_single_timeline_page(session, url, params, next_token):
+    """타임라인 단일 페이지 조회. (rows, next_token) 또는 실패 시 None 반환."""
+    if next_token:
+        params["next"] = next_token
+    else:
+        params.pop("next", None)
+
+    async with session.get(url, params=params) as resp:
+        logger.info(f"fetch_timeline_with_pagination 호출: {url} - next_token={next_token}")
+        logger.info(f"응답 상태: {resp.status}")
+        if resp.status != 200:
+            data = await resp.text()  # json이 아닐 수도 있으니 텍스트로 먼저 찍기
+            logger.warning(f"API 호출 실패 응답 내용: {data}")
+            return None
+
+        data = await resp.json()
+        timeline = data.get("timeline", {})
+        rows = timeline.get("rows", [])
+        new_next = timeline.get("next")
+        return rows, new_next
+
+
+async def fetch_timeline_with_pagination(
+    server_id: str, character_id: str, start_date: str = None, end_date: str = None
+):
+    url = f"{BASE_URL}/servers/{server_id}/characters/{character_id}/timeline"
+    params = _build_timeline_params(start_date, end_date)
+
     all_rows = []
     next_token = None
 
     async with aiohttp.ClientSession() as session:
         while True:
-            if next_token:
-                params["next"] = next_token
-            else:
-                params.pop("next", None)
-
-            async with session.get(url, params=params) as resp:
-                logger.info(f"fetch_timeline_with_pagination 호출: {url} - next_token={next_token}")
-                logger.info(f"응답 상태: {resp.status}")
-                if resp.status != 200:
-                    data = await resp.text()  # json이 아닐 수도 있으니 텍스트로 먼저 찍기
-                    logger.warning(f"API 호출 실패 응답 내용: {data}")
-                    return None
-
-                data = await resp.json()
-                timeline = data.get("timeline", {})
-                rows = timeline.get("rows", [])
-                all_rows.extend(rows)
-
-                next_token = data.get("timeline", {}).get("next")
-                if not next_token:
-                    break
+            page_result = await _fetch_single_timeline_page(session, url, params, next_token)
+            if page_result is None:
+                return None
+            rows, next_token = page_result
+            all_rows.extend(rows)
+            if not next_token:
+                break
 
     return {"timeline": {"rows": all_rows}}
 
@@ -186,17 +198,8 @@ async def preload_item_cache():
 # ===============================
 
 
-async def fetch_item_detail(item_id: str) -> int:
-    """
-    1. 메모리 캐시 → 2. DB → 3. API 순서로 조회, 없으면 0 반환
-    API 조회 성공 시 메모리/DB에 모두 저장
-    """
-    # 1. 메모리 캐시 조회
-    if item_id in ITEM_DETAIL_MEMCACHE:
-        logger.info(f"[memcache] 캐시 히트: {item_id} - {ITEM_DETAIL_MEMCACHE[item_id]}")
-        return ITEM_DETAIL_MEMCACHE[item_id]
-
-    # 2. DB 캐시 조회 (동기화 누락/실패 대응용)
+async def _fetch_item_from_db(item_id: str) -> int | None:
+    """DB 캐시에서 아이템 레벨 조회. 없으면 None."""
     try:
         async with aiosqlite.connect(DB_PATH) as conn:
             cursor = await conn.execute(
@@ -209,8 +212,25 @@ async def fetch_item_detail(item_id: str) -> int:
                 return level
     except Exception as e:
         logger.error(f"DB 캐시 조회 중 오류: {e}")
+    return None
 
-    # 3. API 조회
+
+async def _save_item_to_db(item_id: str, level: int):
+    """아이템 레벨을 DB 캐시에 저장."""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute(
+                "INSERT OR REPLACE INTO item_cache (item_id, item_available_level) VALUES (?, ?)",
+                (item_id, level)
+            )
+            await conn.commit()
+        logger.info(f"아이템 캐시 저장 완료: {item_id} - 레벨 {level}")
+    except Exception as e:
+        logger.error(f"아이템 캐시 저장 실패: {e}")
+
+
+async def _fetch_item_from_api(item_id: str) -> int | None:
+    """API에서 아이템 레벨 조회. 성공 시 메모리/DB에 캐싱."""
     url = f"{BASE_URL}/items/{item_id}"
     params = {"apikey": API_KEY}
     try:
@@ -220,23 +240,35 @@ async def fetch_item_detail(item_id: str) -> int:
                     data = await response.json()
                     level = data.get("itemAvailableLevel", 0)
                     logger.info(f"아이템 상세 조회 성공: {item_id} - 레벨 {level}")
-                    # 메모리/DB 동시 캐싱
                     ITEM_DETAIL_MEMCACHE[item_id] = level
-                    try:
-                        async with aiosqlite.connect(DB_PATH) as conn2:
-                            await conn2.execute(
-                                "INSERT OR REPLACE INTO item_cache (item_id, item_available_level) VALUES (?, ?)",
-                                (item_id, level)
-                            )
-                            await conn2.commit()
-                        logger.info(f"아이템 캐시 저장 완료: {item_id} - 레벨 {level}")
-                    except Exception as e:
-                        logger.error(f"아이템 캐시 저장 실패: {e}")
+                    await _save_item_to_db(item_id, level)
                     return level
                 else:
                     logger.warning(f"아이템 상세 조회 실패: HTTP {response.status} - {item_id}")
     except Exception as e:
         logger.error(f"아이템 상세 조회 예외 발생: {e}")
+    return None
+
+
+async def fetch_item_detail(item_id: str) -> int:
+    """
+    1. 메모리 캐시 → 2. DB → 3. API 순서로 조회, 없으면 0 반환
+    API 조회 성공 시 메모리/DB에 모두 저장
+    """
+    # 1. 메모리 캐시 조회
+    if item_id in ITEM_DETAIL_MEMCACHE:
+        logger.info(f"[memcache] 캐시 히트: {item_id} - {ITEM_DETAIL_MEMCACHE[item_id]}")
+        return ITEM_DETAIL_MEMCACHE[item_id]
+
+    # 2. DB 캐시 조회
+    db_result = await _fetch_item_from_db(item_id)
+    if db_result is not None:
+        return db_result
+
+    # 3. API 조회
+    api_result = await _fetch_item_from_api(item_id)
+    if api_result is not None:
+        return api_result
 
     return 0
 

@@ -36,22 +36,26 @@ class DundamQueueManager:
             self._worker_task = asyncio.create_task(self._worker())
             logger.info("던담 큐 워커 시작됨")
 
+    async def _execute_job(self, job: dict):
+        """단일 작업 실행 및 결과/예외 전달."""
+        self._current_job = job
+        logger.info(f"큐 작업 시작: {job['job_type']} (요청자: {job.get('requester', 'system')})")
+        try:
+            result = await job['coro_factory']()
+            job['future'].set_result(result)
+        except Exception as e:
+            logger.error(f"큐 작업 실패: {job['job_type']} - {e}")
+            if not job['future'].done():
+                job['future'].set_exception(e)
+        finally:
+            self._current_job = None
+            self._queue.task_done()
+
     async def _worker(self):
         while True:
             try:
                 job = await self._queue.get()
-                self._current_job = job
-                logger.info(f"큐 작업 시작: {job['job_type']} (요청자: {job.get('requester', 'system')})")
-                try:
-                    result = await job['coro_factory']()
-                    job['future'].set_result(result)
-                except Exception as e:
-                    logger.error(f"큐 작업 실패: {job['job_type']} - {e}")
-                    if not job['future'].done():
-                        job['future'].set_exception(e)
-                finally:
-                    self._current_job = None
-                    self._queue.task_done()
+                await self._execute_job(job)
             except asyncio.CancelledError:
                 logger.info("던담 큐 워커 종료됨")
                 break

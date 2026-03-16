@@ -311,6 +311,18 @@ async def save_output_channel(guild_id: str, channel_id: str):
         logger.error(f"출력 채널 저장 실패: {e}")
 
 
+def _resolve_channel_from_row(row, channel_type: str | None) -> str:
+    """row에서 channel_type에 맞는 채널 ID 반환 (폴백: channel_id)."""
+    _type_column_map = {
+        'item': 'item_channel_id',
+        'economy': 'economy_channel_id',
+    }
+    col = _type_column_map.get(channel_type)
+    if col and row[col]:
+        return row[col]
+    return row['channel_id']
+
+
 async def get_output_channel(guild_id: str, channel_type: str | None = None) -> str | None:
     """
     출력 채널 조회.
@@ -329,13 +341,7 @@ async def get_output_channel(guild_id: str, channel_type: str | None = None) -> 
             row = await cursor.fetchone()
             if not row:
                 return None
-
-            if channel_type == 'item' and row['item_channel_id']:
-                return row['item_channel_id']
-            elif channel_type == 'economy' and row['economy_channel_id']:
-                return row['economy_channel_id']
-            else:
-                return row['channel_id']
+            return _resolve_channel_from_row(row, channel_type)
     except Exception as e:
         logger.error(f"출력 채널 조회 실패: {e}")
         return None

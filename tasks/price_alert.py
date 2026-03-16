@@ -58,17 +58,20 @@ def _calc_price_bounds(past_prices: list[int]) -> tuple[float, int]:
     q1 = sorted_prices[n // 4]
     q3 = sorted_prices[3 * n // 4]
     iqr = q3 - q1
-
-    if iqr > 0:
-        upper_bound = q3 + 3 * iqr
-        if median_price > 0:
-            upper_bound = max(upper_bound, median_price * 3.0)
-    elif median_price > 0:
-        upper_bound = median_price * 5.0
-    else:
-        upper_bound = float("inf")
-
+    upper_bound = _calc_upper_bound(iqr, q3, median_price)
     return upper_bound, median_price
+
+
+def _calc_upper_bound(iqr, q3, median_price):
+    """IQR과 중앙값 기반 상한선 계산"""
+    if iqr > 0:
+        upper = q3 + 3 * iqr
+        if median_price > 0:
+            upper = max(upper, median_price * 3.0)
+        return upper
+    if median_price > 0:
+        return median_price * 5.0
+    return float("inf")
 
 
 def _detect_surge_crash(item_id: str, item_name: str,
@@ -83,26 +86,91 @@ def _detect_surge_crash(item_id: str, item_name: str,
         return []
 
     change_pct = (last_price - first_price) / first_price * 100
-    alerts = []
+    return _emit_surge_or_crash(item_id, item_name, change_pct, last_price)
 
+
+def _emit_surge_or_crash(item_id, item_name, change_pct, price):
+    """변동률 임계값에 따른 급등/급락 알림 생성"""
     if change_pct >= 30:
         alert = _try_emit(item_id, "surge", {
             "level": "urgent", "type": "surge",
             "item_name": item_name, "change_pct": change_pct,
-            "price": last_price,
+            "price": price,
         }, clear_types=["crash"])
-        if alert:
-            alerts.append(alert)
-    elif change_pct <= -30:
+        return [alert] if alert else []
+    if change_pct <= -30:
         alert = _try_emit(item_id, "crash", {
             "level": "urgent", "type": "crash",
             "item_name": item_name, "change_pct": change_pct,
-            "price": last_price,
+            "price": price,
         }, clear_types=["surge"])
-        if alert:
-            alerts.append(alert)
+        return [alert] if alert else []
+    return []
 
-    return alerts
+
+def _detect_fat_finger_high(item_id, item_name, current_price, upper_bound, median_price):
+    """비정상 고가 (0 추가 실수 등) 감지"""
+    if median_price <= 0 or current_price <= upper_bound:
+        return None
+    overprice = (current_price / median_price - 1) * 100
+    return _try_emit(item_id, "fat_finger_high", {
+        "level": "fun", "type": "fat_finger_high",
+        "item_name": item_name, "price": current_price,
+        "median_price": median_price, "overprice": overprice,
+    })
+
+
+def _detect_new_high(item_id, item_name, current_price, past_prices, upper_bound):
+    """신고가 감지 (이상치가 아닌 경우만)"""
+    clean_past = [p for p in past_prices if p <= upper_bound] or past_prices
+    past_high = max(clean_past)
+    if current_price <= past_high:
+        return None
+    return _try_emit(item_id, "new_high", {
+        "level": "major", "type": "new_high",
+        "item_name": item_name, "price": current_price,
+        "prev_high": past_high,
+    })
+
+
+def _detect_fat_finger_low(item_id, item_name, current_price, median_price):
+    """0빼기 파격세일 감지"""
+    if median_price <= 0 or current_price >= median_price * 0.6:
+        return None
+    discount = (1 - current_price / median_price) * 100
+    return _try_emit(item_id, "fat_finger", {
+        "level": "fun", "type": "fat_finger",
+        "item_name": item_name, "price": current_price,
+        "median_price": median_price, "discount": discount,
+    })
+
+
+def _detect_new_low(item_id, item_name, current_price, past_prices):
+    """신저가 감지 (파격세일이 아닌 경우만)"""
+    past_low = min(past_prices)
+    if current_price >= past_low:
+        return None
+    return _try_emit(item_id, "new_low", {
+        "level": "major", "type": "new_low",
+        "item_name": item_name, "price": current_price,
+        "prev_low": past_low,
+    })
+
+
+def _detect_high_anomaly(item_id, item_name, current_price, past_prices, upper_bound, median_price):
+    """비정상 고가 또는 신고가 감지 (비정상 고가 우선)"""
+    ff_high = _detect_fat_finger_high(item_id, item_name, current_price, upper_bound, median_price)
+    if ff_high:
+        return ff_high
+    return _detect_new_high(item_id, item_name, current_price, past_prices, upper_bound)
+
+
+def _detect_low_anomaly(item_id, item_name, current_price, past_prices, median_price):
+    """파격세일 또는 신저가 감지 (파격세일 우선)"""
+    ff_low = _detect_fat_finger_low(item_id, item_name, current_price, median_price)
+    if ff_low:
+        return ff_low
+    return _detect_new_low(item_id, item_name, current_price, past_prices)
 
 
 def _detect_price_anomalies(
@@ -112,59 +180,22 @@ def _detect_price_anomalies(
 ) -> list[dict]:
     """비정상 고가/저가 및 신고가/신저가 감지."""
     alerts = []
-    fat_finger_high = False
-    fat_finger_low = False
-
-    # 비정상 고가 (0 추가 실수 등)
-    if median_price > 0 and current_price > upper_bound:
-        fat_finger_high = True
-        overprice = (current_price / median_price - 1) * 100
-        alert = _try_emit(item_id, "fat_finger_high", {
-            "level": "fun", "type": "fat_finger_high",
-            "item_name": item_name, "price": current_price,
-            "median_price": median_price, "overprice": overprice,
-        })
-        if alert:
-            alerts.append(alert)
-
-    # 신고가 (이상치가 아닌 경우만)
-    if not fat_finger_high:
-        clean_past = [p for p in past_prices if p <= upper_bound] or past_prices
-        past_high = max(clean_past)
-        if current_price > past_high:
-            alert = _try_emit(item_id, "new_high", {
-                "level": "major", "type": "new_high",
-                "item_name": item_name, "price": current_price,
-                "prev_high": past_high,
-            })
-            if alert:
-                alerts.append(alert)
-
-    # 0빼기 파격세일
-    if median_price > 0 and current_price < median_price * 0.6:
-        fat_finger_low = True
-        discount = (1 - current_price / median_price) * 100
-        alert = _try_emit(item_id, "fat_finger", {
-            "level": "fun", "type": "fat_finger",
-            "item_name": item_name, "price": current_price,
-            "median_price": median_price, "discount": discount,
-        })
-        if alert:
-            alerts.append(alert)
-
-    # 신저가 (파격세일이 아닌 경우만)
-    if not fat_finger_low:
-        past_low = min(past_prices)
-        if current_price < past_low:
-            alert = _try_emit(item_id, "new_low", {
-                "level": "major", "type": "new_low",
-                "item_name": item_name, "price": current_price,
-                "prev_low": past_low,
-            })
-            if alert:
-                alerts.append(alert)
-
+    high = _detect_high_anomaly(item_id, item_name, current_price, past_prices, upper_bound, median_price)
+    if high:
+        alerts.append(high)
+    low = _detect_low_anomaly(item_id, item_name, current_price, past_prices, median_price)
+    if low:
+        alerts.append(low)
     return alerts
+
+
+def _is_volume_spike(vol_1h, avg_hourly):
+    """1시간 거래량이 24시간 평균의 10배 이상인지 판별"""
+    return avg_hourly > 0 and vol_1h >= avg_hourly * 10
+
+
+def _sum_count(records):
+    return sum(r["count"] for r in records)
 
 
 async def _detect_volume_spike(
@@ -180,11 +211,10 @@ async def _detect_volume_spike(
     if not d1_records:
         return []
 
-    vol_1h = sum(r["count"] for r in h1_records)
-    vol_24h = sum(r["count"] for r in d1_records)
-    avg_hourly = vol_24h / 24
+    vol_1h = _sum_count(h1_records)
+    avg_hourly = _sum_count(d1_records) / 24
 
-    if avg_hourly <= 0 or vol_1h < avg_hourly * 10:
+    if not _is_volume_spike(vol_1h, avg_hourly):
         return []
 
     alert = _try_emit(item_id, "volume_spike", {
@@ -195,6 +225,29 @@ async def _detect_volume_spike(
     return [alert] if alert else []
 
 
+def _classify_rsi_zone(rsi):
+    """RSI 값을 구간으로 분류"""
+    if rsi > 70:
+        return "overbought"
+    if rsi < 30:
+        return "oversold"
+    return "neutral"
+
+
+def _is_rsi_unchanged(curr_zone, prev_zone):
+    return curr_zone == prev_zone or curr_zone == "neutral"
+
+
+_RSI_EVENT_MAP = {"overbought": "rsi_overbought", "oversold": "rsi_oversold"}
+
+
+def _update_rsi_zone(item_id, curr_zone):
+    """RSI 구간 상태 업데이트 후 이전 구간 반환"""
+    prev_zone = _prev_state.get(item_id, {}).get("rsi_zone", "neutral")
+    _prev_state.setdefault(item_id, {})["rsi_zone"] = curr_zone
+    return prev_zone
+
+
 def _detect_rsi_signal(item_id: str, item_name: str,
                        closes) -> list[dict]:
     """RSI 과매수/과매도 시그널 감지."""
@@ -202,48 +255,51 @@ def _detect_rsi_signal(item_id: str, item_name: str,
     if rsi is None:
         return []
 
-    prev = _prev_state.get(item_id, {})
-    prev_zone = prev.get("rsi_zone", "neutral")
+    curr_zone = _classify_rsi_zone(rsi)
+    prev_zone = _update_rsi_zone(item_id, curr_zone)
 
-    if rsi > 70:
-        curr_zone = "overbought"
-    elif rsi < 30:
-        curr_zone = "oversold"
-    else:
-        curr_zone = "neutral"
+    if _is_rsi_unchanged(curr_zone, prev_zone):
+        return []
 
-    _prev_state.setdefault(item_id, {})["rsi_zone"] = curr_zone
-    alerts = []
+    event = _RSI_EVENT_MAP.get(curr_zone, "rsi_oversold")
+    alert = _try_emit(item_id, event, {
+        "level": "info", "type": event,
+        "item_name": item_name, "rsi": rsi,
+    })
+    return [alert] if alert else []
 
-    if curr_zone != prev_zone and curr_zone != "neutral":
-        event = "rsi_overbought" if curr_zone == "overbought" else "rsi_oversold"
-        alert = _try_emit(item_id, event, {
-            "level": "info", "type": event,
-            "item_name": item_name, "rsi": rsi,
-        })
-        if alert:
-            alerts.append(alert)
 
-    return alerts
+def _is_no_cross(was_above, currently_above):
+    return was_above is None or currently_above == was_above
+
+
+def _update_ma_state(item_id, currently_above):
+    """MA 교차 상태 업데이트 후 이전 상태 반환"""
+    was_above = _prev_state.get(item_id, {}).get("ma5_above_ma20")
+    _prev_state.setdefault(item_id, {})["ma5_above_ma20"] = currently_above
+    return was_above
+
+
+def _get_ma_cross_direction(closes):
+    """MA5/MA20 값으로 현재 방향 판별. 데이터 부족 시 None."""
+    if len(closes) < 20:
+        return None
+    ma_info = calc_ma_alignment(closes)
+    ma5, ma20 = ma_info["ma5"], ma_info["ma20"]
+    if ma5 is None or ma20 is None:
+        return None
+    return ma5 > ma20
 
 
 def _detect_ma_cross(item_id: str, item_name: str,
                      closes) -> list[dict]:
     """골든/데드 크로스 감지."""
-    if len(closes) < 20:
+    currently_above = _get_ma_cross_direction(closes)
+    if currently_above is None:
         return []
 
-    ma_info = calc_ma_alignment(closes)
-    ma5, ma20 = ma_info["ma5"], ma_info["ma20"]
-    if ma5 is None or ma20 is None:
-        return []
-
-    currently_above = ma5 > ma20
-    prev = _prev_state.get(item_id, {})
-    was_above = prev.get("ma5_above_ma20")
-    _prev_state.setdefault(item_id, {})["ma5_above_ma20"] = currently_above
-
-    if was_above is None or currently_above == was_above:
+    was_above = _update_ma_state(item_id, currently_above)
+    if _is_no_cross(was_above, currently_above):
         return []
 
     event_type = "golden_cross" if currently_above else "dead_cross"
@@ -253,19 +309,23 @@ def _detect_ma_cross(item_id: str, item_name: str,
     return [alert] if alert else []
 
 
-async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
-    """아이템의 시세 데이터를 분석하여 알림 이벤트 목록 반환."""
+async def _fetch_alert_records(item_id):
+    """알림 분석용 1시간/14일 데이터 조회"""
     now = datetime.now(KST)
     now_str = now.strftime("%Y-%m-%d %H:%M:%S")
-
-    # 1시간 데이터: 급등/급락
     h1_start = (now - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
-    h1_records = await get_price_history(item_id, h1_start, now_str)
-    alerts = _detect_surge_crash(item_id, item_name, h1_records)
-
-    # 14일 데이터: 가격 이벤트 + 기술적 시그널
     d14_start = (now - timedelta(days=14)).strftime("%Y-%m-%d %H:%M:%S")
+
+    h1_records = await get_price_history(item_id, h1_start, now_str)
     d14_records = await get_price_history(item_id, d14_start, now_str)
+    return now, now_str, h1_records, d14_records
+
+
+async def check_price_alerts(item_id: str, item_name: str) -> list[dict]:
+    """아이템의 시세 데이터를 분석하여 알림 이벤트 목록 반환."""
+    now, now_str, h1_records, d14_records = await _fetch_alert_records(item_id)
+
+    alerts = _detect_surge_crash(item_id, item_name, h1_records)
 
     if not d14_records or len(d14_records) < 10:
         return alerts
@@ -503,41 +563,58 @@ def build_alert_embed(alert: dict) -> discord.Embed:
 ALERT_WARMUP_HOURS = 2  # 등록 후 데이터 수집 대기 시간
 
 
+def _parse_registered_at(registered_at: str) -> datetime | None:
+    """등록 시각 문자열을 datetime으로 파싱"""
+    if not registered_at:
+        return None
+    try:
+        return datetime.fromisoformat(registered_at).replace(tzinfo=KST)
+    except ValueError:
+        return datetime.strptime(
+            registered_at, "%Y-%m-%d %H:%M:%S"
+        ).replace(tzinfo=KST)
+
+
+def _is_warmup_period(registered_at: str) -> bool:
+    """등록 후 워밍업 기간인지 확인"""
+    reg_time = _parse_registered_at(registered_at)
+    if reg_time is None:
+        return False
+    return datetime.now(KST) - reg_time < timedelta(hours=ALERT_WARMUP_HOURS)
+
+
+async def _send_channel_alerts(bot, guild_id, item_name, alerts):
+    """채널에 알림 embed 발송"""
+    channel_id = await get_output_channel(guild_id, 'economy')
+    if not channel_id:
+        return
+
+    channel = bot.get_channel(int(channel_id))
+    if not channel:
+        return
+
+    for alert in alerts:
+        embed = build_alert_embed(alert)
+        await channel.send(embed=embed)
+        logger.info(
+            f"시세 알림 발송: {item_name} - {alert['type']} ({alert['level']})"
+        )
+
+
 async def process_alerts_for_item(
     bot, guild_id: str, item_id: str, item_name: str,
     registered_at: str = None
 ):
     """아이템 알림 체크 후 채널에 발송. 등록 직후에는 스킵."""
     try:
-        # 등록 후 충분한 데이터가 쌓일 때까지 알림 스킵
-        if registered_at:
-            try:
-                reg_time = datetime.fromisoformat(registered_at).replace(tzinfo=KST)
-            except ValueError:
-                reg_time = datetime.strptime(
-                    registered_at, "%Y-%m-%d %H:%M:%S"
-                ).replace(tzinfo=KST)
-            if datetime.now(KST) - reg_time < timedelta(hours=ALERT_WARMUP_HOURS):
-                return
+        if _is_warmup_period(registered_at):
+            return
 
         alerts = await check_price_alerts(item_id, item_name)
         if not alerts:
             return
 
-        channel_id = await get_output_channel(guild_id, 'economy')
-        if not channel_id:
-            return
-
-        channel = bot.get_channel(int(channel_id))
-        if not channel:
-            return
-
-        for alert in alerts:
-            embed = build_alert_embed(alert)
-            await channel.send(embed=embed)
-            logger.info(
-                f"시세 알림 발송: {item_name} - {alert['type']} ({alert['level']})"
-            )
+        await _send_channel_alerts(bot, guild_id, item_name, alerts)
 
     except Exception as e:
         logger.error(f"시세 알림 처리 오류 ({item_name}): {e}")
@@ -564,48 +641,66 @@ def _set_user_cooldown(user_id: int, item_id: str, event_type: str):
     _user_cooldowns[(user_id, item_id, event_type)] = datetime.now(KST)
 
 
-async def _collect_market_snapshot(item_id: str) -> dict:
-    """알림 평가에 필요한 시장 데이터를 1회 수집."""
-    now = datetime.now(KST)
+def _compute_snapshot_times(now):
+    """시장 스냅샷 조회용 시간 문자열 계산"""
     now_str = now.strftime("%Y-%m-%d %H:%M:%S")
-
     h1_start = (now - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
     d14_start = (now - timedelta(days=14)).strftime("%Y-%m-%d %H:%M:%S")
     d1_start = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
+    return now_str, h1_start, d14_start, d1_start
+
+
+def _calc_change_pct(h1_records):
+    """1시간 변동률 계산"""
+    if not h1_records or len(h1_records) < 2:
+        return None
+    first = h1_records[0]["unit_price"]
+    last = h1_records[-1]["unit_price"]
+    if first <= 0:
+        return None
+    return (last - first) / first * 100
+
+
+def _calc_snapshot_rsi(d14_records):
+    """14일 데이터에서 RSI 계산"""
+    if not d14_records or len(d14_records) < 10:
+        return None
+    ohlc = aggregate_to_ohlc(d14_records, interval_minutes=1440)
+    if len(ohlc) >= 5:
+        return calc_rsi(ohlc["close"])
+    return None
+
+
+def _safe_sum_count(records):
+    return _sum_count(records) if records else 0
+
+
+def _extract_snapshot_metrics(h1_records, d14_records, d1_records):
+    """수집된 레코드들에서 스냅샷 지표 추출"""
+    current_price = d14_records[-1]["unit_price"] if d14_records else None
+    return current_price, _safe_sum_count(h1_records), _safe_sum_count(d1_records)
+
+
+async def _collect_market_snapshot(item_id: str) -> dict:
+    """알림 평가에 필요한 시장 데이터를 1회 수집."""
+    now = datetime.now(KST)
+    now_str, h1_start, d14_start, d1_start = _compute_snapshot_times(now)
 
     h1_records = await get_price_history(item_id, h1_start, now_str)
     d14_records = await get_price_history(item_id, d14_start, now_str)
     d1_records = await get_price_history(item_id, d1_start, now_str)
 
-    # 현재가
-    current_price = d14_records[-1]["unit_price"] if d14_records else None
-
-    # 1시간 변동률
-    change_pct = None
-    if h1_records and len(h1_records) >= 2:
-        first = h1_records[0]["unit_price"]
-        last = h1_records[-1]["unit_price"]
-        if first > 0:
-            change_pct = (last - first) / first * 100
-
-    # 거래량
-    vol_1h = sum(r["count"] for r in h1_records) if h1_records else 0
-    vol_24h = sum(r["count"] for r in d1_records) if d1_records else 0
-
-    # RSI
-    rsi = None
-    if d14_records and len(d14_records) >= 10:
-        ohlc = aggregate_to_ohlc(d14_records, interval_minutes=1440)
-        if len(ohlc) >= 5:
-            rsi = calc_rsi(ohlc["close"])
+    current_price, vol_1h, vol_24h = _extract_snapshot_metrics(
+        h1_records, d14_records, d1_records
+    )
 
     return {
         "now": now,
         "current_price": current_price,
-        "change_pct": change_pct,
+        "change_pct": _calc_change_pct(h1_records),
         "vol_1h": vol_1h,
         "avg_hourly": vol_24h / 24 if vol_24h > 0 else 0,
-        "rsi": rsi,
+        "rsi": _calc_snapshot_rsi(d14_records),
         "d14_records": d14_records or [],
     }
 
@@ -624,17 +719,30 @@ def _check_ua_crash(tv, snap):
     return None
 
 
-def _check_ua_price_window(tv, snap, direction: str):
-    """new_high / new_low 공통: 기간 내 가격 윈도우 비교."""
-    cp = snap["current_price"]
-    if not cp or not snap["d14_records"]:
+def _has_price_data(snap):
+    return snap["current_price"] and snap["d14_records"]
+
+
+def _extract_price_window(snap, tv):
+    """기간 내 가격 윈도우 추출. 데이터 부족 시 None."""
+    if not _has_price_data(snap):
         return None
     cutoff = (snap["now"] - timedelta(days=int(tv))).strftime("%Y-%m-%d %H:%M:%S")
     window = [r["unit_price"] for r in snap["d14_records"]
               if r["sold_date"] >= cutoff]
-    if len(window) <= 1:
+    return window if len(window) > 1 else None
+
+
+def _check_ua_price_window(tv, snap, direction: str):
+    """new_high / new_low 공통: 기간 내 가격 윈도우 비교."""
+    window = _extract_price_window(snap, tv)
+    if window is None:
         return None
-    past = window[:-1]
+    return _check_price_direction(snap["current_price"], window[:-1], direction)
+
+
+def _check_price_direction(cp, past, direction):
+    """가격 방향에 따른 신고가/신저가 판별"""
     if direction == "high" and cp > max(past):
         return {"price": cp, "prev_high": max(past)}
     if direction == "low" and cp < min(past):
@@ -648,26 +756,34 @@ def _check_ua_volume(tv, snap):
     return None
 
 
+_RSI_DIRECTION_MAP = {
+    "upper": (lambda rsi, tv: rsi > tv, "rsi_overbought"),
+    "lower": (lambda rsi, tv: rsi < tv, "rsi_oversold"),
+}
+
+
 def _check_ua_rsi(tv, snap, direction: str):
     rsi = snap["rsi"]
     if rsi is None:
         return None
-    if direction == "upper" and rsi > tv:
-        return {"rsi": rsi, "_override_type": "rsi_overbought"}
-    if direction == "lower" and rsi < tv:
-        return {"rsi": rsi, "_override_type": "rsi_oversold"}
+    check, override_type = _RSI_DIRECTION_MAP.get(direction, (None, None))
+    if check and check(rsi, tv):
+        return {"rsi": rsi, "_override_type": override_type}
     return None
+
+
+_PRICE_TARGET_OPS = {
+    "above": lambda cp, tv: cp >= tv,
+    "below": lambda cp, tv: cp <= tv,
+}
 
 
 def _check_ua_price_target(tv, snap, direction: str):
     cp = snap["current_price"]
     if cp is None:
         return None
-    if direction == "above" and cp >= tv:
-        return {"price": cp, "target": tv}
-    if direction == "below" and cp <= tv:
-        return {"price": cp, "target": tv}
-    return None
+    check = _PRICE_TARGET_OPS.get(direction)
+    return {"price": cp, "target": tv} if check and check(cp, tv) else None
 
 
 _USER_ALERT_CHECKERS = {
@@ -710,6 +826,42 @@ async def _send_dm_alerts(bot, user_id: int, dm_alerts: list[dict],
         logger.error(f"DM 알림 발송 오류: user={user_id}, {e}")
 
 
+def _build_dm_alert_data(ua, result):
+    """사용자 알림 데이터 조립"""
+    alert_type = result.pop("_override_type", ua["alert_type"])
+    alert_data = {"type": alert_type, "item_name": ua.get("_item_name", "")}
+    alert_data.update(result)
+    return alert_data
+
+
+async def _try_trigger_alert(ua, snap, user_id, item_id, item_name):
+    """단일 알림 조건을 평가하여 트리거되면 alert_data 반환, 아니면 None."""
+    at = ua["alert_type"]
+    if _is_user_on_cooldown(user_id, item_id, at):
+        return None
+    result = _evaluate_user_alert(ua, snap)
+    if not result:
+        return None
+    alert_type = result.pop("_override_type", at)
+    alert_data = {"type": alert_type, "item_name": item_name}
+    alert_data.update(result)
+    _set_user_cooldown(user_id, item_id, at)
+    if ua.get("one_time", 0):
+        await disable_user_alert(user_id, item_id, at)
+    return alert_data
+
+
+async def _process_user_alerts(bot, user_id, alerts, snap, item_id, item_name):
+    """단일 사용자의 알림 목록 처리 및 DM 발송"""
+    dm_alerts = []
+    for ua in alerts:
+        alert_data = await _try_trigger_alert(ua, snap, user_id, item_id, item_name)
+        if alert_data:
+            dm_alerts.append(alert_data)
+    if dm_alerts:
+        await _send_dm_alerts(bot, user_id, dm_alerts, item_name)
+
+
 async def process_user_alerts_for_item(
     bot, item_id: str, item_name: str
 ):
@@ -727,31 +879,7 @@ async def process_user_alerts_for_item(
             user_groups.setdefault(ua["user_id"], []).append(ua)
 
         for user_id, alerts in user_groups.items():
-            dm_alerts = []
-
-            for ua in alerts:
-                at = ua["alert_type"]
-                if _is_user_on_cooldown(user_id, item_id, at):
-                    continue
-
-                result = _evaluate_user_alert(ua, snap)
-                if not result:
-                    continue
-
-                # alert_data 조립
-                alert_type = result.pop("_override_type", at)
-                alert_data = {"type": alert_type, "item_name": item_name}
-                alert_data.update(result)
-
-                dm_alerts.append(alert_data)
-                _set_user_cooldown(user_id, item_id, at)
-
-                # 1회성 알림이면 자동 해제
-                if ua.get("one_time", 0):
-                    await disable_user_alert(user_id, item_id, at)
-
-            if dm_alerts:
-                await _send_dm_alerts(bot, user_id, dm_alerts, item_name)
+            await _process_user_alerts(bot, user_id, alerts, snap, item_id, item_name)
 
     except Exception as e:
         logger.error(f"사용자별 알림 처리 오류 ({item_name}): {e}")

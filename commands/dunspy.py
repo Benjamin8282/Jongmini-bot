@@ -14,26 +14,7 @@ PERIODS = [
 ]
 
 
-async def _build_dunspy(display_days: int = 30):
-    """던스피 지수 계산 + 차트 생성. (embed, file) 또는 에러 str 반환."""
-    data = await calc_dunspy_index(display_days=display_days)
-    if data is None:
-        return "바스켓 아이템이 부족하거나 가격 데이터가 없습니다."
-
-    chart_buf = generate_dunspy_chart(
-        dates=data["dates"],
-        index_values=data["index"],
-        current=data["current"],
-        change=data["change"],
-        change_pct=data["change_pct"],
-        item_count=data["item_count"],
-        base_date=data["base_date"],
-    )
-    if not chart_buf:
-        return "차트 생성에 실패했습니다."
-
-    file = discord.File(chart_buf, filename="dunspy.png")
-
+def _build_index_embed(data: dict, display_days: int) -> discord.Embed:
     change = data["change"]
     change_pct = data["change_pct"]
     arrow = "▲" if change > 0 else "▼" if change < 0 else "−"
@@ -66,26 +47,54 @@ async def _build_dunspy(display_days: int = 30):
         name="조회 기간", value=f"{display_days}일", inline=True
     )
     embed.set_image(url="attachment://dunspy.png")
+    return embed
 
-    # 종목별 등락 embed
-    comp_embed = None
-    if data["components"]:
-        lines = []
-        for c in data["components"][:15]:
-            c_arrow = "▲" if c["change_pct"] > 0 else "▼" if c["change_pct"] < 0 else "−"
-            c_color = "🔴" if c["change_pct"] > 0 else "🔵" if c["change_pct"] < 0 else "⚪"
-            lines.append(
-                f"{c_color} **{c['name']}** "
-                f"{int(c['price']):,}G "
-                f"({c_arrow}{abs(c['change_pct']):.2f}%)"
-            )
-        comp_embed = discord.Embed(
-            title="종목별 등락",
-            description="\n".join(lines),
-            color=0x2C3E50,
-        )
-        comp_embed.set_footer(text="전일 대비 변동률 기준 정렬")
 
+def _format_component_line(c: dict) -> str:
+    """종목 한 줄 포맷."""
+    arrow = "▲" if c["change_pct"] > 0 else "▼" if c["change_pct"] < 0 else "−"
+    icon = "🔴" if c["change_pct"] > 0 else "🔵" if c["change_pct"] < 0 else "⚪"
+    return (
+        f"{icon} **{c['name']}** "
+        f"{int(c['price']):,}G "
+        f"({arrow}{abs(c['change_pct']):.2f}%)"
+    )
+
+
+def _build_component_embed(components: list[dict]) -> discord.Embed | None:
+    if not components:
+        return None
+    lines = [_format_component_line(c) for c in components[:15]]
+    embed = discord.Embed(
+        title="종목별 등락",
+        description="\n".join(lines),
+        color=0x2C3E50,
+    )
+    embed.set_footer(text="전일 대비 변동률 기준 정렬")
+    return embed
+
+
+async def _build_dunspy(display_days: int = 30):
+    """던스피 지수 계산 + 차트 생성. (embed, file) 또는 에러 str 반환."""
+    data = await calc_dunspy_index(display_days=display_days)
+    if data is None:
+        return "바스켓 아이템이 부족하거나 가격 데이터가 없습니다."
+
+    chart_buf = generate_dunspy_chart(
+        dates=data["dates"],
+        index_values=data["index"],
+        current=data["current"],
+        change=data["change"],
+        change_pct=data["change_pct"],
+        item_count=data["item_count"],
+        base_date=data["base_date"],
+    )
+    if not chart_buf:
+        return "차트 생성에 실패했습니다."
+
+    file = discord.File(chart_buf, filename="dunspy.png")
+    embed = _build_index_embed(data, display_days)
+    comp_embed = _build_component_embed(data.get("components", []))
     return embed, file, comp_embed
 
 

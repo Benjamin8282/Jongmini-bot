@@ -48,6 +48,16 @@ MODE_CONFIG = {
     },
 }
 
+_FETCH_DISPATCHERS = {
+    "딜러": lambda session, chars: fetch_all_with_rate_limit(session, chars, limit_per_second=5),
+    "버퍼": lambda session, chars: fetch_all_buffers_with_rate_limit(session, chars, limit_per_second=5),
+}
+
+_SORT_KEYS = {
+    "딜러": "damage",
+    "버퍼": "buff_score",
+}
+
 
 class DundamRankingView(View):
     """던담 랭킹 페이지네이션 View (딜러/버퍼 공용)"""
@@ -131,6 +141,64 @@ class NextButton(Button):
             await interaction.response.edit_message(embed=view.get_embed(), view=view)
 
 
+async def _fetch_ranked(mode: str, characters: list[dict], score_key: str) -> list[dict] | None:
+    """API에서 랭킹 데이터를 가져와 정렬. 실패 시 None."""
+    sort_key = _SORT_KEYS[mode]
+    try:
+        async with aiohttp.ClientSession() as session:
+            fetcher = _FETCH_DISPATCHERS[mode]
+            results = await fetcher(session, characters)
+            ranked = sorted(
+                [r for r in results if r],
+                key=lambda x: x[sort_key], reverse=True
+            )
+        return ranked if ranked else None
+    except Exception as e:
+        logger.warning(f"던담순위 실시간 조회 실패, 캐시 사용: {e}")
+        return None
+
+
+async def _save_to_cache(ranked: list[dict], db_mode: str, score_key: str):
+    """랭킹 결과를 캐시에 저장."""
+    now_str = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
+    cache_entries = [
+        {
+            'character_id': r.get('character_id', ''),
+            'server_id': r.get('server_id', ''),
+            'mode': db_mode,
+            'character_name': r.get('character_name', ''),
+            'adventure_name': r.get('adventure_name', ''),
+            'score': r.get(score_key, 0),
+            'updated_at': now_str,
+        }
+        for r in ranked
+    ]
+    await save_dundam_ranking_cache(cache_entries)
+    logger.info(f"던담순위 캐시 갱신 완료: {db_mode} {len(cache_entries)}건")
+
+
+def _ranked_from_cache(cached: list[dict], score_key: str) -> list[dict]:
+    """캐시 데이터를 ranked 리스트 형태로 변환."""
+    return [{
+        'character_name': c['character_name'],
+        'adventure_name': c['adventure_name'],
+        score_key: c['score'],
+    } for c in cached]
+
+
+async def _resolve_ranked(
+    mode: str, db_mode: str, score_key: str, characters: list[dict], cached: list[dict], cached_ts: str
+) -> tuple[list[dict], str] | None:
+    """실시간 조회 또는 캐시에서 랭킹 데이터 resolve. 실패 시 None."""
+    ranked = await _fetch_ranked(mode, characters, score_key) if characters else None
+    if ranked:
+        await _save_to_cache(ranked, db_mode, score_key)
+        return ranked, datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
+    if cached:
+        return _ranked_from_cache(cached, score_key), f"{cached_ts} (캐시)"
+    return None
+
+
 @app_commands.command(name="던담순위", description="등록된 캐릭터의 던담 딜러/버퍼 순위를 조회합니다.")
 @app_commands.describe(유형="딜러 또는 버퍼 순위를 선택하세요")
 @app_commands.choices(유형=[
@@ -142,63 +210,17 @@ async def dundam_ranking(interaction: Interaction, 유형: app_commands.Choice[s
     mode = 유형.value
     db_mode = 'dealer' if mode == '딜러' else 'buffer'
     config = MODE_CONFIG[mode]
-    score_key = config['score_key']
 
-    # 캐시 우선 조회
+    characters = await get_active_characters()
     cached = await get_dundam_ranking_cache(db_mode)
     cached_ts = await get_dundam_ranking_cache_timestamp(db_mode)
 
-    # API에서 실시간 갱신 시도
-    characters = await get_active_characters()
-    ranked = None
-
-    if characters:
-        try:
-            async with aiohttp.ClientSession() as session:
-                if mode == "딜러":
-                    results = await fetch_all_with_rate_limit(session, characters, limit_per_second=5)
-                    ranked = sorted([r for r in results if r], key=lambda x: x['damage'], reverse=True)
-                else:
-                    results = await fetch_all_buffers_with_rate_limit(session, characters, limit_per_second=5)
-                    ranked = sorted([r for r in results if r], key=lambda x: x['buff_score'], reverse=True)
-
-            # 캐시에 저장
-            if ranked:
-                now_str = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
-                cache_entries = []
-                for r in ranked:
-                    cache_entries.append({
-                        'character_id': r.get('character_id', ''),
-                        'server_id': r.get('server_id', ''),
-                        'mode': db_mode,
-                        'character_name': r.get('character_name', ''),
-                        'adventure_name': r.get('adventure_name', ''),
-                        'score': r.get(score_key, 0),
-                        'updated_at': now_str,
-                    })
-                await save_dundam_ranking_cache(cache_entries)
-                logger.info(f"던담순위 캐시 갱신 완료: {db_mode} {len(cache_entries)}건")
-        except Exception as e:
-            logger.warning(f"던담순위 실시간 조회 실패, 캐시 사용: {e}")
-            ranked = None
-
-    # 실시간 실패 시 캐시 사용
-    if not ranked and cached:
-        ranked = [{
-            'character_name': c['character_name'],
-            'adventure_name': c['adventure_name'],
-            score_key: c['score'],
-        } for c in cached]
-        timestamp = f"{cached_ts} (캐시)"
-    elif ranked:
-        timestamp = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
-    else:
-        if not characters:
-            await interaction.followup.send("등록된 캐릭터가 없습니다.")
-        else:
-            await interaction.followup.send(config["empty_msg"])
+    resolved = await _resolve_ranked(mode, db_mode, config['score_key'], characters, cached, cached_ts)
+    if not resolved:
+        msg = "등록된 캐릭터가 없습니다." if not characters else config["empty_msg"]
+        await interaction.followup.send(msg)
         return
 
+    ranked, timestamp = resolved
     view = DundamRankingView(ranked, timestamp, mode)
-    embed = view.get_embed()
-    await interaction.followup.send(embed=embed, view=view)
+    await interaction.followup.send(embed=view.get_embed(), view=view)

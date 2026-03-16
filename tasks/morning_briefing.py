@@ -9,6 +9,63 @@ from core.logger import logger
 KST = timezone(timedelta(hours=9))
 
 
+def _compute_time_ranges(now):
+    """24시간/48시간 시간 범위 계산"""
+    h24_start = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
+    h48_start = (now - timedelta(hours=48)).strftime("%Y-%m-%d %H:%M:%S")
+    h24_end = now.strftime("%Y-%m-%d %H:%M:%S")
+    h24_boundary = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
+    return h24_start, h48_start, h24_end, h24_boundary
+
+
+def _calc_price_change_pct(prices):
+    """첫 가격 대비 마지막 가격 변동률 계산"""
+    first, last = prices[0], prices[-1]
+    return ((last - first) / first * 100) if first else 0
+
+
+def _filter_prev_records(records_48h, h24_boundary):
+    return [r for r in records_48h if r["sold_date"] < h24_boundary]
+
+
+def _pct_change(current, previous):
+    return ((current - previous) / previous * 100) if previous else 0
+
+
+def _calc_volume_stats(records_24h, records_48h, h24_boundary):
+    """24시간/전일 거래량 및 변동률 계산"""
+    prev_records = _filter_prev_records(records_48h, h24_boundary)
+    volume_24h = sum(r["count"] for r in records_24h)
+    volume_prev = sum(r["count"] for r in prev_records) if prev_records else 0
+    return volume_24h, volume_prev, _pct_change(volume_24h, volume_prev)
+
+
+def _build_item_result(item_name, item_id, records_24h, records_48h, h24_boundary, signal):
+    """단일 아이템의 24시간 분석 결과 생성"""
+    if not records_24h or len(records_24h) < 2:
+        return None
+
+    prices_24h = [r["unit_price"] for r in records_24h]
+    change_pct = _calc_price_change_pct(prices_24h)
+    volume_24h, volume_prev, volume_change_pct = _calc_volume_stats(
+        records_24h, records_48h, h24_boundary
+    )
+
+    return {
+        "name": item_name,
+        "item_id": item_id,
+        "prices": prices_24h,
+        "current": prices_24h[-1],
+        "change_pct": change_pct,
+        "high": max(prices_24h),
+        "low": min(prices_24h),
+        "volume": volume_24h,
+        "volume_prev": volume_prev,
+        "volume_change_pct": volume_change_pct,
+        "signal": signal,
+    }
+
+
 async def _collect_item_data():
     """전 감시 아이템의 24시간/48시간 데이터 수집"""
     watch_items = await get_all_watch_items()
@@ -16,10 +73,7 @@ async def _collect_item_data():
         return []
 
     now = datetime.now(KST)
-    h24_start = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
-    h48_start = (now - timedelta(hours=48)).strftime("%Y-%m-%d %H:%M:%S")
-    h24_end = now.strftime("%Y-%m-%d %H:%M:%S")
-    h24_boundary = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
+    h24_start, h48_start, h24_end, h24_boundary = _compute_time_ranges(now)
 
     results = []
     for item in watch_items:
@@ -29,46 +83,27 @@ async def _collect_item_data():
         records_24h = await get_price_history(item_id, h24_start, h24_end)
         records_48h = await get_price_history(item_id, h48_start, h24_end)
 
-        if not records_24h or len(records_24h) < 2:
-            continue
-
-        # 전일(24~48시간 전) 거래 분리
-        prev_records = [r for r in records_48h if r["sold_date"] < h24_boundary]
-
-        prices_24h = [r["unit_price"] for r in records_24h]
-        first_price = prices_24h[0]
-        current_price = prices_24h[-1]
-        change_pct = ((current_price - first_price) / first_price * 100) if first_price else 0
-
-        # 거래량
-        volume_24h = sum(r["count"] for r in records_24h)
-        volume_prev = sum(r["count"] for r in prev_records) if prev_records else 0
-        volume_change_pct = (
-            ((volume_24h - volume_prev) / volume_prev * 100) if volume_prev else 0
-        )
-
-        # 고가/저가
-        high_24h = max(prices_24h)
-        low_24h = min(prices_24h)
-
-        # 골든크로스/데드크로스 감지 (일봉 MA5/MA20 기준)
         signal = await _detect_cross_signal(item_id, item_name)
 
-        results.append({
-            "name": item_name,
-            "item_id": item_id,
-            "prices": prices_24h,
-            "current": current_price,
-            "change_pct": change_pct,
-            "high": high_24h,
-            "low": low_24h,
-            "volume": volume_24h,
-            "volume_prev": volume_prev,
-            "volume_change_pct": volume_change_pct,
-            "signal": signal,
-        })
+        result = _build_item_result(item_name, item_id, records_24h, records_48h, h24_boundary, signal)
+        if result:
+            results.append(result)
 
     return results
+
+
+def _determine_cross_type(closes):
+    """MA5/MA20 교차 방향 판별"""
+    ma5 = closes[-5:].mean()
+    ma20 = closes[-20:].mean()
+    prev_ma5 = closes[-6:-1].mean()
+    prev_ma20 = closes[-21:-1].mean()
+
+    if prev_ma5 <= prev_ma20 and ma5 > ma20:
+        return "golden_cross"
+    if prev_ma5 >= prev_ma20 and ma5 < ma20:
+        return "dead_cross"
+    return None
 
 
 async def _detect_cross_signal(item_id: str, item_name: str) -> str | None:
@@ -85,64 +120,95 @@ async def _detect_cross_signal(item_id: str, item_name: str) -> str | None:
     if len(ohlc) < 20:
         return None
 
-    closes = ohlc["close"].values
-    ma5 = closes[-5:].mean()
-    ma20 = closes[-20:].mean()
-    prev_ma5 = closes[-6:-1].mean()
-    prev_ma20 = closes[-21:-1].mean()
-
-    if prev_ma5 <= prev_ma20 and ma5 > ma20:
-        return "golden_cross"
-    elif prev_ma5 >= prev_ma20 and ma5 < ma20:
-        return "dead_cross"
-    return None
+    return _determine_cross_type(ohlc["close"].values)
 
 
-def _build_briefing_embeds(items_data: list[dict]) -> list[discord.Embed]:
-    """브리핑 embed 목록 생성"""
-    now = datetime.now(KST)
-    embeds = []
+def _arrow_for(value):
+    """값의 부호에 따른 화살표 반환"""
+    if value > 0:
+        return "▲"
+    if value < 0:
+        return "▼"
+    return "−"
 
-    # --- Embed 1: 시장 종합 ---
+
+def _color_for_change(value):
+    """변동률에 따른 embed 색상 반환"""
+    if value > 0:
+        return 0xE74C3C
+    if value < 0:
+        return 0x3498DB
+    return 0x95A5A6
+
+
+def _count_change_direction(items_data):
+    up = sum(1 for d in items_data if d["change_pct"] > 0)
+    down = sum(1 for d in items_data if d["change_pct"] < 0)
+    return up, down, len(items_data) - up - down
+
+
+def _calc_market_aggregates(items_data: list[dict]) -> dict:
+    """시장 전체 집계 지표 계산"""
     total_volume = sum(d["volume"] for d in items_data)
     total_prev_volume = sum(d["volume_prev"] for d in items_data)
     avg_change = sum(d["change_pct"] for d in items_data) / len(items_data)
-    vol_total_change = (
-        ((total_volume - total_prev_volume) / total_prev_volume * 100)
-        if total_prev_volume else 0
-    )
+    up_count, down_count, flat_count = _count_change_direction(items_data)
+    return {
+        "total_volume": total_volume,
+        "avg_change": avg_change,
+        "vol_total_change": _pct_change(total_volume, total_prev_volume),
+        "up_count": up_count,
+        "down_count": down_count,
+        "flat_count": flat_count,
+    }
 
-    up_count = sum(1 for d in items_data if d["change_pct"] > 0)
-    down_count = sum(1 for d in items_data if d["change_pct"] < 0)
-    flat_count = len(items_data) - up_count - down_count
 
-    market_arrow = "▲" if avg_change > 0 else "▼" if avg_change < 0 else "−"
-    market_color = 0xE74C3C if avg_change > 0 else 0x3498DB if avg_change < 0 else 0x95A5A6
-    vol_arrow = "▲" if vol_total_change > 0 else "▼" if vol_total_change < 0 else "−"
+def _build_market_summary_embed(items_data: list[dict], now: datetime) -> discord.Embed:
+    """시장 종합 embed 생성"""
+    agg = _calc_market_aggregates(items_data)
 
     header = discord.Embed(
         title="경제 브리핑",
         description=f"{now.strftime('%Y년 %m월 %d일')} 06:00 기준",
-        color=market_color
+        color=_color_for_change(agg["avg_change"])
     )
     header.add_field(
         name="시장 평균 변동률",
-        value=f"{market_arrow} {abs(avg_change):.1f}%",
+        value=f"{_arrow_for(agg['avg_change'])} {abs(agg['avg_change']):.1f}%",
         inline=True
     )
     header.add_field(
         name="총 거래량",
-        value=f"{total_volume:,}개 ({vol_arrow}{abs(vol_total_change):.1f}%)",
+        value=(
+            f"{agg['total_volume']:,}개 "
+            f"({_arrow_for(agg['vol_total_change'])}{abs(agg['vol_total_change']):.1f}%)"
+        ),
         inline=True
     )
     header.add_field(
         name="상승/하락/보합",
-        value=f"{up_count} / {down_count} / {flat_count}",
+        value=f"{agg['up_count']} / {agg['down_count']} / {agg['flat_count']}",
         inline=True
     )
-    embeds.append(header)
+    return header
 
-    # --- Embed 2: 아이템별 시세 변동 ---
+
+def _build_item_field_value(d: dict) -> str:
+    """단일 아이템 필드 값 문자열 생성"""
+    arrow = _arrow_for(d["change_pct"])
+    color_tag = "🔴" if d["change_pct"] > 0 else "🔵" if d["change_pct"] < 0 else "⚪"
+    vol_arrow = _arrow_for(d["volume_change_pct"])
+
+    return (
+        f"{color_tag} {int(d['current']):,}G "
+        f"({arrow}{abs(d['change_pct']):.1f}%)\n"
+        f"고가 {int(d['high']):,} / 저가 {int(d['low']):,} / "
+        f"거래량 {d['volume']:,} ({vol_arrow}{abs(d['volume_change_pct']):.0f}%)"
+    )
+
+
+def _build_price_change_embed(items_data: list[dict]) -> discord.Embed:
+    """아이템별 시세 변동 embed 생성"""
     sorted_items = sorted(items_data, key=lambda x: x["change_pct"], reverse=True)
 
     price_embed = discord.Embed(
@@ -151,41 +217,46 @@ def _build_briefing_embeds(items_data: list[dict]) -> list[discord.Embed]:
     )
 
     for d in sorted_items:
-        arrow = "▲" if d["change_pct"] > 0 else "▼" if d["change_pct"] < 0 else "−"
-        color_tag = "🔴" if d["change_pct"] > 0 else "🔵" if d["change_pct"] < 0 else "⚪"
-        vol_arrow = "▲" if d["volume_change_pct"] > 0 else "▼" if d["volume_change_pct"] < 0 else "−"
+        price_embed.add_field(name=d["name"], value=_build_item_field_value(d), inline=False)
 
-        value = (
-            f"{color_tag} {int(d['current']):,}G "
-            f"({arrow}{abs(d['change_pct']):.1f}%)\n"
-            f"고가 {int(d['high']):,} / 저가 {int(d['low']):,} / "
-            f"거래량 {d['volume']:,} ({vol_arrow}{abs(d['volume_change_pct']):.0f}%)"
-        )
-        price_embed.add_field(name=d["name"], value=value, inline=False)
+    return price_embed
 
-    embeds.append(price_embed)
 
-    # --- Embed 3: 추세 시그널 (있는 경우만) ---
+def _build_signal_embed(items_data: list[dict]) -> discord.Embed | None:
+    """추세 시그널 embed 생성 (시그널이 있는 경우만)"""
     signals = [d for d in items_data if d["signal"]]
-    if signals:
-        signal_embed = discord.Embed(
-            title="추세 시그널",
-            description="일봉 MA5/MA20 교차 감지",
-            color=0xF39C12
+    if not signals:
+        return None
+
+    signal_embed = discord.Embed(
+        title="추세 시그널",
+        description="일봉 MA5/MA20 교차 감지",
+        color=0xF39C12
+    )
+    _SIGNAL_MAP = {
+        "golden_cross": ("🔴", "골든크로스 (MA5 > MA20) — 상승 추세 전환"),
+        "dead_cross": ("🔵", "데드크로스 (MA5 < MA20) — 하락 추세 전환"),
+    }
+    for d in signals:
+        icon, desc = _SIGNAL_MAP.get(d["signal"], ("⚪", "알 수 없는 시그널"))
+        signal_embed.add_field(
+            name=f"{icon} {d['name']}",
+            value=desc,
+            inline=False
         )
-        for d in signals:
-            if d["signal"] == "golden_cross":
-                signal_embed.add_field(
-                    name=f"🔴 {d['name']}",
-                    value="골든크로스 (MA5 > MA20) — 상승 추세 전환",
-                    inline=False
-                )
-            else:
-                signal_embed.add_field(
-                    name=f"🔵 {d['name']}",
-                    value="데드크로스 (MA5 < MA20) — 하락 추세 전환",
-                    inline=False
-                )
+    return signal_embed
+
+
+def _build_briefing_embeds(items_data: list[dict]) -> list[discord.Embed]:
+    """브리핑 embed 목록 생성"""
+    now = datetime.now(KST)
+    embeds = [
+        _build_market_summary_embed(items_data, now),
+        _build_price_change_embed(items_data),
+    ]
+
+    signal_embed = _build_signal_embed(items_data)
+    if signal_embed:
         embeds.append(signal_embed)
 
     return embeds

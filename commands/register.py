@@ -38,7 +38,7 @@ class CharacterSelect(ui.View):
     async def select_callback(self, interaction: Interaction):
         if interaction.user.id != self.author_id:
             # noinspection PyUnresolvedReferences
-            await interaction.response.send_message("⚠️ 본인이 실행한 명령어만 응답할 수 있어요.", ephemeral=True)
+            await interaction.response.send_message("본인이 실행한 명령어만 응답할 수 있어요.", ephemeral=True)
             logger.warning(f"잘못된 사용자 {interaction.user.id}가 선택 콜백을 시도함")
             return
 
@@ -61,7 +61,7 @@ class CharacterSelect(ui.View):
         )
         char = self.selected_character
         message = (
-            f"✅ `{char['characterName']} (Lv.{char['level']} - {char['jobName']})`"
+            f"`{char['characterName']} (Lv.{char['level']} - {char['jobName']})`"
             f" 캐릭터가 선택되었어요.\n"
             f"서버: {server_name_kr}\n"
             f"모험단: {adventure_name}"
@@ -70,6 +70,41 @@ class CharacterSelect(ui.View):
         # noinspection PyUnresolvedReferences
         await interaction.response.send_message(message, ephemeral=True)
         self.stop()
+
+
+async def _build_character_embeds(characters: list[dict]) -> tuple[list[discord.File], list[Embed]]:
+    """캐릭터 목록에서 이미지 파일과 Embed 리스트 생성."""
+    files = []
+    embeds = []
+    for idx, char in enumerate(characters[:5]):
+        image_bytes = await get_character_image_bytes(char['serverId'], char['characterId'])
+        if image_bytes is None:
+            logger.warning(f"이미지 데이터 없음: {char['characterName']} ({char['characterId']})")
+            continue
+        file = discord.File(BytesIO(image_bytes), filename=f"char{idx}.png")
+        server_kr = SERVER_MAP.get(char['serverId'], char['serverId'])
+        embed = Embed(
+            title=f"{char['characterName']} (Lv.{char['level']} - {char['jobGrowName']})",
+            description=f"서버: {server_kr}",
+            color=discord.Color.blurple()
+        )
+        embed.set_image(url=f"attachment://char{idx}.png")
+        files.append(file)
+        embeds.append(embed)
+    return files, embeds
+
+
+async def _save_selected_character(user_id: int, character: dict):
+    """선택된 캐릭터를 DB에 저장."""
+    try:
+        await save_character(character)
+        await register_character(user_id, character["characterId"])
+        logger.info(
+            f"캐릭터 저장 성공: 사용자={user_id}, "
+            f"캐릭터={character['characterName']} ({character['characterId']})"
+        )
+    except Exception as e:
+        logger.error(f"캐릭터 저장 중 오류 발생: 사용자={user_id}, 에러={e}")
 
 
 # /등록 명령어
@@ -83,31 +118,12 @@ async def register_command(interaction: Interaction, server: app_commands.Choice
 
     result = await search_characters(server.value, name)
     if not result or not result.get("rows"):
-        await interaction.followup.send("❌ 캐릭터를 찾을 수 없어요.", ephemeral=True)
+        await interaction.followup.send("캐릭터를 찾을 수 없어요.", ephemeral=True)
         logger.warning(f"/등록 실패: 캐릭터 검색 결과 없음 - 사용자={interaction.user.id}, 검색어={name}")
         return
 
     characters = result["rows"]
-    files = []
-    embeds = []
-
-    for idx, char in enumerate(characters[:5]):
-        image_bytes = await get_character_image_bytes(char['serverId'], char['characterId'])
-        if image_bytes is None:
-            logger.warning(f"이미지 데이터 없음: {char['characterName']} ({char['characterId']})")
-            continue
-        file = discord.File(BytesIO(image_bytes), filename=f"char{idx}.png")
-        server_kr = SERVER_MAP.get(char['serverId'], char['serverId'])
-
-        embed = Embed(
-            title=f"{char['characterName']} (Lv.{char['level']} - {char['jobGrowName']})",
-            description=f"서버: {server_kr}",
-            color=discord.Color.blurple()
-        )
-        embed.set_image(url=f"attachment://char{idx}.png")
-
-        files.append(file)
-        embeds.append(embed)
+    files, embeds = await _build_character_embeds(characters)
 
     view = CharacterSelect(characters, interaction.user.id)
     await interaction.followup.send(embeds=embeds, view=view, files=files, ephemeral=True)
@@ -115,13 +131,4 @@ async def register_command(interaction: Interaction, server: app_commands.Choice
 
     await view.wait()
     if view.selected_character:
-        try:
-            await save_character(view.selected_character)
-            await register_character(interaction.user.id, view.selected_character["characterId"])
-            char = view.selected_character
-            logger.info(
-                f"캐릭터 저장 성공: 사용자={interaction.user.id}, "
-                f"캐릭터={char['characterName']} ({char['characterId']})"
-            )
-        except Exception as e:
-            logger.error(f"캐릭터 저장 중 오류 발생: 사용자={interaction.user.id}, 에러={e}")
+        await _save_selected_character(interaction.user.id, view.selected_character)
