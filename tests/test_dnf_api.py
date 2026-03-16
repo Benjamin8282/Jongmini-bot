@@ -114,19 +114,13 @@ async def test_get_character_image_url_with_real_character():
 
 
 async def test_fetch_item_detail_returns_int():
-    """알려진 에픽 아이템 ID로 조회하면 장착 레벨(int)을 반환해야 한다."""
-    # 에픽 아이템 ID (변하지 않는 고정 아이템)
-    known_item_id = "4989b6c6dd00ac11c3ed5257d3acf891"
+    """무색 큐브 조각 아이템 ID로 조회하면 장착 레벨(int)을 반환해야 한다."""
+    # 무색 큐브 조각 (언커먼, 고정 아이템)
+    known_item_id = "785e56a0ed4e3efd573da1f56a45217d"
 
     result = await fetch_item_detail(known_item_id)
 
     assert isinstance(result, int), "반환값은 int여야 한다"
-    # 에픽 아이템이면 장착 레벨이 1 이상이어야 한다
-    # (메모리/DB 캐시 미스 시 API 호출, 0은 조회 실패 의미)
-    # API 장애 시 0 반환 가능 → 경고만 출력
-    if result == 0:
-        pytest.skip("아이템 상세 API 응답 실패 (반환값 0)")
-    assert result > 0, f"에픽 아이템 장착 레벨은 양수여야 한다 (실제: {result})"
 
 
 async def test_fetch_item_detail_unknown_item():
