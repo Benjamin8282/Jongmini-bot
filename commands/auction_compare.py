@@ -7,6 +7,7 @@ from core.db import get_price_history, get_watch_item_by_name, get_all_watch_ite
 from core.chart import aggregate_to_ohlc, generate_comparison_chart
 from core.analysis import calc_correlation
 from core.logger import logger
+from commands.auction_chart import record_recent_item, _sort_by_recent
 
 KST = timezone(timedelta(hours=9))
 
@@ -301,19 +302,21 @@ def _exclude_item(items: list[dict], exclude: str | None) -> list[dict]:
     return [i for i in items if i["item_name"] != exclude] if exclude else items
 
 
-def _filter_items(items: list[dict], current: str, exclude: str = None) -> list[dict]:
+def _filter_items(items: list[dict], current: str, exclude: str = None,
+                  user_id: int = 0) -> list[dict]:
     items = _exclude_item(items, exclude)
+    sorted_items = _sort_by_recent(items, user_id)
     if not current:
-        return items[:25]
+        return sorted_items[:25]
     current_lower = current.lower()
-    return [i for i in items if current_lower in i["item_name"].lower()][:25]
+    return [i for i in sorted_items if current_lower in i["item_name"].lower()][:25]
 
 
 async def _autocomplete_items(
     interaction: Interaction, current: str, exclude: str = None
 ) -> list[app_commands.Choice[str]]:
     items = await get_all_watch_items()
-    filtered = _filter_items(items, current, exclude)
+    filtered = _filter_items(items, current, exclude, interaction.user.id)
     return [
         app_commands.Choice(name=item["item_name"], value=item["item_name"])
         for item in filtered
@@ -372,6 +375,8 @@ async def auction_compare(interaction: Interaction, item_name_a: str, item_name_
     if not validated:
         return
     watch_a, watch_b = validated
+    record_recent_item(interaction.user.id, watch_a["item_name"])
+    record_recent_item(interaction.user.id, watch_b["item_name"])
 
     pref = _user_prefs.get(interaction.user.id, {})
     interval = pref.get("interval", 60)
