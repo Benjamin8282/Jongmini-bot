@@ -1,7 +1,5 @@
 """core.time_utils 모듈 테스트."""
-from datetime import datetime, timedelta, timezone
-
-import pytest
+from datetime import datetime, timedelta
 
 from core.time_utils import (
     KST,

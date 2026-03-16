@@ -21,8 +21,8 @@ pytestmark = [
     pytest.mark.asyncio,
 ]
 
-from core.dnf_api import search_characters
-from core.dundam_api import (
+from core.dnf_api import search_characters  # noqa: E402
+from core.dundam_api import (  # noqa: E402
     _cache,
     fetch_dundam_data_with_retry,
     fetch_dundam_buffer_with_retry,

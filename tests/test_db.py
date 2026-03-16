@@ -1,6 +1,5 @@
 """core.db 모듈 테스트."""
 import pytest
-import pytest_asyncio
 
 import core.db as db
 

@@ -1,6 +1,5 @@
 """core.analysis 모듈 테스트."""
 import pandas as pd
-import pytest
 
 from core.analysis import (
     analyze,
@@ -107,7 +106,7 @@ def test_volume_surge_급증():
     # 처음 15캔들은 거래량 10, 마지막 5캔들은 거래량 30 → ratio=30/(avg20) > 1.5
     volumes = pd.Series([10] * 15 + [30] * 5)
     result = calc_volume_surge(volumes)
-    assert result["surge"] == True
+    assert result["surge"]
     assert result["ratio"] is not None
     assert result["ratio"] >= 1.5
 
@@ -116,7 +115,7 @@ def test_volume_surge_보통():
     """거래량이 고르면 surge=False."""
     volumes = pd.Series([10] * 20)
     result = calc_volume_surge(volumes)
-    assert result["surge"] == False
+    assert not result["surge"]
     assert result["ratio"] is not None
     assert abs(result["ratio"] - 1.0) < 0.01
 
@@ -126,7 +125,7 @@ def test_volume_surge_데이터_부족():
     volumes = pd.Series([10] * 10)
     result = calc_volume_surge(volumes)
     assert result["ratio"] is None
-    assert result["surge"] == False
+    assert not result["surge"]
 
 
 def test_volume_surge_avg20_0():
@@ -134,7 +133,7 @@ def test_volume_surge_avg20_0():
     volumes = pd.Series([0] * 20)
     result = calc_volume_surge(volumes)
     assert result["ratio"] is None
-    assert result["surge"] == False
+    assert not result["surge"]
 
 
 # ─── calc_ma_disparity ───

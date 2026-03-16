@@ -1,5 +1,5 @@
 """tasks/price_alert.py 순수 감지 로직 테스트."""
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import discord
 import pandas as pd

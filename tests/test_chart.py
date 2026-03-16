@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta, timezone
 
 import pandas as pd
-import pytest
 
 from core.chart import aggregate_to_ohlc, filter_price_outliers
 

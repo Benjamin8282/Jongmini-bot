@@ -3,7 +3,6 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import aiosqlite
 import pandas as pd
 import pytest
 from dotenv import load_dotenv
@@ -13,7 +12,9 @@ load_dotenv()
 
 KST = timezone(timedelta(hours=9))
 
+
 # ─── 이벤트 루프 ───
+
 
 @pytest.fixture(scope="session")
 def event_loop():

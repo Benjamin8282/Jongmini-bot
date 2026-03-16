@@ -18,7 +18,7 @@ pytestmark = [
     pytest.mark.asyncio,
 ]
 
-from core.dnf_api import (
+from core.dnf_api import (  # noqa: E402
     search_characters,
     get_character_details,
     get_character_image_url,
