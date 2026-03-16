@@ -94,7 +94,7 @@ def format_rank_embed(rank_list, timestamp, period="일간"):
     rank = 0
     real_rank = 1  # 표시될 실제 순위
 
-    for i, entry in enumerate(sorted_list):
+    for entry in sorted_list:
         score = entry['score']
         counts = entry['counts']
 

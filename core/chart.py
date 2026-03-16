@@ -549,7 +549,7 @@ def generate_activity_chart(
              color="#888888", va="top")
 
     # 범례
-    handles, labels = ax.get_legend_handles_labels()
+    handles, _labels = ax.get_legend_handles_labels()
     if handles:
         legend = ax.legend(
             loc="upper right", fontsize=8, frameon=True,

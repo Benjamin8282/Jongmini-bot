@@ -44,7 +44,7 @@ def format_character_rank_embed(rank_list, timestamp):
 
     display_list = rank_list[:20]
 
-    for i, entry in enumerate(display_list, start=1):
+    for entry in display_list:
         score = entry['score']
         counts = entry['counts']
         character_name = entry['character_name']

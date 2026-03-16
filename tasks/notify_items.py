@@ -187,7 +187,7 @@ async def notify_all_characters(bot, guild_id):
     semaphore = asyncio.Semaphore(50)  # 최대 50개 동시 실행 제한
 
     async with aiohttp.ClientSession():
-        for adventure, characters in grouped.items():
+        for _adventure, characters in grouped.items():
             tasks = [notify_items_for_character(char, bot, guild_id, semaphore) for char in characters]
             await asyncio.gather(*tasks)
 

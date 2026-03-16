@@ -1,6 +1,3 @@
-from io import BytesIO
-
-import aiohttp
 import discord
 from discord import app_commands, Interaction, ui
 
@@ -29,7 +26,10 @@ class ItemSelectView(ui.View):
         options = [
             discord.SelectOption(
                 label=item["itemName"][:100],
-                description=f'{item.get("itemRarity", "")} | {item.get("itemType", "")} / {item.get("itemTypeDetail", "")}',
+                description=(
+                    f'{item.get("itemRarity", "")} | '
+                    f'{item.get("itemType", "")} / {item.get("itemTypeDetail", "")}'
+                ),
                 value=item["itemId"]
             ) for item in items[:25]
         ]

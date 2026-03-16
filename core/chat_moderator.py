@@ -214,8 +214,8 @@ class ChatModerator:
     # -----------------------------
     def _normalize_response(self, data: Dict[str, Any]) -> Dict[str, Any]:
         has_expected_keys = (
-            "message" in data or "riskLevel" in data or
-            "summary" in data or "route" in data
+            "message" in data or "riskLevel" in data
+            or "summary" in data or "route" in data
         )
         if isinstance(data, dict) and has_expected_keys:
             return data
