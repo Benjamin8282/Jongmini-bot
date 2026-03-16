@@ -3,7 +3,7 @@ from discord import app_commands, Interaction
 
 from commands.total import PaginationView
 from core.avatar_market_api import (
-    fetch_avatar_sale, fetch_jobs, fetch_avatar_hashtags,
+    fetch_avatar_sale, fetch_avatar_hashtags,
 )
 from core.logger import logger
 
@@ -15,23 +15,34 @@ _RARITY_COLORS = {
 }
 _DEFAULT_COLOR = 0x95A5A6
 
+# 직업 Choice (DNF 17개 직업 고정)
+JOB_CHOICES = [
+    app_commands.Choice(name="귀검사(남)", value="41f1cdc2ff58bb5fdc287be0db2a8df3"),
+    app_commands.Choice(name="격투가(여)", value="a7a059ebe9e6054c0644b40ef316d6e9"),
+    app_commands.Choice(name="거너(남)", value="afdf3b989339de478e85b614d274d1ef"),
+    app_commands.Choice(name="마법사(여)", value="3909d0b188e9c95311399f776e331da5"),
+    app_commands.Choice(name="프리스트(남)", value="f6a4ad30555b99b499c07835f87ce522"),
+    app_commands.Choice(name="거너(여)", value="944b9aab492c15a8474f96947ceeb9e4"),
+    app_commands.Choice(name="도적", value="ddc49e9ad1ff72a00b53c6cff5b1e920"),
+    app_commands.Choice(name="격투가(남)", value="ca0f0e0e9e1d55b5f9955b03d9dd213c"),
+    app_commands.Choice(name="마법사(남)", value="a5ccbaf5538981c6ef99b236c0a60b73"),
+    app_commands.Choice(name="다크나이트", value="17e417b31686389eebff6d754c3401ea"),
+    app_commands.Choice(name="크리에이터", value="b522a95d819a5559b775deb9a490e49a"),
+    app_commands.Choice(name="귀검사(여)", value="1645c45aabb008c98406b3a16447040d"),
+    app_commands.Choice(name="나이트", value="0ee8fa5dc525c1a1f23fc6911e921e4a"),
+    app_commands.Choice(name="총검사", value="3deb7be5f01953ac8b1ecaa1e25e0420"),
+    app_commands.Choice(name="프리스트(여)", value="0c1b401bb09241570d364420b3ba3fd7"),
+    app_commands.Choice(name="외전검사", value="986c2b3d72ee0e4a0b7fcfbe786d4e02"),
+    app_commands.Choice(name="아처", value="b9cb48777665de22c006fabaf9a560b3"),
+]
 
-def _filter_jobs(jobs: list[dict], current: str) -> list[dict]:
-    if not current:
-        return jobs[:25]
-    lower = current.lower()
-    return [j for j in jobs if lower in j["jobName"].lower()][:25]
-
-
-async def job_autocomplete(
-    interaction: Interaction, current: str
-) -> list[app_commands.Choice[str]]:
-    """직업 캐시에서 자동완성 제공."""
-    jobs = await fetch_jobs()
-    return [
-        app_commands.Choice(name=j["jobName"], value=j["jobId"])
-        for j in _filter_jobs(jobs, current)
-    ]
+RARITY_CHOICES = [
+    app_commands.Choice(name="커먼", value="커먼"),
+    app_commands.Choice(name="언커먼", value="언커먼"),
+    app_commands.Choice(name="레어", value="레어"),
+    app_commands.Choice(name="클론", value="클론"),
+    app_commands.Choice(name="상급", value="상급"),
+]
 
 
 def _filter_tags(tags: list[str], current: str) -> list[str]:
@@ -125,17 +136,11 @@ async def _send_results(interaction: Interaction, embeds: list[discord.Embed]):
     레어리티="아바타 등급 (선택)",
     해시태그="해시태그 필터 (선택)",
 )
-@app_commands.choices(레어리티=[
-    app_commands.Choice(name="커먼", value="커먼"),
-    app_commands.Choice(name="언커먼", value="언커먼"),
-    app_commands.Choice(name="레어", value="레어"),
-    app_commands.Choice(name="클론", value="클론"),
-    app_commands.Choice(name="상급", value="상급"),
-])
-@app_commands.autocomplete(직업=job_autocomplete, 해시태그=hashtag_autocomplete)
+@app_commands.choices(직업=JOB_CHOICES, 레어리티=RARITY_CHOICES)
+@app_commands.autocomplete(해시태그=hashtag_autocomplete)
 async def avatar_search(
     interaction: Interaction,
-    직업: str = None,
+    직업: app_commands.Choice[str] = None,
     레어리티: app_commands.Choice[str] = None,
     해시태그: str = None,
 ):
@@ -146,9 +151,10 @@ async def avatar_search(
     # noinspection PyUnresolvedReferences
     await interaction.response.defer(thinking=True)
 
+    job_id = 직업.value if 직업 else None
     rarity_val = 레어리티.value if 레어리티 else None
     goods_list = await fetch_avatar_sale(
-        job_id=직업,
+        job_id=job_id,
         avatar_rarity=rarity_val,
         hashtag=해시태그,
     )
