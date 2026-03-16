@@ -7,7 +7,7 @@ from core.db import get_price_history, get_watch_item_by_name, get_all_watch_ite
 from core.chart import aggregate_to_ohlc, generate_comparison_chart
 from core.analysis import calc_correlation
 from core.logger import logger
-from commands.auction_chart import record_recent_item, _sort_by_recent
+from commands.auction_chart import record_recent_item, _sort_by_recent, load_recent_items_cache
 
 KST = timezone(timedelta(hours=9))
 
@@ -315,6 +315,7 @@ def _filter_items(items: list[dict], current: str, exclude: str = None,
 async def _autocomplete_items(
     interaction: Interaction, current: str, exclude: str = None
 ) -> list[app_commands.Choice[str]]:
+    await load_recent_items_cache()
     items = await get_all_watch_items()
     filtered = _filter_items(items, current, exclude, interaction.user.id)
     return [
@@ -375,8 +376,8 @@ async def auction_compare(interaction: Interaction, item_name_a: str, item_name_
     if not validated:
         return
     watch_a, watch_b = validated
-    record_recent_item(interaction.user.id, watch_a["item_name"])
-    record_recent_item(interaction.user.id, watch_b["item_name"])
+    await record_recent_item(interaction.user.id, watch_a["item_name"])
+    await record_recent_item(interaction.user.id, watch_b["item_name"])
 
     pref = _user_prefs.get(interaction.user.id, {})
     interval = pref.get("interval", 60)

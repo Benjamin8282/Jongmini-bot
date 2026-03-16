@@ -3,7 +3,10 @@ from datetime import datetime, timedelta, timezone
 import discord
 from discord import app_commands, Interaction, ui
 
-from core.db import get_price_history, get_watch_item_by_name, get_all_watch_items
+from core.db import (
+    get_price_history, get_watch_item_by_name, get_all_watch_items,
+    save_recent_item, load_all_recent_items,
+)
 from core.chart import aggregate_to_ohlc, generate_candlestick_chart
 from core.analysis import analyze, format_analysis_text, recommend_prices, format_recommendation_text
 from core.logger import logger
@@ -251,16 +254,29 @@ class ChartControlView(ui.View):
 # 사용자별 최근 조회 아이템 {user_id: [item_name, ...]} (최근 순)
 _recent_items: dict[int, list[str]] = {}
 _RECENT_MAX = 10
+_recent_loaded = False
 
 
-def record_recent_item(user_id: int, item_name: str):
-    """사용자의 최근 조회 아이템 기록."""
+async def load_recent_items_cache():
+    """DB에서 최근 조회 아이템을 인메모리에 로드 (봇 시작 시 1회)."""
+    global _recent_loaded
+    if _recent_loaded:
+        return
+    loaded = await load_all_recent_items()
+    _recent_items.update(loaded)
+    _recent_loaded = True
+    logger.info(f"최근 조회 아이템 캐시 로드: {len(loaded)}명")
+
+
+async def record_recent_item(user_id: int, item_name: str):
+    """사용자의 최근 조회 아이템 기록 (인메모리 + DB)."""
     recent = _recent_items.setdefault(user_id, [])
     if item_name in recent:
         recent.remove(item_name)
     recent.insert(0, item_name)
     if len(recent) > _RECENT_MAX:
         recent.pop()
+    await save_recent_item(user_id, item_name)
 
 
 def _sort_by_recent(items: list[dict], user_id: int) -> list[dict]:
@@ -289,6 +305,7 @@ async def item_name_autocomplete(
     current: str
 ) -> list[app_commands.Choice[str]]:
     """등록된 감시 아이템 목록에서 자동완성 제공 (최근 사용 우선)"""
+    await load_recent_items_cache()
     items = await get_all_watch_items()
     filtered = _filter_watch_items(items, current, interaction.user.id)
     return [
@@ -353,7 +370,7 @@ async def auction_chart(interaction: Interaction, item_name: str):
     if not watch_item:
         return
 
-    record_recent_item(interaction.user.id, watch_item["item_name"])
+    await record_recent_item(interaction.user.id, watch_item["item_name"])
     pref = _user_prefs.get(interaction.user.id, {})
     interval = pref.get("interval", 60)
     period = pref.get("period", 7)

@@ -159,6 +159,15 @@ async def init_db():
                     count INTEGER DEFAULT 0
                 )
             """)
+            # 사용자별 최근 조회 아이템
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS user_recent_items (
+                    user_id INTEGER NOT NULL,
+                    item_name TEXT NOT NULL,
+                    used_at TEXT NOT NULL,
+                    PRIMARY KEY (user_id, item_name)
+                )
+            """)
             await conn.commit()
         logger.info("DB 초기화 완료")
     except Exception as e:
@@ -1008,3 +1017,51 @@ async def get_job_skill_options(job_key: str) -> dict | None:
     except Exception as e:
         logger.error(f"직업 스킬 옵션 캐시 조회 실패: {e}")
         return None
+
+
+# ----- 최근 조회 아이템 -----
+
+RECENT_ITEMS_MAX = 10
+
+
+async def save_recent_item(user_id: int, item_name: str):
+    """최근 조회 아이템 저장 (upsert). 10개 초과 시 오래된 항목 삭제."""
+    from datetime import datetime, timezone, timedelta
+    now = datetime.now(timezone(timedelta(hours=9))).isoformat()
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("""
+                INSERT INTO user_recent_items (user_id, item_name, used_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(user_id, item_name) DO UPDATE SET used_at = ?
+            """, (user_id, item_name, now, now))
+
+            # 오래된 항목 정리 (최근 10개만 유지)
+            await conn.execute("""
+                DELETE FROM user_recent_items
+                WHERE user_id = ? AND item_name NOT IN (
+                    SELECT item_name FROM user_recent_items
+                    WHERE user_id = ?
+                    ORDER BY used_at DESC LIMIT ?
+                )
+            """, (user_id, user_id, RECENT_ITEMS_MAX))
+            await conn.commit()
+    except Exception as e:
+        logger.error(f"최근 조회 아이템 저장 실패: {e}")
+
+
+async def load_all_recent_items() -> dict[int, list[str]]:
+    """전체 사용자의 최근 조회 아이템을 로드. {user_id: [item_name, ...]} (최근 순)"""
+    result: dict[int, list[str]] = {}
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            cursor = await conn.execute("""
+                SELECT user_id, item_name FROM user_recent_items
+                ORDER BY user_id, used_at DESC
+            """)
+            rows = await cursor.fetchall()
+        for user_id, item_name in rows:
+            result.setdefault(user_id, []).append(item_name)
+    except Exception as e:
+        logger.error(f"최근 조회 아이템 로드 실패: {e}")
+    return result
