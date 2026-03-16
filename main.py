@@ -47,6 +47,8 @@ from commands.alert_settings import (
     alert_settings_cmd, alert_list_cmd, alert_remove_cmd
 )
 from commands.dunspy import dunspy_cmd
+from commands.avatar_search import avatar_search
+from commands.avatar_price import avatar_price
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -117,6 +119,8 @@ class JongminiBot(commands.Bot):
         await init_db()
         logger.info("DB 초기화 완료")
         await preload_item_cache()
+        from core.avatar_market_api import preload_caches as preload_avatar_caches
+        await preload_avatar_caches()
 
         self.tree.add_command(hello_command)
         self.tree.add_command(register_command)
@@ -144,6 +148,8 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(alert_list_cmd)
         self.tree.add_command(alert_remove_cmd)
         self.tree.add_command(dunspy_cmd)
+        self.tree.add_command(avatar_search)
+        self.tree.add_command(avatar_price)
         logger.info("커맨드 등록 완료 (sync는 on_ready에서 실행)")
 
 
