@@ -97,20 +97,32 @@ async def test_fetch_dundam_data_result_has_character_info():
 # ─── 버퍼 던담 데이터 조회 테스트 ───
 
 
+async def _get_buffer_character():
+    """버퍼 캐릭터 정보 획득 (카시야스/잘빠라메딕)."""
+    search = await search_characters("casillas", "잘빠라메딕")
+    if search is None or not search.get("rows"):
+        return None
+    row = search["rows"][0]
+    return {
+        "character_id": row["characterId"],
+        "server_id": row["serverId"],
+        "character_name": row["characterName"],
+        "adventure_name": row.get("adventureName", ""),
+    }
+
+
 async def test_fetch_dundam_buffer_with_retry():
     """버퍼 캐릭터 데이터 조회 시 buff_score 키가 포함된 dict 또는 None을 반환해야 한다."""
     _clear_dundam_cache()
-    character = await _get_valid_character()
+    character = await _get_buffer_character()
     if character is None:
-        pytest.skip("유효한 캐릭터를 검색할 수 없음")
+        pytest.skip("버퍼 캐릭터를 검색할 수 없음")
 
     async with aiohttp.ClientSession() as session:
         result = await fetch_dundam_buffer_with_retry(session, character)
 
-    # 딜러 캐릭터에 대해 버퍼 조회 시 None 반환 가능 (정상 동작)
     if result is None:
-        # 버퍼가 아닌 캐릭터는 buff_score가 없으므로 None 반환은 정상
-        pytest.skip("해당 캐릭터는 버퍼가 아니거나 던담 API 미응답")
+        pytest.skip("던담 API 미응답")
 
     assert isinstance(result, dict), "반환값은 dict여야 한다"
     assert "buff_score" in result, "buff_score 키가 존재해야 한다"
