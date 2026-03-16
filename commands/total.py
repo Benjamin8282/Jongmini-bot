@@ -59,7 +59,6 @@ def _build_adventure_embeds(grouped_data: dict) -> list[Embed]:
     return all_embeds
 
 
-@app_commands.command(name="전체조회", description="등록된 모든 캐릭터를 모험단 단위로 조회합니다")
 async def _send_embeds(interaction: Interaction, all_embeds: list[Embed]):
     """Embed 리스트를 10개 이하면 바로, 초과면 페이지네이션으로 전송."""
     if len(all_embeds) <= 10:
@@ -71,6 +70,7 @@ async def _send_embeds(interaction: Interaction, all_embeds: list[Embed]):
     logger.info(f"/전체조회 결과 {len(all_embeds)}개 Embed 전송: 사용자={interaction.user.id}")
 
 
+@app_commands.command(name="전체조회", description="등록된 모든 캐릭터를 모험단 단위로 조회합니다")
 async def total_command(interaction: Interaction):
     logger.info(f"/전체조회 명령어 호출: 사용자={interaction.user.id}")
     # noinspection PyUnresolvedReferences
