@@ -38,55 +38,35 @@ def _save_user_pref(user_id: int, interval: int = None, period: int = None):
         pref["period"] = period
 
 
-async def _build_comparison(
-    item_id_a: str, item_name_a: str,
-    item_id_b: str, item_name_b: str,
-    interval_minutes: int, period_days: int,
-):
-    """비교 차트 생성. (embeds, file) 또는 에러 str 반환."""
-    end_dt = datetime.now(KST)
-    start_dt = end_dt - timedelta(days=period_days)
-    start_str = start_dt.strftime("%Y-%m-%d %H:%M:%S")
-    end_str = end_dt.strftime("%Y-%m-%d %H:%M:%S")
-
-    records_a = await get_price_history(item_id_a, start_str, end_str)
-    records_b = await get_price_history(item_id_b, start_str, end_str)
-
-    if not records_a and not records_b:
-        return f"두 아이템 모두 해당 기간({period_days}일) 거래 기록이 없습니다."
-    if not records_a:
-        return f"'{item_name_a}'의 해당 기간({period_days}일) 거래 기록이 없습니다."
-    if not records_b:
-        return f"'{item_name_b}'의 해당 기간({period_days}일) 거래 기록이 없습니다."
-
-    interval_label = next(
+def _get_interval_label(interval_minutes: int) -> str:
+    return next(
         (i["label"] for i in INTERVALS if i["minutes"] == interval_minutes),
         f"{interval_minutes}분봉"
     )
 
-    ohlc_a = aggregate_to_ohlc(records_a, interval_minutes)
-    ohlc_b = aggregate_to_ohlc(records_b, interval_minutes)
 
-    if ohlc_a.empty and ohlc_b.empty:
-        return "OHLC 데이터를 생성할 수 없습니다."
+def _format_change_text(close: int, prev: int) -> str:
+    """변동률 텍스트 포맷."""
+    diff = close - prev
+    pct = (diff / prev * 100) if prev else 0
+    arrow = "▲" if diff > 0 else "▼" if diff < 0 else "−"
+    return f"{close:,}G ({arrow} {abs(pct):.1f}%)"
 
-    # 상관관계 분석
-    corr_result = None
-    if not ohlc_a.empty and not ohlc_b.empty:
-        corr_result = calc_correlation(ohlc_a["close"], ohlc_b["close"])
 
-    corr_val = corr_result["correlation"] if corr_result else None
+def _calc_item_field(name: str, ohlc) -> tuple[str, str] | None:
+    """아이템 현재가/변동률 필드 생성. (name, value) 또는 None."""
+    if ohlc.empty:
+        return None
+    close = int(ohlc["close"].iloc[-1])
+    val = _format_change_text(close, int(ohlc["close"].iloc[0])) if len(ohlc) >= 2 else f"{close:,}G"
+    return name, val
 
-    chart_buf = generate_comparison_chart(
-        item_name_a, ohlc_a, item_name_b, ohlc_b,
-        interval_label, corr_val
-    )
-    if not chart_buf:
-        return "차트 생성에 실패했습니다."
 
-    file = discord.File(chart_buf, filename="compare_chart.png")
-
-    # 메인 embed
+def _build_main_embed(
+    item_name_a: str, ohlc_a, item_name_b: str, ohlc_b,
+    period_days: int, interval_label: str,
+    records_a: list, records_b: list,
+) -> discord.Embed:
     embed = discord.Embed(
         title=f"{item_name_a} vs {item_name_b}",
         description=(
@@ -96,64 +76,138 @@ async def _build_comparison(
         ),
         color=0x9B59B6
     )
-
-    # 각 아이템 현재가/변동률
     for name, ohlc in [(item_name_a, ohlc_a), (item_name_b, ohlc_b)]:
-        if ohlc.empty or len(ohlc) < 1:
-            continue
-        close = int(ohlc["close"].iloc[-1])
-        if len(ohlc) >= 2:
-            prev = int(ohlc["close"].iloc[0])
-            diff = close - prev
-            pct = (diff / prev * 100) if prev else 0
-            arrow = "▲" if diff > 0 else "▼" if diff < 0 else "−"
-            val = f"{close:,}G ({arrow} {abs(pct):.1f}%)"
-        else:
-            val = f"{close:,}G"
-        embed.add_field(name=name, value=val, inline=True)
-
+        field = _calc_item_field(name, ohlc)
+        if field:
+            embed.add_field(name=field[0], value=field[1], inline=True)
     embed.set_image(url="attachment://compare_chart.png")
+    return embed
 
-    # 상관관계 embed
-    corr_embed = None
-    if corr_result:
-        if corr_result["correlation"] is not None:
-            c = corr_result["correlation"]
-            interp = corr_result["interpretation"]
-            overlap = corr_result["overlap_count"]
 
-            if c >= 0.3:
-                corr_color = 0x2ED573
-            elif c <= -0.3:
-                corr_color = 0xFF4757
-            else:
-                corr_color = 0x95A5A6
+def _corr_color(c: float) -> int:
+    if c >= 0.3:
+        return 0x2ED573
+    if c <= -0.3:
+        return 0xFF4757
+    return 0x95A5A6
 
-            corr_embed = discord.Embed(
-                title="상관관계 분석",
-                description=(
-                    f"**피어슨 상관계수: {c:.3f}**\n"
-                    f"해석: {interp}\n"
-                    f"분석 대상: 겹치는 {overlap}개 캔들\n\n"
-                    f"{'두 아이템의 가격이 함께 움직이는 경향이 있습니다.' if abs(c) >= 0.3 else '두 아이템의 가격은 독립적으로 움직입니다.'}\n"
-                    f"{'같은 컨텐츠 수요의 영향을 받을 수 있습니다.' if c >= 0.7 else ''}"
-                ),
-                color=corr_color
-            )
-            corr_embed.set_footer(
-                text="상관관계는 인과관계를 의미하지 않습니다. 참고용으로만 활용하세요."
-            )
-        else:
-            corr_embed = discord.Embed(
-                title="상관관계 분석",
-                description=(
-                    f"겹치는 데이터가 부족하여 분석할 수 없습니다.\n"
-                    f"(최소 10캔들 필요, 현재 {corr_result['overlap_count']}캔들)\n\n"
-                    f"더 긴 기간이나 짧은 봉 간격을 선택해보세요."
-                ),
-                color=0x95A5A6
-            )
 
+def _build_corr_embed_with_value(corr_result: dict) -> discord.Embed:
+    c = corr_result["correlation"]
+    interp = corr_result["interpretation"]
+    overlap = corr_result["overlap_count"]
+    trend_text = (
+        '두 아이템의 가격이 함께 움직이는 경향이 있습니다.'
+        if abs(c) >= 0.3
+        else '두 아이템의 가격은 독립적으로 움직입니다.'
+    )
+    demand_text = '같은 컨텐츠 수요의 영향을 받을 수 있습니다.' if c >= 0.7 else ''
+    embed = discord.Embed(
+        title="상관관계 분석",
+        description=(
+            f"**피어슨 상관계수: {c:.3f}**\n"
+            f"해석: {interp}\n"
+            f"분석 대상: 겹치는 {overlap}개 캔들\n\n"
+            f"{trend_text}\n{demand_text}"
+        ),
+        color=_corr_color(c)
+    )
+    embed.set_footer(
+        text="상관관계는 인과관계를 의미하지 않습니다. 참고용으로만 활용하세요."
+    )
+    return embed
+
+
+def _build_corr_embed_insufficient(corr_result: dict) -> discord.Embed:
+    return discord.Embed(
+        title="상관관계 분석",
+        description=(
+            f"겹치는 데이터가 부족하여 분석할 수 없습니다.\n"
+            f"(최소 10캔들 필요, 현재 {corr_result['overlap_count']}캔들)\n\n"
+            f"더 긴 기간이나 짧은 봉 간격을 선택해보세요."
+        ),
+        color=0x95A5A6
+    )
+
+
+def _build_corr_embed(corr_result: dict | None) -> discord.Embed | None:
+    if not corr_result:
+        return None
+    if corr_result["correlation"] is not None:
+        return _build_corr_embed_with_value(corr_result)
+    return _build_corr_embed_insufficient(corr_result)
+
+
+def _fetch_time_range(period_days: int) -> tuple[str, str]:
+    end_dt = datetime.now(KST)
+    start_dt = end_dt - timedelta(days=period_days)
+    return start_dt.strftime("%Y-%m-%d %H:%M:%S"), end_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _check_records(records_a, records_b, item_name_a, item_name_b, period_days):
+    """거래 기록 유효성 체크. 에러 str 또는 None."""
+    if not records_a and not records_b:
+        return f"두 아이템 모두 해당 기간({period_days}일) 거래 기록이 없습니다."
+    if not records_a:
+        return f"'{item_name_a}'의 해당 기간({period_days}일) 거래 기록이 없습니다."
+    if not records_b:
+        return f"'{item_name_b}'의 해당 기간({period_days}일) 거래 기록이 없습니다."
+    return None
+
+
+def _calc_corr_result(ohlc_a, ohlc_b) -> dict | None:
+    """두 OHLC 시리즈 간 상관관계 계산. 둘 중 하나라도 비어있으면 None."""
+    if ohlc_a.empty or ohlc_b.empty:
+        return None
+    return calc_correlation(ohlc_a["close"], ohlc_b["close"])
+
+
+async def _fetch_pair_records(item_id_a, item_id_b, period_days):
+    """두 아이템의 가격 이력을 조회."""
+    start_str, end_str = _fetch_time_range(period_days)
+    records_a = await get_price_history(item_id_a, start_str, end_str)
+    records_b = await get_price_history(item_id_b, start_str, end_str)
+    return records_a, records_b
+
+
+def _both_ohlc_empty(ohlc_a, ohlc_b):
+    return ohlc_a.empty and ohlc_b.empty
+
+
+async def _build_comparison(
+    item_id_a: str, item_name_a: str,
+    item_id_b: str, item_name_b: str,
+    interval_minutes: int, period_days: int,
+):
+    """비교 차트 생성. (embeds, file) 또는 에러 str 반환."""
+    records_a, records_b = await _fetch_pair_records(item_id_a, item_id_b, period_days)
+
+    err = _check_records(records_a, records_b, item_name_a, item_name_b, period_days)
+    if err:
+        return err
+
+    interval_label = _get_interval_label(interval_minutes)
+    ohlc_a = aggregate_to_ohlc(records_a, interval_minutes)
+    ohlc_b = aggregate_to_ohlc(records_b, interval_minutes)
+
+    if _both_ohlc_empty(ohlc_a, ohlc_b):
+        return "OHLC 데이터를 생성할 수 없습니다."
+
+    corr_result = _calc_corr_result(ohlc_a, ohlc_b)
+    corr_val = corr_result["correlation"] if corr_result else None
+    chart_buf = generate_comparison_chart(
+        item_name_a, ohlc_a, item_name_b, ohlc_b,
+        interval_label, corr_val
+    )
+    if not chart_buf:
+        return "차트 생성에 실패했습니다."
+
+    file = discord.File(chart_buf, filename="compare_chart.png")
+    embed = _build_main_embed(
+        item_name_a, ohlc_a, item_name_b, ohlc_b,
+        period_days, interval_label, records_a, records_b,
+    )
+    corr_embed = _build_corr_embed(corr_result)
     return embed, file, corr_embed
 
 
@@ -242,25 +296,27 @@ class CompareControlView(ui.View):
             )
 
 
+def _exclude_item(items: list[dict], exclude: str | None) -> list[dict]:
+    """제외할 아이템을 필터링."""
+    return [i for i in items if i["item_name"] != exclude] if exclude else items
+
+
+def _filter_items(items: list[dict], current: str, exclude: str = None) -> list[dict]:
+    items = _exclude_item(items, exclude)
+    if not current:
+        return items[:25]
+    current_lower = current.lower()
+    return [i for i in items if current_lower in i["item_name"].lower()][:25]
+
+
 async def _autocomplete_items(
     interaction: Interaction, current: str, exclude: str = None
 ) -> list[app_commands.Choice[str]]:
     items = await get_all_watch_items()
-    if exclude:
-        items = [i for i in items if i["item_name"] != exclude]
-    if not current:
-        return [
-            app_commands.Choice(name=item["item_name"], value=item["item_name"])
-            for item in items[:25]
-        ]
-    current_lower = current.lower()
-    matches = [
-        item for item in items
-        if current_lower in item["item_name"].lower()
-    ]
+    filtered = _filter_items(items, current, exclude)
     return [
         app_commands.Choice(name=item["item_name"], value=item["item_name"])
-        for item in matches[:25]
+        for item in filtered
     ]
 
 
@@ -275,6 +331,25 @@ async def autocomplete_b(
 ) -> list[app_commands.Choice[str]]:
     exclude = getattr(interaction.namespace, "item_name_a", None)
     return await _autocomplete_items(interaction, current, exclude=exclude)
+
+
+async def _validate_compare_items(
+    interaction: Interaction, item_name_a: str, item_name_b: str
+) -> tuple[dict, dict] | None:
+    """비교 대상 아이템 유효성 검사. 실패 시 None (응답 전송 포함)."""
+    if item_name_a == item_name_b:
+        await interaction.followup.send("같은 아이템은 비교할 수 없습니다.")
+        return None
+    watch_a = await get_watch_item_by_name(item_name_a)
+    watch_b = await get_watch_item_by_name(item_name_b)
+    unregistered = item_name_a if not watch_a else (item_name_b if not watch_b else None)
+    if unregistered:
+        await interaction.followup.send(
+            f"'{unregistered}'은(는) 등록되지 않은 아이템입니다. "
+            f"`/시세등록`으로 먼저 등록해주세요."
+        )
+        return None
+    return watch_a, watch_b
 
 
 @app_commands.command(
@@ -293,25 +368,10 @@ async def auction_compare(interaction: Interaction, item_name_a: str, item_name_
     )
     await interaction.response.defer(thinking=True)
 
-    if item_name_a == item_name_b:
-        await interaction.followup.send("같은 아이템은 비교할 수 없습니다.")
+    validated = await _validate_compare_items(interaction, item_name_a, item_name_b)
+    if not validated:
         return
-
-    watch_a = await get_watch_item_by_name(item_name_a)
-    watch_b = await get_watch_item_by_name(item_name_b)
-
-    if not watch_a:
-        await interaction.followup.send(
-            f"'{item_name_a}'은(는) 등록되지 않은 아이템입니다. "
-            f"`/시세등록`으로 먼저 등록해주세요."
-        )
-        return
-    if not watch_b:
-        await interaction.followup.send(
-            f"'{item_name_b}'은(는) 등록되지 않은 아이템입니다. "
-            f"`/시세등록`으로 먼저 등록해주세요."
-        )
-        return
+    watch_a, watch_b = validated
 
     pref = _user_prefs.get(interaction.user.id, {})
     interval = pref.get("interval", 60)
@@ -333,8 +393,6 @@ async def auction_compare(interaction: Interaction, item_name_a: str, item_name_
         msg = await interaction.followup.send(content=result, view=view)
     else:
         embed, file, corr_embed = result
-        embeds = [embed]
-        if corr_embed:
-            embeds.append(corr_embed)
+        embeds = [embed] + ([corr_embed] if corr_embed else [])
         msg = await interaction.followup.send(embeds=embeds, file=file, view=view)
     view.message = msg

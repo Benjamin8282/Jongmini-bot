@@ -48,48 +48,50 @@ ALERT_META = {
     "price_below": {"unit": "G", "label": "가격 (골드)", "hint": "예: 500000"},
 }
 
+_FORMAT_DISPATCH = {
+    "new_high": lambda v, meta: f"{int(v)}{meta['unit']}",
+    "new_low": lambda v, meta: f"{int(v)}{meta['unit']}",
+    "price_above": lambda v, meta: f"{int(v):,}{meta['unit']}",
+    "price_below": lambda v, meta: f"{int(v):,}{meta['unit']}",
+    "rsi_upper": lambda v, meta: f"{v:.0f}",
+    "rsi_lower": lambda v, meta: f"{v:.0f}",
+}
+
 
 def _format_value(alert_type: str, value: float) -> str:
     meta = ALERT_META[alert_type]
-    if alert_type in ("new_high", "new_low"):
-        return f"{int(value)}{meta['unit']}"
-    elif alert_type in ("price_above", "price_below"):
-        return f"{int(value):,}{meta['unit']}"
-    elif alert_type in ("rsi_upper", "rsi_lower"):
-        return f"{value:.0f}"
-    else:
-        return f"{value:.0f}{meta['unit']}"
+    formatter = _FORMAT_DISPATCH.get(alert_type)
+    if formatter:
+        return formatter(value, meta)
+    return f"{value:.0f}{meta['unit']}"
 
 
 def _mode_label(one_time: bool) -> str:
     return "1회" if one_time else "반복"
 
 
+def _setting_line(at: str, label: str, settings_map: dict) -> str:
+    """알림 타입별 설정 라인 생성."""
+    if at in settings_map:
+        s = settings_map[at]
+        val = _format_value(at, s["threshold_value"])
+        mode = _mode_label(bool(s.get("one_time", 0)))
+        return f"**{label}**: {val} [{mode}]"
+    if at in DEFAULT_THRESHOLDS:
+        val = _format_value(at, DEFAULT_THRESHOLDS[at])
+        return f"{label}: {val} (기본값)"
+    return f"{label}: 미설정"
+
+
 def _build_settings_embed(
     item_name: str, user_settings: list[dict]
 ) -> discord.Embed:
-    settings_map = {
-        s["alert_type"]: s for s in user_settings
-    }
-
+    settings_map = {s["alert_type"]: s for s in user_settings}
     embed = discord.Embed(
         title=f"알림 설정: {item_name}",
         color=0xFFA502
     )
-
-    lines = []
-    for at, label in ALERT_TYPE_LABELS.items():
-        if at in settings_map:
-            s = settings_map[at]
-            val = _format_value(at, s["threshold_value"])
-            mode = _mode_label(bool(s.get("one_time", 0)))
-            lines.append(f"**{label}**: {val} [{mode}]")
-        elif at in DEFAULT_THRESHOLDS:
-            val = _format_value(at, DEFAULT_THRESHOLDS[at])
-            lines.append(f"{label}: {val} (기본값)")
-        else:
-            lines.append(f"{label}: 미설정")
-
+    lines = [_setting_line(at, label, settings_map) for at, label in ALERT_TYPE_LABELS.items()]
     embed.description = "\n".join(lines)
     embed.set_footer(
         text="버튼을 눌러 수치를 변경하세요. "
@@ -99,6 +101,46 @@ def _build_settings_embed(
 
 
 # ─── Modal: 수치 + 알림 방식 입력 ───
+
+def _resolve_default_value(alert_type: str, current_value: float | None) -> str:
+    if current_value is not None:
+        if current_value == int(current_value):
+            return str(int(current_value))
+        return str(current_value)
+    if alert_type in DEFAULT_THRESHOLDS:
+        return str(int(DEFAULT_THRESHOLDS[alert_type]))
+    return ""
+
+
+def _resolve_mode_default(alert_type: str, current_one_time: bool | None) -> str:
+    if current_one_time is not None:
+        return "1회" if current_one_time else "반복"
+    is_default_ot = DEFAULT_ONE_TIME.get(alert_type, False)
+    return "1회" if is_default_ot else "반복"
+
+
+_ONE_TIME_VALUES = {"1회", "1", "once", "한번"}
+_REPEAT_VALUES = {"반복", "0", "repeat", "계속"}
+
+
+def _parse_mode(mode_raw: str) -> bool | None:
+    """알림 방식 파싱. True=1회, False=반복, None=잘못된 입력."""
+    cleaned = mode_raw.strip()
+    if cleaned in _ONE_TIME_VALUES:
+        return True
+    if cleaned in _REPEAT_VALUES:
+        return False
+    return None
+
+
+def _validate_value(alert_type: str, value: float) -> str | None:
+    """값 검증. 에러 메시지 또는 None."""
+    if value <= 0:
+        return "0보다 큰 값을 입력해주세요."
+    if alert_type in ("rsi_upper", "rsi_lower") and not (0 < value <= 100):
+        return "RSI는 1~100 사이 값을 입력해주세요."
+    return None
+
 
 class ThresholdInputModal(ui.Modal):
     def __init__(
@@ -115,14 +157,7 @@ class ThresholdInputModal(ui.Modal):
         self.parent_view = parent_view
 
         meta = ALERT_META[alert_type]
-        default = ""
-        if current_value is not None:
-            if current_value == int(current_value):
-                default = str(int(current_value))
-            else:
-                default = str(current_value)
-        elif alert_type in DEFAULT_THRESHOLDS:
-            default = str(int(DEFAULT_THRESHOLDS[alert_type]))
+        default = _resolve_default_value(alert_type, current_value)
 
         self.value_input = ui.TextInput(
             label=meta["label"],
@@ -133,13 +168,7 @@ class ThresholdInputModal(ui.Modal):
         )
         self.add_item(self.value_input)
 
-        # 알림 방식 선택
-        if current_one_time is not None:
-            mode_default = "1회" if current_one_time else "반복"
-        else:
-            is_default_ot = DEFAULT_ONE_TIME.get(alert_type, False)
-            mode_default = "1회" if is_default_ot else "반복"
-
+        mode_default = _resolve_mode_default(alert_type, current_one_time)
         self.mode_input = ui.TextInput(
             label="알림 방식 (1회 또는 반복)",
             placeholder="1회 = 한번 울리면 자동 해제 / 반복 = 계속 유지",
@@ -150,41 +179,21 @@ class ThresholdInputModal(ui.Modal):
         self.add_item(self.mode_input)
 
     async def on_submit(self, interaction: Interaction):
-        # 수치 파싱
         raw = self.value_input.value.strip().replace(",", "")
         try:
             value = float(raw)
         except ValueError:
-            await interaction.response.send_message(
-                "숫자를 입력해주세요.", ephemeral=True
-            )
+            await interaction.response.send_message("숫자를 입력해주세요.", ephemeral=True)
             return
 
-        if value <= 0:
-            await interaction.response.send_message(
-                "0보다 큰 값을 입력해주세요.", ephemeral=True
-            )
+        err = _validate_value(self.alert_type, value)
+        if err:
+            await interaction.response.send_message(err, ephemeral=True)
             return
 
-        if self.alert_type in ("rsi_upper", "rsi_lower"):
-            if not (0 < value <= 100):
-                await interaction.response.send_message(
-                    "RSI는 1~100 사이 값을 입력해주세요.",
-                    ephemeral=True
-                )
-                return
-
-        # 알림 방식 파싱
-        mode_raw = self.mode_input.value.strip()
-        if mode_raw in ("1회", "1", "once", "한번"):
-            one_time = True
-        elif mode_raw in ("반복", "0", "repeat", "계속"):
-            one_time = False
-        else:
-            await interaction.response.send_message(
-                "'1회' 또는 '반복'을 입력해주세요.",
-                ephemeral=True
-            )
+        one_time = _parse_mode(self.mode_input.value)
+        if one_time is None:
+            await interaction.response.send_message("'1회' 또는 '반복'을 입력해주세요.", ephemeral=True)
             return
 
         await upsert_user_alert(
@@ -192,15 +201,10 @@ class ThresholdInputModal(ui.Modal):
             self.alert_type, value, one_time
         )
 
-        # 부모 뷰 갱신
-        settings = await get_user_alerts(
-            interaction.user.id, self.item_id
-        )
+        settings = await get_user_alerts(interaction.user.id, self.item_id)
         embed = _build_settings_embed(self.item_name, settings)
         self.parent_view.update_buttons(settings)
-        await interaction.response.edit_message(
-            embed=embed, view=self.parent_view
-        )
+        await interaction.response.edit_message(embed=embed, view=self.parent_view)
 
 
 # ─── View: 알림 종류 버튼 그리드 ───
@@ -418,6 +422,28 @@ async def alert_settings_cmd(interaction: Interaction):
     )
 
 
+def _build_alert_embed(item_name: str, alerts: list[dict]) -> discord.Embed:
+    lines = []
+    for a in alerts:
+        label = ALERT_TYPE_LABELS.get(a["alert_type"], a["alert_type"])
+        val = _format_value(a["alert_type"], a["threshold_value"])
+        mode = _mode_label(bool(a.get("one_time", 0)))
+        lines.append(f"**{label}**: {val} [{mode}]")
+    return discord.Embed(
+        title=item_name,
+        description="\n".join(lines),
+        color=0xFFA502
+    )
+
+
+def _group_alerts(settings: list[dict]) -> dict[str, list[dict]]:
+    grouped = {}
+    for s in settings:
+        name = s.get("item_name") or s["item_id"]
+        grouped.setdefault(name, []).append(s)
+    return grouped
+
+
 @app_commands.command(
     name="시세알림목록",
     description="내 시세 알림 설정 목록을 확인합니다"
@@ -433,29 +459,8 @@ async def alert_list_cmd(interaction: Interaction):
         )
         return
 
-    # 아이템별 그룹핑
-    grouped = {}
-    for s in settings:
-        name = s.get("item_name") or s["item_id"]
-        grouped.setdefault(name, []).append(s)
-
-    embeds = []
-    for item_name, alerts in grouped.items():
-        lines = []
-        for a in alerts:
-            label = ALERT_TYPE_LABELS.get(
-                a["alert_type"], a["alert_type"]
-            )
-            val = _format_value(a["alert_type"], a["threshold_value"])
-            mode = _mode_label(bool(a.get("one_time", 0)))
-            lines.append(f"**{label}**: {val} [{mode}]")
-
-        embed = discord.Embed(
-            title=item_name,
-            description="\n".join(lines),
-            color=0xFFA502
-        )
-        embeds.append(embed)
+    grouped = _group_alerts(settings)
+    embeds = [_build_alert_embed(name, alerts) for name, alerts in grouped.items()]
 
     await interaction.response.send_message(
         content=f"내 알림 설정 ({len(settings)}개)",

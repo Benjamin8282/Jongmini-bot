@@ -111,6 +111,48 @@ class NextButton(Button):
             await interaction.response.edit_message(embed=view.get_embed(), view=view)
 
 
+def _find_server_id(characters: list[dict], character_name: str) -> str | None:
+    """캐릭터 이름으로 서버 ID 조회."""
+    char_info = next((c for c in characters if c['character_name'] == character_name), None)
+    return char_info['server_id'] if char_info else None
+
+
+def _aggregate_adventure_damages(
+    valid_results: list[dict], characters: list[dict]
+) -> dict:
+    """모험단별 데미지 합산 딕셔너리 생성."""
+    adventure_damages = defaultdict(
+        lambda: {'total_damage': 0, 'characters': [], 'server_id': None}
+    )
+    for result in valid_results:
+        adventure_name = result.get('adventure_name', '알 수 없음')
+        character_name = result.get('character_name', '알 수 없음')
+        entry = adventure_damages[adventure_name]
+        entry['total_damage'] += result.get('damage', 0)
+        entry['characters'].append(character_name)
+        server_id = _find_server_id(characters, character_name)
+        entry['server_id'] = entry['server_id'] or server_id
+    return adventure_damages
+
+
+def _build_ranked_list(adventure_damages: dict) -> list[dict]:
+    """모험단 합산 데이터를 정렬된 순위 리스트로 변환."""
+    ranked_adventures = []
+    for adventure_name, data in adventure_damages.items():
+        server_name = (
+            SERVER_MAP.get(data['server_id'], data['server_id'])
+            if data['server_id'] else '알 수 없음'
+        )
+        ranked_adventures.append({
+            'adventure_name': adventure_name,
+            'server_name': server_name,
+            'total_damage': data['total_damage'],
+            'character_count': len(data['characters'])
+        })
+    ranked_adventures.sort(key=lambda x: x['total_damage'], reverse=True)
+    return ranked_adventures
+
+
 @app_commands.command(name="모험단던담순위", description="모험단별 던담 데미지 합산 순위를 조회합니다.")
 async def adventure_dundam_ranking(interaction: Interaction):
     await interaction.response.defer(thinking=True)
@@ -120,47 +162,16 @@ async def adventure_dundam_ranking(interaction: Interaction):
         await interaction.followup.send("등록된 캐릭터가 없습니다.")
         return
 
-    # 던담 API 호출
     async with aiohttp.ClientSession() as session:
         results = await fetch_all_with_rate_limit(session, characters, limit_per_second=5)
 
-    # 던담 데이터가 있는 캐릭터만 필터링
     valid_results = [r for r in results if r]
-
     if not valid_results:
         await interaction.followup.send("던담 랭킹 정보를 가져올 수 있는 캐릭터가 없습니다.")
         return
 
-    # 모험단별로 데미지 합산
-    adventure_damages = defaultdict(lambda: {'total_damage': 0, 'characters': [], 'server_id': None})
-
-    for result in valid_results:
-        adventure_name = result.get('adventure_name', '알 수 없음')
-        damage = result.get('damage', 0)
-        character_name = result.get('character_name', '알 수 없음')
-
-        # 캐릭터 정보에서 server_id 가져오기
-        char_info = next((c for c in characters if c['character_name'] == character_name), None)
-        server_id = char_info['server_id'] if char_info else None
-
-        adventure_damages[adventure_name]['total_damage'] += damage
-        adventure_damages[adventure_name]['characters'].append(character_name)
-        if server_id and not adventure_damages[adventure_name]['server_id']:
-            adventure_damages[adventure_name]['server_id'] = server_id
-
-    # 순위 리스트 생성
-    ranked_adventures = []
-    for adventure_name, data in adventure_damages.items():
-        server_name = SERVER_MAP.get(data['server_id'], data['server_id']) if data['server_id'] else '알 수 없음'
-        ranked_adventures.append({
-            'adventure_name': adventure_name,
-            'server_name': server_name,
-            'total_damage': data['total_damage'],
-            'character_count': len(data['characters'])
-        })
-
-    # 합산 데미지로 정렬
-    ranked_adventures.sort(key=lambda x: x['total_damage'], reverse=True)
+    adventure_damages = _aggregate_adventure_damages(valid_results, characters)
+    ranked_adventures = _build_ranked_list(adventure_damages)
 
     timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
     view = AdventureDundamRankingView(ranked_adventures, timestamp)

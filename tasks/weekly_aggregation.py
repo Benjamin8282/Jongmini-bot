@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 
-from .daily_aggregation import aggregate_items_and_notify_for_period
+from tasks.daily_aggregation import aggregate_items_and_notify_for_period
 from core.logger import logger
 from core.time_utils import get_weekly_period, KST
 

@@ -130,6 +130,35 @@ async def init_db():
                     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            # 던담순위 캐시 테이블
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS dundam_ranking_cache (
+                    character_id TEXT NOT NULL,
+                    server_id TEXT NOT NULL,
+                    mode TEXT NOT NULL,
+                    character_name TEXT,
+                    adventure_name TEXT,
+                    score INTEGER NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY (character_id, server_id, mode)
+                )
+            """)
+            # 직업별 스킬개화 옵션 캐시
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS job_skill_options (
+                    job_key TEXT PRIMARY KEY,
+                    skill_vp_options TEXT NOT NULL,
+                    skill_force_options TEXT,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            # 던담 API 일일 사용량 추적
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS dundam_daily_usage (
+                    date TEXT PRIMARY KEY,
+                    count INTEGER DEFAULT 0
+                )
+            """)
             await conn.commit()
         logger.info("DB 초기화 완료")
     except Exception as e:
@@ -282,6 +311,18 @@ async def save_output_channel(guild_id: str, channel_id: str):
         logger.error(f"출력 채널 저장 실패: {e}")
 
 
+def _resolve_channel_from_row(row, channel_type: str | None) -> str:
+    """row에서 channel_type에 맞는 채널 ID 반환 (폴백: channel_id)."""
+    _type_column_map = {
+        'item': 'item_channel_id',
+        'economy': 'economy_channel_id',
+    }
+    col = _type_column_map.get(channel_type)
+    if col and row[col]:
+        return row[col]
+    return row['channel_id']
+
+
 async def get_output_channel(guild_id: str, channel_type: str | None = None) -> str | None:
     """
     출력 채널 조회.
@@ -300,13 +341,7 @@ async def get_output_channel(guild_id: str, channel_type: str | None = None) -> 
             row = await cursor.fetchone()
             if not row:
                 return None
-
-            if channel_type == 'item' and row['item_channel_id']:
-                return row['item_channel_id']
-            elif channel_type == 'economy' and row['economy_channel_id']:
-                return row['economy_channel_id']
-            else:
-                return row['channel_id']
+            return _resolve_channel_from_row(row, channel_type)
     except Exception as e:
         logger.error(f"출력 채널 조회 실패: {e}")
         return None
@@ -865,3 +900,111 @@ async def disable_user_alert(
             await conn.commit()
     except Exception as e:
         logger.error(f"사용자 알림 비활성화 실패: {e}")
+
+
+# ----- 던담 API 일일 사용량 -----
+
+async def get_dundam_daily_usage(date: str) -> int:
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            cursor = await conn.execute(
+                "SELECT count FROM dundam_daily_usage WHERE date = ?", (date,)
+            )
+            row = await cursor.fetchone()
+            return row[0] if row else 0
+    except Exception as e:
+        logger.error(f"던담 일일 사용량 조회 실패: {e}")
+        return 0
+
+
+async def increment_dundam_daily_usage(date: str, amount: int = 1):
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("""
+                INSERT INTO dundam_daily_usage (date, count) VALUES (?, ?)
+                ON CONFLICT(date) DO UPDATE SET count = count + ?
+            """, (date, amount, amount))
+            await conn.commit()
+    except Exception as e:
+        logger.error(f"던담 일일 사용량 증가 실패: {e}")
+
+
+# ----- 던담순위 캐시 -----
+
+async def save_dundam_ranking_cache(entries: list[dict]):
+    if not entries:
+        return
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.executemany("""
+                INSERT OR REPLACE INTO dundam_ranking_cache
+                (character_id, server_id, mode, character_name, adventure_name, score, updated_at)
+                VALUES (:character_id, :server_id, :mode, :character_name, :adventure_name, :score, :updated_at)
+            """, entries)
+            await conn.commit()
+        logger.info(f"던담순위 캐시 저장: {len(entries)}건")
+    except Exception as e:
+        logger.error(f"던담순위 캐시 저장 실패: {e}")
+
+
+async def get_dundam_ranking_cache(mode: str) -> list[dict]:
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
+                SELECT * FROM dundam_ranking_cache
+                WHERE mode = ?
+                ORDER BY score DESC
+            """, (mode,))
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"던담순위 캐시 조회 실패: {e}")
+        return []
+
+
+async def get_dundam_ranking_cache_timestamp(mode: str) -> str | None:
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            cursor = await conn.execute("""
+                SELECT updated_at FROM dundam_ranking_cache
+                WHERE mode = ?
+                ORDER BY updated_at DESC LIMIT 1
+            """, (mode,))
+            row = await cursor.fetchone()
+            return row[0] if row else None
+    except Exception as e:
+        logger.error(f"던담순위 캐시 시간 조회 실패: {e}")
+        return None
+
+
+# ----- 직업별 스킬 옵션 캐시 -----
+
+async def save_job_skill_options(job_key: str, vp_options: str, force_options: str | None):
+    from datetime import datetime, timezone, timedelta
+    now = datetime.now(timezone(timedelta(hours=9))).isoformat()
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            await conn.execute("""
+                INSERT OR REPLACE INTO job_skill_options
+                (job_key, skill_vp_options, skill_force_options, updated_at)
+                VALUES (?, ?, ?, ?)
+            """, (job_key, vp_options, force_options, now))
+            await conn.commit()
+        logger.info(f"직업 스킬 옵션 캐시 저장: {job_key}")
+    except Exception as e:
+        logger.error(f"직업 스킬 옵션 캐시 저장 실패: {e}")
+
+
+async def get_job_skill_options(job_key: str) -> dict | None:
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
+                "SELECT * FROM job_skill_options WHERE job_key = ?", (job_key,)
+            )
+            row = await cursor.fetchone()
+            return dict(row) if row else None
+    except Exception as e:
+        logger.error(f"직업 스킬 옵션 캐시 조회 실패: {e}")
+        return None

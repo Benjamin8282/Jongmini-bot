@@ -169,22 +169,215 @@ def _normalize_by_regime(
     )
 
     for i in range(len(boundaries) - 1):
-        start = boundaries[i]
-        end = boundaries[i + 1]
-        mask = (series.index >= start) & (series.index <= end)
-        segment = series.loc[mask]
-
-        if len(segment) < 3:
-            result.loc[mask] = 100.0
-            continue
-
-        seg_window = min(window, max(len(segment) // 2, 3))
-        ma = segment.rolling(
-            window=seg_window, min_periods=max(seg_window // 2, 1)
-        ).mean()
-        result.loc[mask] = segment / ma * 100
+        _normalize_single_regime(
+            series, result, boundaries[i], boundaries[i + 1], window
+        )
 
     return result
+
+
+def _normalize_single_regime(
+    series: pd.Series, result: pd.Series,
+    start, end, window: int
+):
+    """단일 체제 구간에 대해 이동평균 기준 정규화 적용."""
+    mask = (series.index >= start) & (series.index <= end)
+    segment = series.loc[mask]
+
+    if len(segment) < 3:
+        result.loc[mask] = 100.0
+        return
+
+    seg_window = min(window, max(len(segment) // 2, 3))
+    ma = segment.rolling(
+        window=seg_window, min_periods=max(seg_window // 2, 1)
+    ).mean()
+    result.loc[mask] = segment / ma * 100
+
+
+# ───────────────────────────────────────────
+# 파이프라인 단계별 헬퍼 함수
+# ───────────────────────────────────────────
+
+async def _load_series_data(basket: list, fetch_days: int) -> dict:
+    """1단계: 바스켓 아이템의 일별 거래량 수집."""
+    all_series = {}
+    for item in basket:
+        rows = await get_daily_volumes(item["item_id"], fetch_days)
+        if not rows:
+            continue
+        series = pd.Series(
+            {r["date"]: r["volume"] for r in rows},
+            dtype=float,
+        )
+        series.index = pd.to_datetime(series.index)
+        all_series[item["item_name"]] = series
+    return all_series
+
+
+def _build_raw_dataframe(all_series: dict) -> pd.DataFrame:
+    """수집된 시리즈를 통합 데이터프레임으로 구성."""
+    all_dates = sorted(
+        set().union(*(s.index for s in all_series.values()))
+    )
+    df_raw = pd.DataFrame(index=all_dates)
+    for name, series in all_series.items():
+        df_raw[name] = series
+    return df_raw.sort_index()
+
+
+def _apply_hampel_to_column(df_raw: pd.DataFrame, df_hampel: pd.DataFrame,
+                            col: str, hampel_stats: dict):
+    """단일 컬럼에 Hampel 필터 적용."""
+    col_data = df_raw[col].dropna()
+    if len(col_data) < 15:
+        df_hampel[col] = df_raw[col]
+        return
+
+    cleaned, replaced = _hampel_filter(col_data, window=7, threshold=3.0)
+    df_hampel[col] = df_raw[col].copy()
+    df_hampel.loc[cleaned.index, col] = cleaned
+
+    if replaced:
+        hampel_stats["total_replaced"] += len(replaced)
+        hampel_stats["items"][col] = len(replaced)
+
+
+def _apply_hampel_filter(df_raw: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """Phase A: Hampel 필터를 각 컬럼에 적용."""
+    logger.info("활동지수 Phase A: Hampel 필터 적용")
+    df_hampel = pd.DataFrame(index=df_raw.index)
+    hampel_stats = {"total_replaced": 0, "items": {}}
+
+    for col in df_raw.columns:
+        _apply_hampel_to_column(df_raw, df_hampel, col, hampel_stats)
+
+    if hampel_stats["total_replaced"] > 0:
+        logger.info(
+            f"Hampel 필터: {hampel_stats['total_replaced']}개 "
+            f"스파이크 교체 ({hampel_stats['items']})"
+        )
+
+    return df_hampel, hampel_stats
+
+
+def _apply_stl_to_column(df_hampel: pd.DataFrame, df_deseason: pd.DataFrame, col: str):
+    """단일 컬럼에 STL 분해 적용."""
+    col_data = df_hampel[col].dropna()
+    if len(col_data) < 14:
+        df_deseason[col] = df_hampel[col]
+        return
+    decomposed = _stl_decompose(col_data, period=7)
+    df_deseason[col] = df_hampel[col].copy()
+    df_deseason.loc[decomposed.index, col] = decomposed
+
+
+def _apply_stl_decompose(df_hampel: pd.DataFrame) -> pd.DataFrame:
+    """Phase B: STL 분해 (요일 효과 제거)."""
+    logger.info("활동지수 Phase B: STL 분해 적용")
+    df_deseason = pd.DataFrame(index=df_hampel.index)
+
+    for col in df_hampel.columns:
+        _apply_stl_to_column(df_hampel, df_deseason, col)
+
+    return df_deseason
+
+
+def _run_changepoint_detection(df_deseason: pd.DataFrame) -> list:
+    """Phase D: PELT 변화점 탐지."""
+    logger.info("활동지수 Phase D: PELT 변화점 탐지")
+    temp_median = df_deseason.median(axis=1).dropna()
+    changepoint_dates = _detect_changepoints(
+        temp_median, min_size=14, penalty=5.0
+    )
+    if changepoint_dates:
+        cp_str = [d.strftime("%Y-%m-%d") for d in changepoint_dates]
+        logger.info(f"변화점 감지: {cp_str}")
+    return changepoint_dates
+
+
+def _normalize_columns(df_deseason: pd.DataFrame, changepoint_dates: list) -> pd.DataFrame:
+    """정규화: 체제별 이동평균 대비 비율(%)."""
+    normalized = pd.DataFrame(index=df_deseason.index)
+    for col in df_deseason.columns:
+        col_data = df_deseason[col].dropna()
+        if len(col_data) < 15:
+            continue
+        normalized[col] = _normalize_by_regime(
+            col_data, changepoint_dates, window=30
+        )
+    return normalized
+
+
+def _compute_raw_normalized(df_raw: pd.DataFrame) -> pd.DataFrame:
+    """원본 지수 (정제 전 비교용)."""
+    raw_normalized = pd.DataFrame(index=df_raw.index)
+    for col in df_raw.columns:
+        ma30 = df_raw[col].rolling(window=30, min_periods=15).mean()
+        raw_normalized[col] = df_raw[col] / ma30 * 100
+    return raw_normalized
+
+
+def _detect_outliers(normalized: pd.DataFrame) -> dict:
+    """Phase C: MAD 이상치 감지."""
+    logger.info("활동지수 Phase C: MAD 이상치 감지")
+    outliers = {}
+    for date_idx in normalized.index:
+        row = normalized.loc[date_idx]
+        outlier_items = _mad_outlier_detection(row, threshold=3.0)
+        if outlier_items:
+            date_str = date_idx.strftime("%Y-%m-%d")
+            outliers[date_str] = outlier_items
+    return outliers
+
+
+def _build_raw_values(raw_daily_median: pd.Series, daily_median: pd.Series) -> list:
+    """원본 지수 값 리스트 생성 (NaN은 100.0으로 대체)."""
+    raw_reindexed = raw_daily_median.reindex(daily_median.index)
+    return [
+        round(v, 1) if not np.isnan(v) else 100.0
+        for v in raw_reindexed.values
+    ]
+
+
+def _filter_changepoints_for_display(changepoint_dates: list, daily_median: pd.Series) -> list[str]:
+    """표시 기간에 해당하는 변화점만 필터링."""
+    if not len(daily_median.index):
+        return []
+    return [
+        d.strftime("%Y-%m-%d") for d in changepoint_dates
+        if d >= daily_median.index[0]
+    ]
+
+
+def _assemble_result(
+    daily_median: pd.Series,
+    raw_daily_median: pd.Series,
+    all_series: dict,
+    outliers: dict,
+    changepoint_dates: list,
+    hampel_stats: dict,
+) -> dict:
+    """최종 결과 딕셔너리 조립."""
+    dates = [d.strftime("%Y-%m-%d") for d in daily_median.index]
+    index_values = [round(v, 1) for v in daily_median.values]
+    raw_values = _build_raw_values(raw_daily_median, daily_median)
+    cp_strs = _filter_changepoints_for_display(changepoint_dates, daily_median)
+
+    logger.info(
+        f"활동지수 산출 완료: {len(dates)}일, "
+        f"이상치 {len(outliers)}건, 변화점 {len(cp_strs)}건"
+    )
+
+    return {
+        "dates": dates,
+        "index": index_values,
+        "raw_index": raw_values,
+        "item_count": len(all_series),
+        "outliers": outliers,
+        "changepoints": cp_strs,
+        "hampel_stats": hampel_stats,
+    }
 
 
 # ───────────────────────────────────────────
@@ -224,101 +417,23 @@ async def calc_activity_index(display_days: int = 30) -> dict | None:
     fetch_days = display_days + 60
 
     # ── 1단계: 일별 거래량 수집 ──
-    all_series = {}
-    for item in basket:
-        rows = await get_daily_volumes(item["item_id"], fetch_days)
-        if not rows:
-            continue
-        series = pd.Series(
-            {r["date"]: r["volume"] for r in rows},
-            dtype=float,
-        )
-        series.index = pd.to_datetime(series.index)
-        all_series[item["item_name"]] = series
-
+    all_series = await _load_series_data(basket, fetch_days)
     if len(all_series) < 3:
         return None
 
-    # 전체 날짜 범위 통합
-    all_dates = sorted(
-        set().union(*(s.index for s in all_series.values()))
-    )
-    df_raw = pd.DataFrame(index=all_dates)
-    for name, series in all_series.items():
-        df_raw[name] = series
-    df_raw = df_raw.sort_index()
+    df_raw = _build_raw_dataframe(all_series)
 
-    # ── Phase A: Hampel 필터 ──
-    logger.info("활동지수 Phase A: Hampel 필터 적용")
-    df_hampel = pd.DataFrame(index=df_raw.index)
-    hampel_stats = {"total_replaced": 0, "items": {}}
+    # ── Phase A~D 파이프라인 ──
+    df_hampel, hampel_stats = _apply_hampel_filter(df_raw)
+    df_deseason = _apply_stl_decompose(df_hampel)
+    changepoint_dates = _run_changepoint_detection(df_deseason)
 
-    for col in df_raw.columns:
-        col_data = df_raw[col].dropna()
-        if len(col_data) < 15:
-            df_hampel[col] = df_raw[col]
-            continue
-
-        cleaned, replaced = _hampel_filter(
-            col_data, window=7, threshold=3.0
-        )
-        df_hampel[col] = df_raw[col].copy()
-        df_hampel.loc[cleaned.index, col] = cleaned
-
-        if replaced:
-            hampel_stats["total_replaced"] += len(replaced)
-            hampel_stats["items"][col] = len(replaced)
-
-    if hampel_stats["total_replaced"] > 0:
-        logger.info(
-            f"Hampel 필터: {hampel_stats['total_replaced']}개 "
-            f"스파이크 교체 ({hampel_stats['items']})"
-        )
-
-    # ── Phase B: STL 분해 (요일 효과 제거) ──
-    logger.info("활동지수 Phase B: STL 분해 적용")
-    df_deseason = pd.DataFrame(index=df_hampel.index)
-
-    for col in df_hampel.columns:
-        col_data = df_hampel[col].dropna()
-        if len(col_data) < 14:
-            df_deseason[col] = df_hampel[col]
-            continue
-        decomposed = _stl_decompose(col_data, period=7)
-        df_deseason[col] = df_hampel[col].copy()
-        df_deseason.loc[decomposed.index, col] = decomposed
-
-    # ── Phase D: PELT 변화점 탐지 (정규화 전) ──
-    logger.info("활동지수 Phase D: PELT 변화점 탐지")
-    temp_median = df_deseason.median(axis=1).dropna()
-    changepoint_dates = _detect_changepoints(
-        temp_median, min_size=14, penalty=5.0
-    )
-    if changepoint_dates:
-        cp_str = [d.strftime("%Y-%m-%d") for d in changepoint_dates]
-        logger.info(f"변화점 감지: {cp_str}")
-
-    # ── 정규화: 체제별 이동평균 대비 비율(%) ──
-    normalized = pd.DataFrame(index=df_deseason.index)
-    for col in df_deseason.columns:
-        col_data = df_deseason[col].dropna()
-        if len(col_data) < 15:
-            continue
-        normalized[col] = _normalize_by_regime(
-            col_data, changepoint_dates, window=30
-        )
-
-    # 원본 지수 (정제 전 비교용)
-    raw_normalized = pd.DataFrame(index=df_raw.index)
-    for col in df_raw.columns:
-        ma30 = df_raw[col].rolling(window=30, min_periods=15).mean()
-        raw_normalized[col] = df_raw[col] / ma30 * 100
+    normalized = _normalize_columns(df_deseason, changepoint_dates)
+    raw_normalized = _compute_raw_normalized(df_raw)
 
     # 표시 기간만 잘라내기
-    normalized = normalized.iloc[-display_days:]
-    normalized = normalized.dropna(how="all")
-    raw_normalized = raw_normalized.iloc[-display_days:]
-    raw_normalized = raw_normalized.dropna(how="all")
+    normalized = normalized.iloc[-display_days:].dropna(how="all")
+    raw_normalized = raw_normalized.iloc[-display_days:].dropna(how="all")
 
     if normalized.empty:
         return None
@@ -328,41 +443,10 @@ async def calc_activity_index(display_days: int = 30) -> dict | None:
     raw_daily_median = raw_normalized.median(axis=1)
 
     # ── Phase C: MAD 이상치 감지 ──
-    logger.info("활동지수 Phase C: MAD 이상치 감지")
-    outliers = {}
-    for date_idx in normalized.index:
-        row = normalized.loc[date_idx]
-        outlier_items = _mad_outlier_detection(row, threshold=3.0)
-        if outlier_items:
-            date_str = date_idx.strftime("%Y-%m-%d")
-            outliers[date_str] = outlier_items
+    outliers = _detect_outliers(normalized)
 
     # 결과 조립
-    dates = [d.strftime("%Y-%m-%d") for d in daily_median.index]
-    index_values = [round(v, 1) for v in daily_median.values]
-
-    raw_reindexed = raw_daily_median.reindex(daily_median.index)
-    raw_values = [
-        round(v, 1) if not np.isnan(v) else 100.0
-        for v in raw_reindexed.values
-    ]
-
-    cp_strs = [
-        d.strftime("%Y-%m-%d") for d in changepoint_dates
-        if len(daily_median.index) > 0 and d >= daily_median.index[0]
-    ]
-
-    logger.info(
-        f"활동지수 산출 완료: {len(dates)}일, "
-        f"이상치 {len(outliers)}건, 변화점 {len(cp_strs)}건"
+    return _assemble_result(
+        daily_median, raw_daily_median, all_series,
+        outliers, changepoint_dates, hampel_stats,
     )
-
-    return {
-        "dates": dates,
-        "index": index_values,
-        "raw_index": raw_values,
-        "item_count": len(all_series),
-        "outliers": outliers,
-        "changepoints": cp_strs,
-        "hampel_stats": hampel_stats,
-    }

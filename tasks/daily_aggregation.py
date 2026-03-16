@@ -94,7 +94,7 @@ def format_rank_embed(rank_list, timestamp, period="일간"):
     rank = 0
     real_rank = 1  # 표시될 실제 순위
 
-    for i, entry in enumerate(sorted_list):
+    for entry in sorted_list:
         score = entry['score']
         counts = entry['counts']
 
@@ -113,32 +113,56 @@ def format_rank_embed(rank_list, timestamp, period="일간"):
     return embed
 
 
-async def aggregate_items_and_notify_for_period(
-    bot, guild_id, start_time, end_time,
-    base_time=None, interaction=None, period="일간", need_embed=False
-):
-    if base_time is None:
-        base_time = datetime.now(KST)
+def _split_periods(start: datetime, end: datetime):
+    """90일 단위 기간 분할"""
+    periods = []
+    current_start = start
+    while current_start < end:
+        current_end = min(current_start + timedelta(days=MAX_PERIOD_DAYS), end)
+        periods.append((current_start, current_end))
+        current_start = current_end + timedelta(minutes=1)  # 중복 방지
+    return periods
 
-    grouped = await get_all_characters_grouped_by_adventure()
-    if not grouped:
-        logger.info("DB에 등록된 캐릭터가 없습니다.")
-        return
 
-    adventure_item_counts = defaultdict(lambda: defaultdict(int))
+def _calc_adventure_scores(adventure_item_counts):
+    """모험단별 점수 계산 및 정렬된 리스트 반환"""
+    adventure_scores = []
+    for adventure_name, counts in adventure_item_counts.items():
+        score = sum(RARITY_WEIGHTS.get(r, 0) * c for r, c in counts.items())
+        adventure_scores.append({
+            "adventure_name": adventure_name,
+            "score": score,
+            "counts": counts
+        })
+    adventure_scores.sort(key=lambda x: x["score"], reverse=True)
+    return adventure_scores
+
+
+async def _send_aggregation_result(bot, guild_id, embed, interaction, need_embed):
+    """집계 결과를 interaction 또는 채널로 발송"""
+    if interaction is not None:
+        await interaction.response.send_message(embed=embed)
+        return None
+
+    if need_embed:
+        return embed
+
+    channel_id = await get_output_channel(guild_id, 'item')
+    if not channel_id:
+        logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
+        return None
+    channel = bot.get_channel(int(channel_id))
+    if not channel:
+        logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
+        return None
+    await channel.send(embed=embed)
+    logger.info("모험단 아이템 획득량 순위 Discord에 전송 완료")
+    return None
+
+
+async def _gather_all_character_items(grouped, periods, adventure_item_counts):
+    """전체 캐릭터의 아이템 데이터를 기간별로 수집"""
     semaphore = asyncio.Semaphore(CONCURRENT_REQUEST_LIMIT)
-
-    # 90일 단위 기간 분할 함수
-    def split_periods(start: datetime, end: datetime):
-        periods = []
-        current_start = start
-        while current_start < end:
-            current_end = min(current_start + timedelta(days=MAX_PERIOD_DAYS), end)
-            periods.append((current_start, current_end))
-            current_start = current_end + timedelta(minutes=1)  # 중복 방지
-        return periods
-
-    periods = split_periods(start_time, end_time)
 
     async def process_character_multi_period(char, adventure_name):
         for (p_start, p_end) in periods:
@@ -165,35 +189,28 @@ async def aggregate_items_and_notify_for_period(
     ]
     await asyncio.gather(*tasks)
 
-    # 이후 점수 계산 및 임베드 생성은 기존과 동일
-    adventure_scores = []
-    for adventure_name, counts in adventure_item_counts.items():
-        score = sum(RARITY_WEIGHTS.get(r, 0) * c for r, c in counts.items())
-        adventure_scores.append({
-            "adventure_name": adventure_name,
-            "score": score,
-            "counts": counts
-        })
 
-    adventure_scores.sort(key=lambda x: x["score"], reverse=True)
+async def aggregate_items_and_notify_for_period(
+    bot, guild_id, start_time, end_time,
+    base_time=None, interaction=None, period="일간", need_embed=False
+):
+    if base_time is None:
+        base_time = datetime.now(KST)
 
-    channel_id = await get_output_channel(guild_id, 'item')
-    if not channel_id:
-        logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
-        return
-    channel = bot.get_channel(int(channel_id))
-    if not channel:
-        logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
+    grouped = await get_all_characters_grouped_by_adventure()
+    if not grouped:
+        logger.info("DB에 등록된 캐릭터가 없습니다.")
         return
 
+    adventure_item_counts = defaultdict(lambda: defaultdict(int))
+    periods = _split_periods(start_time, end_time)
+
+    await _gather_all_character_items(grouped, periods, adventure_item_counts)
+
+    adventure_scores = _calc_adventure_scores(adventure_item_counts)
     embed = format_rank_embed(adventure_scores, base_time, period=period)
-    if interaction is not None:
-        await interaction.response.send_message(embed=embed)
-    else:
-        if need_embed:
-            return embed
-        await channel.send(embed=embed)
-        logger.info("모험단 아이템 획득량 순위 Discord에 전송 완료")
+
+    return await _send_aggregation_result(bot, guild_id, embed, interaction, need_embed)
 
 
 async def aggregate_daily_items_and_notify(bot, guild_id):

@@ -44,7 +44,7 @@ def format_character_rank_embed(rank_list, timestamp):
 
     display_list = rank_list[:20]
 
-    for i, entry in enumerate(display_list, start=1):
+    for entry in display_list:
         score = entry['score']
         counts = entry['counts']
         character_name = entry['character_name']
@@ -68,18 +68,65 @@ def format_character_rank_embed(rank_list, timestamp):
     return embed
 
 
-async def aggregate_weekly_items_by_character(bot, guild_id, interaction=None):
-    """
-    캐릭터별 주간 아이템 획득량 집계 및 Discord 알림
-    """
-    now = datetime.now(KST)
+def _compute_weekly_period(now):
+    """주간 집계 기간 계산. (start_time, end_time) 반환."""
     weekday = now.weekday()
     days_since_thursday = (weekday - 3) % 7
     last_thursday = now - timedelta(days=days_since_thursday)
     start_time = last_thursday.replace(hour=6, minute=0, second=0, microsecond=0)
     if now < start_time:
         start_time -= timedelta(days=7)
-    end_time = now
+    return start_time, now
+
+
+def _build_rank_list(character_item_counts, characters):
+    """캐릭터별 아이템 카운트에서 순위 리스트 생성"""
+    # 캐릭터명 -> 모험단명 매핑 생성
+    adventure_map = {
+        char['character_name']: char.get('adventure_name', '모험단 없음')
+        for char in characters
+    }
+
+    rank_list = []
+    for character_name, counts in character_item_counts.items():
+        score = sum(RARITY_WEIGHTS.get(r, 0) * c for r, c in counts.items())
+        rank_list.append({
+            "character_name": character_name,
+            "score": score,
+            "counts": counts,
+            "adventure_name": adventure_map.get(character_name, '모험단 없음')
+        })
+
+    rank_list.sort(key=lambda x: x["score"], reverse=True)
+    return rank_list
+
+
+async def _send_embed_result(bot, guild_id, embed, interaction):
+    """embed를 interaction 또는 출력 채널로 전송"""
+    if interaction is not None:
+        try:
+            await interaction.response.send_message(embed=embed)
+        except discord.errors.InteractionResponded:
+            await interaction.followup.send(embed=embed)
+        return
+
+    channel_id = await get_output_channel(guild_id, 'item')
+    if not channel_id:
+        logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
+        return
+    channel = bot.get_channel(int(channel_id))
+    if not channel:
+        logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
+        return
+    await channel.send(embed=embed)
+
+
+async def aggregate_weekly_items_by_character(bot, guild_id, interaction=None):
+    """
+    캐릭터별 주간 아이템 획득량 집계 및 Discord 알림
+    """
+    now = datetime.now(KST)
+    start_time, end_time = _compute_weekly_period(now)
 
     start_date_str = start_time.strftime("%Y%m%dT%H%M")
     end_date_str = end_time.strftime("%Y%m%dT%H%M")
@@ -113,44 +160,8 @@ async def aggregate_weekly_items_by_character(bot, guild_id, interaction=None):
 
     await asyncio.gather(*(process_character(char) for char in characters))
 
-    rank_list = []
-    for character_name, counts in character_item_counts.items():
-        score = sum(RARITY_WEIGHTS.get(r, 0) * c for r, c in counts.items())
-        # 모험단 이름을 캐릭터 정보에서 찾아서 포함
-        adventure_name = None
-        for char in characters:
-            if char['character_name'] == character_name:
-                adventure_name = char.get('adventure_name', '모험단 없음')
-                break
-
-        rank_list.append({
-            "character_name": character_name,
-            "score": score,
-            "counts": counts,
-            "adventure_name": adventure_name or '모험단 없음'
-        })
-
-    rank_list.sort(key=lambda x: x["score"], reverse=True)
-
+    rank_list = _build_rank_list(character_item_counts, characters)
     embed = format_character_rank_embed(rank_list, end_time)
 
-    if interaction is not None:
-        # interaction이 있을 경우
-        # interaction.response가 이미 defer 되었다면 followup으로 전송
-        try:
-            await interaction.response.send_message(embed=embed)
-        except discord.errors.InteractionResponded:
-            await interaction.followup.send(embed=embed)
-    else:
-        # 기존처럼 등록된 출력 채널에 메시지 전송
-        channel_id = await get_output_channel(guild_id, 'item')
-        if not channel_id:
-            logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
-            return
-        channel = bot.get_channel(int(channel_id))
-        if not channel:
-            logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
-            return
-        await channel.send(embed=embed)
-
+    await _send_embed_result(bot, guild_id, embed, interaction)
     logger.info("캐릭터별 주간 아이템 획득량 순위 Discord에 전송 완료")

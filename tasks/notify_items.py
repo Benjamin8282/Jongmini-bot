@@ -42,35 +42,43 @@ def get_rarity_color(rarity: str) -> int:
     return mapping.get(rarity, 0x000000)  # 기본 검정
 
 
-def format_item_announce_embed(adventure_name, character_name, item, event_date):
-    dt_pastime = datetime.strptime(event_date, "%Y-%m-%d %H:%M")
-    date_str = dt_pastime.strftime("%Y.%m.%d(%H:%M)")
-
+def _build_description(adventure_name, character_name, item):
+    """아이템 코드별 획득 설명 문자열 생성"""
     code = item.get("code")
     data = item.get("data", {})
     item_name = data.get("itemName", "알 수 없음")
     item_rarity = data.get("itemRarity", "알 수 없음")
+    base = f"{adventure_name} 모험단의 {character_name} 모험가가"
 
+    _CODE_TEMPLATES = {
+        505: lambda d: (
+            f" {d.get('channelName')} {d.get('channelNo')}채널 "
+            f"{d.get('dungeonName')}에서 드랍으로 {item_name}[{item_rarity}](을)를 획득했습니다."
+        ),
+        513: lambda d: (
+            f" {d.get('dungeonName')}에서 던전 카드 보상으로 {item_name}[{item_rarity}](을)를 획득했습니다."
+        ),
+        504: lambda d: (
+            f" {d.get('channelName')} {d.get('channelNo')}채널 "
+            f"항아리/상자에서 {item_name}[{item_rarity}](을)를 획득했습니다."
+        ),
+        507: lambda d: f" 레이드 카드 보상에서 {item_name}[{item_rarity}](을)를 획득했습니다.",
+    }
+
+    template = _CODE_TEMPLATES.get(code)
+    suffix = template(data) if template else f" {item_name}[{item_rarity}](을)를 획득했습니다."
+    return base + suffix
+
+
+def format_item_announce_embed(adventure_name, character_name, item, event_date):
+    dt_pastime = datetime.strptime(event_date, "%Y-%m-%d %H:%M")
+    date_str = dt_pastime.strftime("%Y.%m.%d(%H:%M)")
+
+    data = item.get("data", {})
+    item_rarity = data.get("itemRarity", "알 수 없음")
     color = get_rarity_color(item_rarity)
 
-    description = f"{adventure_name} 모험단의 {character_name} 모험가가"
-
-    if code == 505:  # 던전 드랍
-        channel_name = data.get('channelName')
-        channel_no = data.get('channelNo')
-        dungeon_name = data.get('dungeonName')
-        description += f" {channel_name} {channel_no}채널 {dungeon_name}에서 드랍으로 {item_name}[{item_rarity}](을)를 획득했습니다."
-    elif code == 513:  # 던전 카드 보상
-        dungeon_name = data.get('dungeonName')
-        description += f" {dungeon_name}에서 던전 카드 보상으로 {item_name}[{item_rarity}](을)를 획득했습니다."
-    elif code == 504:  # 항아리/상자
-        channel_name = data.get('channelName')
-        channel_no = data.get('channelNo')
-        description += f" {channel_name} {channel_no}채널 항아리/상자에서 {item_name}[{item_rarity}](을)를 획득했습니다."
-    elif code == 507:  # 레이드 카드 보상
-        description += f" 레이드 카드 보상에서 {item_name}[{item_rarity}](을)를 획득했습니다."
-    else:
-        description += f" {item_name}[{item_rarity}](을)를 획득했습니다."
+    description = _build_description(adventure_name, character_name, item)
 
     embed = discord.Embed(
         description=description,
@@ -92,85 +100,132 @@ async def filter_valid_items(timeline_rows):
     return valid_items
 
 
+async def _sync_character_name(char):
+    """DNF API에서 최신 캐릭터 이름 동기화. 변경된 이름 반환."""
+    server_id = char['server_id']
+    character_id = char['character_id']
+    character_name = char['character_name']
+
+    char_details = await dnf_api.get_character_details(server_id, character_id)
+    if not char_details:
+        return character_name
+
+    api_name = char_details.get('characterName')
+    if api_name and api_name != character_name:
+        logger.info(f"캐릭터 이름 변경 감지: {character_name} -> {api_name}")
+        await update_character_name(character_id, api_name)
+        return api_name
+
+    return character_name
+
+
+def _compute_start_date(last_checked, now):
+    """타임라인 조회 시작 시간 계산"""
+    if last_checked:
+        start_time = datetime.strptime(last_checked, "%Y%m%dT%H%M")
+        return start_time.strftime("%Y%m%dT%H%M")
+    lookback = now - timedelta(minutes=DEFAULT_LOOKBACK_MINUTES)
+    return lookback.strftime("%Y%m%dT%H%M")
+
+
+def _is_new_event(event_dt, last_time):
+    """이벤트가 마지막 처리 시점 이후인지 판별"""
+    return last_time is None or event_dt > last_time
+
+
+def _update_max_time(current_max, event_dt):
+    """최대 이벤트 시간 갱신"""
+    return event_dt if (current_max is None or event_dt > current_max) else current_max
+
+
+def _filter_new_items(filtered_items, last_time):
+    """이전 처리 시점 이후의 새 아이템만 필터링. (new_items, max_event_time) 반환."""
+    new_filtered_items = []
+    max_event_time = last_time
+
+    for item in filtered_items:
+        event_dt = parse_event_date(item)
+        if event_dt is None or not _is_new_event(event_dt, last_time):
+            continue
+        new_filtered_items.append(item)
+        max_event_time = _update_max_time(max_event_time, event_dt)
+
+    return new_filtered_items, max_event_time
+
+
+async def _send_item_embeds(channel, filtered_items, adventure_name, character_name):
+    """필터링된 아이템들을 채널에 발송"""
+    for item in filtered_items:
+        event_date = item.get("date", "")
+        embed = format_item_announce_embed(adventure_name, character_name, item, event_date)
+        await channel.send(embed=embed)
+
+
+async def _resolve_output_channel(bot, guild_id):
+    """아이템 알림 출력 채널 조회. 실패 시 None 반환."""
+    channel_id = await get_output_channel(guild_id, 'item')
+    if not channel_id:
+        logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
+        return None
+    channel = bot.get_channel(int(channel_id))
+    if not channel:
+        logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
+        return None
+    return channel
+
+
+def _extract_timeline_rows(timeline, character_name):
+    """타임라인 응답에서 rows 추출. 실패 시 None."""
+    if timeline is None or "timeline" not in timeline:
+        logger.warning(f"[{character_name}] 타임라인 데이터를 받아오지 못했습니다.")
+        return None
+    if "rows" not in timeline["timeline"]:
+        logger.warning(f"[{character_name}] 타임라인 데이터를 받아오지 못했습니다.")
+        return None
+    return timeline["timeline"]["rows"]
+
+
+async def _process_timeline_items(rows, character_id, last_time):
+    """타임라인 rows에서 유효 아이템 필터링 및 새 아이템 분리"""
+    filtered_items = await filter_valid_items(rows)
+    filtered_items = [
+        item for item in filtered_items
+        if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
+    ]
+    return _filter_new_items(filtered_items, last_time)
+
+
 async def notify_items_for_character(char, bot, guild_id, semaphore):
     async with semaphore:
         character_id = char['character_id']
         server_id = char['server_id']
-        character_name = char['character_name']
         adventure_name = char.get('adventure_name', '모험단명 없음')
 
-        # === 캐릭터 이름 동기화 ===
-        # DNF API에서 최신 캐릭터 정보 조회
-        char_details = await dnf_api.get_character_details(server_id, character_id)
-        if char_details:
-            api_name = char_details.get('characterName')
-            if api_name and api_name != character_name:
-                logger.info(f"캐릭터 이름 변경 감지: {character_name} -> {api_name}")
-                await update_character_name(character_id, api_name)
-                character_name = api_name  # 로컬 변수도 업데이트하여 알림에 새 이름 사용
-        # ========================
+        character_name = await _sync_character_name(char)
 
         last_checked = await get_last_checked(character_id)
         now = datetime.now(KST)
         end_date = now.strftime("%Y%m%dT%H%M")
-
-        if last_checked:
-            start_time = datetime.strptime(last_checked, "%Y%m%dT%H%M")
-            start_date = start_time.strftime("%Y%m%dT%H%M")
-        else:
-            lookback = now - timedelta(minutes=DEFAULT_LOOKBACK_MINUTES)
-            start_date = lookback.strftime("%Y%m%dT%H%M")
+        start_date = _compute_start_date(last_checked, now)
 
         timeline = await dnf_api.fetch_timeline(server_id, character_id, start_date=start_date, end_date=end_date)
-        if timeline is None or "timeline" not in timeline or "rows" not in timeline["timeline"]:
-            logger.warning(f"[{character_name}] 타임라인 데이터를 받아오지 못했습니다.")
+        rows = _extract_timeline_rows(timeline, character_name)
+        if rows is None:
             await update_last_checked(character_id, end_date)
             return
 
-        rows = timeline["timeline"]["rows"]
-        filtered_items = await filter_valid_items(rows)
-
-        # 레전더리 아이템 제외 필터링
-        filtered_items = [
-            item for item in filtered_items
-            if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
-        ]
-
-        # 이전 처리 시점 락을 걸고 읽기
         async with last_processed_lock:
             last_time = last_processed_time.get(character_id)
 
-        new_filtered_items = []
-        max_event_time = last_time  # 이번에 처리한 가장 최신 시간 추적
+        filtered_items, max_event_time = await _process_timeline_items(rows, character_id, last_time)
 
-        for item in filtered_items:
-            event_dt = parse_event_date(item)
-            if event_dt is None:
-                continue
-            if (last_time is None) or (event_dt > last_time):
-                new_filtered_items.append(item)
-                if (max_event_time is None) or (event_dt > max_event_time):
-                    max_event_time = event_dt
-
-        filtered_items = new_filtered_items
-
-        # 디스코드 채널 조회
-        channel_id = await get_output_channel(guild_id, 'item')
-        if not channel_id:
-            logger.warning(f"길드 {guild_id}에 등록된 출력 채널이 없습니다.")
-            return
-        channel = bot.get_channel(int(channel_id))
+        channel = await _resolve_output_channel(bot, guild_id)
         if not channel:
-            logger.warning(f"채널 {channel_id}을 찾을 수 없습니다.")
             return
 
         if filtered_items:
-            for item in filtered_items:
-                event_date = item.get("date", "")
-                embed = format_item_announce_embed(adventure_name, character_name, item, event_date)
-                await channel.send(embed=embed)
+            await _send_item_embeds(channel, filtered_items, adventure_name, character_name)
 
-        # 처리 완료한 가장 최신 시간 캐싱도 락 걸고 쓰기
         if max_event_time is not None:
             async with last_processed_lock:
                 last_processed_time[character_id] = max_event_time
@@ -187,7 +242,7 @@ async def notify_all_characters(bot, guild_id):
     semaphore = asyncio.Semaphore(50)  # 최대 50개 동시 실행 제한
 
     async with aiohttp.ClientSession():
-        for adventure, characters in grouped.items():
+        for _adventure, characters in grouped.items():
             tasks = [notify_items_for_character(char, bot, guild_id, semaphore) for char in characters]
             await asyncio.gather(*tasks)
 
