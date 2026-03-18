@@ -92,8 +92,9 @@ async def _sync_guild_commands(bot):
         return
     for guild in bot.guilds:
         bot.tree.copy_global_to(guild=guild)
-        await bot.tree.sync(guild=guild)
-        logger.info(f"슬래시 명령어 길드 동기화 완료: {guild.name} ({guild.id})")
+        synced = await bot.tree.sync(guild=guild)
+        cmd_names = [c.name for c in synced]
+        logger.info(f"슬래시 명령어 길드 동기화 완료: {guild.name} ({guild.id}) - {len(synced)}개: {cmd_names}")
     # 기존 글로벌 커맨드 제거 (중복 방지)
     bot.tree.clear_commands(guild=None)
     await bot.tree.sync()
