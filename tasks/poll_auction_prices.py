@@ -1,18 +1,15 @@
 import asyncio
 import traceback
-from datetime import datetime, timedelta, timezone
 
 from core.db import (
     get_all_watch_items,
     save_auction_prices,
-    cleanup_old_price_history
 )
 from core.dnf_api import fetch_auction_sold
 from core.logger import logger
 from tasks.price_alert import process_alerts_for_item, process_user_alerts_for_item
 
 DEFAULT_POLL_INTERVAL = 30  # 30초
-KST = timezone(timedelta(hours=9))
 
 
 async def fetch_and_save_item_prices(item_id: str, item_name: str) -> int:
@@ -55,15 +52,6 @@ async def _process_single_item(bot, guild_id, item):
         logger.error(f"아이템 '{item.get('item_name', '?')}' 폴링 오류: {e}")
 
 
-async def _maybe_cleanup(last_cleanup_date):
-    """하루 1회 오래된 데이터 정리. 정리 실행 날짜 반환."""
-    today = datetime.now(KST).date()
-    if last_cleanup_date != today:
-        await cleanup_old_price_history(days=90)
-        return today
-    return last_cleanup_date
-
-
 async def _poll_once(bot, guild_id):
     """감시 아이템 1회 폴링"""
     watch_items = await get_all_watch_items()
@@ -76,12 +64,9 @@ async def _poll_once(bot, guild_id):
 
 
 async def poll_auction_prices(bot=None, guild_id=None):
-    """등록된 감시 아이템들의 경매장 시세를 주기적으로 폴링"""
-    last_cleanup_date = None
-
+    """등록된 감시 아이템들의 경매장 시세를 주기적으로 폴링 (거래 이력 영구 보존)"""
     while True:
         try:
-            last_cleanup_date = await _maybe_cleanup(last_cleanup_date)
             await _poll_once(bot, guild_id)
         except Exception as e:
             logger.error(f"경매장 시세 폴링 오류: {e}")
