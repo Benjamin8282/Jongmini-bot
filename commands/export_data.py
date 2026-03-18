@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import csv
 import io
 import os
@@ -23,11 +24,11 @@ SFTP_USER = os.getenv("SFTP_USER", "")
 SFTP_KEY_DATA = os.getenv("SFTP_KEY_DATA", "")
 SFTP_EXPORT_PATH = os.getenv("SFTP_EXPORT_PATH", "/home/jongwoo/ml-data")
 
-# 환경변수의 키 데이터를 임시 파일로 저장 (paramiko는 파일 경로 필요)
+# 환경변수의 키 데이터(base64)를 디코딩하여 임시 파일로 저장
 _key_file_path = None
 if SFTP_KEY_DATA:
-    _tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".key", delete=False)
-    _tmp.write(SFTP_KEY_DATA)
+    _tmp = tempfile.NamedTemporaryFile(mode="wb", suffix=".key", delete=False)
+    _tmp.write(base64.b64decode(SFTP_KEY_DATA))
     _tmp.close()
     os.chmod(_tmp.name, stat.S_IRUSR)
     _key_file_path = _tmp.name
