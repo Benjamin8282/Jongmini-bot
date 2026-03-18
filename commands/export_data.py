@@ -5,6 +5,7 @@ import io
 import os
 import stat
 import tempfile
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 import aiosqlite
@@ -32,6 +33,9 @@ if SFTP_KEY_DATA:
     _tmp.close()
     os.chmod(_tmp.name, stat.S_IRUSR)
     _key_file_path = _tmp.name
+
+UTF8_BOM = b"\xef\xbb\xbf"
+CSV_FIELDS = ["item_id", "item_name", "sold_date", "unit_price", "price", "count"]
 
 
 async def _fetch_export_data(item_id: str | None, days: int | None) -> tuple[list[dict], int]:
@@ -63,7 +67,7 @@ async def _fetch_export_data(item_id: str | None, days: int | None) -> tuple[lis
             FROM auction_price_history aph
             LEFT JOIN auction_watch_items aw ON aph.item_id = aw.item_id
             {where}
-            ORDER BY aph.sold_date
+            ORDER BY aw.item_name, aph.sold_date
         """, params)
         rows = await cursor.fetchall()
 
@@ -71,38 +75,86 @@ async def _fetch_export_data(item_id: str | None, days: int | None) -> tuple[lis
 
 
 def _build_csv(rows: list[dict]) -> bytes:
-    """딕셔너리 리스트를 UTF-8 CSV 바이트로 변환."""
+    """딕셔너리 리스트를 UTF-8 BOM CSV 바이트로 변환."""
     if not rows:
         return b""
     output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=rows[0].keys())
+    writer = csv.DictWriter(output, fieldnames=CSV_FIELDS)
     writer.writeheader()
-    writer.writerows(rows)
-    return output.getvalue().encode("utf-8")
+    for row in rows:
+        row["item_name"] = row.get("item_name") or row.get("item_id", "unknown")
+        writer.writerow(row)
+    return UTF8_BOM + output.getvalue().encode("utf-8")
 
 
-def _upload_sftp(csv_bytes: bytes, filename: str):
-    """CSV 데이터를 SFTP로 업로드 (SSH 키 인증)."""
+def _build_per_item_csvs(rows: list[dict]) -> dict[str, bytes]:
+    """아이템별 CSV 파일 생성. {safe_name: csv_bytes} 반환."""
+    grouped = defaultdict(list)
+    for row in rows:
+        name = row.get("item_name") or row.get("item_id", "unknown")
+        row["item_name"] = name
+        grouped[name].append(row)
+
+    result = {}
+    for name, item_rows in grouped.items():
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=CSV_FIELDS)
+        writer.writeheader()
+        writer.writerows(item_rows)
+        safe_name = name.replace("/", "_").replace("\\", "_").replace(" ", "_")
+        result[safe_name] = UTF8_BOM + output.getvalue().encode("utf-8")
+    return result
+
+
+def _get_sftp_client():
+    """SFTP 클라이언트 연결."""
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    pkey = paramiko.Ed25519Key.from_private_key_file(_key_file_path, password=get_passphrase())
+    client.connect(SFTP_HOST, port=SFTP_PORT, username=SFTP_USER, pkey=pkey)
+    return client
+
+
+def _ensure_dir(sftp, path):
+    """SFTP 디렉토리 생성 (없으면)."""
     try:
-        pkey = paramiko.Ed25519Key.from_private_key_file(_key_file_path, password=get_passphrase())
-        client.connect(SFTP_HOST, port=SFTP_PORT, username=SFTP_USER, pkey=pkey)
+        sftp.stat(path)
+    except FileNotFoundError:
+        sftp.mkdir(path)
+
+
+def _upload_single(csv_bytes: bytes, filename: str):
+    """단일 CSV 파일 업로드."""
+    client = _get_sftp_client()
+    try:
         sftp = client.open_sftp()
         try:
-            # 디렉토리 생성 (없으면)
-            try:
-                sftp.stat(SFTP_EXPORT_PATH)
-            except FileNotFoundError:
-                sftp.mkdir(SFTP_EXPORT_PATH)
-
-            remote_path = f"{SFTP_EXPORT_PATH}/{filename}"
-            with sftp.open(remote_path, "wb") as f:
+            _ensure_dir(sftp, SFTP_EXPORT_PATH)
+            with sftp.open(f"{SFTP_EXPORT_PATH}/{filename}", "wb") as f:
                 f.write(csv_bytes)
         finally:
             sftp.close()
     finally:
         client.close()
+
+
+def _upload_per_item(item_csvs: dict[str, bytes], dir_name: str) -> int:
+    """아이템별 CSV 파일을 디렉토리에 업로드. 파일 수 반환."""
+    client = _get_sftp_client()
+    try:
+        sftp = client.open_sftp()
+        try:
+            _ensure_dir(sftp, SFTP_EXPORT_PATH)
+            export_dir = f"{SFTP_EXPORT_PATH}/{dir_name}"
+            _ensure_dir(sftp, export_dir)
+            for name, csv_bytes in item_csvs.items():
+                with sftp.open(f"{export_dir}/{name}.csv", "wb") as f:
+                    f.write(csv_bytes)
+        finally:
+            sftp.close()
+    finally:
+        client.close()
+    return len(item_csvs)
 
 
 def _format_size(size_bytes: int) -> str:
@@ -157,19 +209,25 @@ async def export_data(interaction: discord.Interaction,
             await interaction.followup.send("내보낼 데이터가 없습니다.")
             return
 
-        # CSV 생성
-        csv_bytes = await asyncio.to_thread(_build_csv, rows)
-
-        # 파일명 생성
         now = datetime.now(KST)
         timestamp = now.strftime("%Y%m%d_%H%M%S")
-        filename = f"auction_raw_{timestamp}.csv"
 
-        # SFTP 업로드 (블로킹 → 스레드)
-        await asyncio.to_thread(_upload_sftp, csv_bytes, filename)
+        if item_id:
+            # 단일 아이템 → 파일 1개
+            csv_bytes = await asyncio.to_thread(_build_csv, rows)
+            filename = f"{item_display}_{timestamp}.csv"
+            await asyncio.to_thread(_upload_single, csv_bytes, filename)
+            size = _format_size(len(csv_bytes))
+            location = f"`{SFTP_EXPORT_PATH}/{filename}`"
+        else:
+            # 전체 → 아이템별 파일 분리
+            item_csvs = await asyncio.to_thread(_build_per_item_csvs, rows)
+            dir_name = f"export_{timestamp}"
+            file_count = await asyncio.to_thread(_upload_per_item, item_csvs, dir_name)
+            total_size = sum(len(v) for v in item_csvs.values())
+            size = _format_size(total_size)
+            location = f"`{SFTP_EXPORT_PATH}/{dir_name}/` ({file_count}개 파일)"
 
-        # 결과 보고
-        size = _format_size(len(csv_bytes))
         period = f"최근 {days}일" if days else "전체 기간"
 
         embed = discord.Embed(
@@ -179,12 +237,12 @@ async def export_data(interaction: discord.Interaction,
         embed.add_field(name="아이템", value=item_display, inline=True)
         embed.add_field(name="기간", value=period, inline=True)
         embed.add_field(name="건수", value=f"{total:,}건", inline=True)
-        embed.add_field(name="파일", value=f"`{filename}`", inline=False)
+        embed.add_field(name="위치", value=location, inline=False)
         embed.add_field(name="크기", value=size, inline=True)
         embed.set_footer(text=f"{now.strftime('%Y-%m-%d %H:%M KST')}")
 
         await interaction.followup.send(embed=embed)
-        logger.info(f"데이터 내보내기 완료: {filename} ({total}건, {size})")
+        logger.info(f"데이터 내보내기 완료: {location} ({total}건, {size})")
 
     except paramiko.AuthenticationException:
         await interaction.followup.send("SFTP 인증 실패. 접속 정보를 확인해주세요.", ephemeral=True)
