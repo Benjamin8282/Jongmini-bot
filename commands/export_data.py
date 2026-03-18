@@ -28,7 +28,7 @@ SFTP_EXPORT_PATH = os.getenv("SFTP_EXPORT_PATH", "/home/jongwoo/ml-data")
 _key_file_path = None
 if SFTP_KEY_DATA:
     _tmp = tempfile.NamedTemporaryFile(mode="wb", suffix=".key", delete=False)
-    _tmp.write(base64.b64decode(SFTP_KEY_DATA))
+    _tmp.write(base64.b64decode(SFTP_KEY_DATA.strip()))
     _tmp.close()
     os.chmod(_tmp.name, stat.S_IRUSR)
     _key_file_path = _tmp.name
