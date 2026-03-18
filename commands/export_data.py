@@ -114,7 +114,6 @@ def _format_size(size_bytes: int) -> str:
 
 
 @app_commands.command(name="데이터내보내기", description="경매장 시세 데이터를 빌드서버로 내보냅니다")
-@app_commands.default_permissions(administrator=True)
 @app_commands.describe(
     days="최근 N일 데이터만 (미입력 시 전체)",
     item="특정 아이템만 (미입력 시 전체)"
