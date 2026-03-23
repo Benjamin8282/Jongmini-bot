@@ -309,18 +309,30 @@ class AlertTypeView(ui.View):
 # ─── View: 아이템 선택 ───
 
 class ItemSelectView(ui.View):
-    def __init__(self, items: list[dict], author_id: int):
+    PAGE_SIZE = 25
+
+    def __init__(self, items: list[dict], author_id: int, page: int = 0):
         super().__init__(timeout=120)
         self.author_id = author_id
+        self.all_items = items
+        self.page = page
+        self._items_map = {}
+        self._build()
+
+    def _build(self):
+        self.clear_items()
+        start = self.page * self.PAGE_SIZE
+        page_items = self.all_items[start:start + self.PAGE_SIZE]
+
         self._items_map = {
-            item["item_id"]: item for item in items[:25]
+            item["item_id"]: item for item in page_items
         }
 
         options = [
             discord.SelectOption(
                 label=item["item_name"][:100],
                 value=item["item_id"]
-            ) for item in items[:25]
+            ) for item in page_items
         ]
         self.select = ui.Select(
             placeholder="알림을 설정할 아이템을 선택하세요",
@@ -328,6 +340,47 @@ class ItemSelectView(ui.View):
         )
         self.select.callback = self._select_callback
         self.add_item(self.select)
+
+        total_pages = (len(self.all_items) + self.PAGE_SIZE - 1) // self.PAGE_SIZE
+        if total_pages > 1:
+            prev_btn = ui.Button(
+                label="◀ 이전", style=discord.ButtonStyle.secondary,
+                disabled=self.page == 0, row=1
+            )
+            prev_btn.callback = self._prev_callback
+            self.add_item(prev_btn)
+
+            page_label = ui.Button(
+                label=f"{self.page + 1}/{total_pages}",
+                style=discord.ButtonStyle.secondary, disabled=True, row=1
+            )
+            self.add_item(page_label)
+
+            next_btn = ui.Button(
+                label="다음 ▶", style=discord.ButtonStyle.secondary,
+                disabled=self.page >= total_pages - 1, row=1
+            )
+            next_btn.callback = self._next_callback
+            self.add_item(next_btn)
+
+    async def _prev_callback(self, interaction: Interaction):
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "본인이 실행한 명령어만 응답할 수 있습니다.", ephemeral=True)
+            return
+        self.page = max(0, self.page - 1)
+        self._build()
+        await interaction.response.edit_message(view=self)
+
+    async def _next_callback(self, interaction: Interaction):
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "본인이 실행한 명령어만 응답할 수 있습니다.", ephemeral=True)
+            return
+        total_pages = (len(self.all_items) + self.PAGE_SIZE - 1) // self.PAGE_SIZE
+        self.page = min(total_pages - 1, self.page + 1)
+        self._build()
+        await interaction.response.edit_message(view=self)
 
     async def _select_callback(self, interaction: Interaction):
         if interaction.user.id != self.author_id:
@@ -354,12 +407,16 @@ class ItemSelectView(ui.View):
 # ─── View: 알림 해제용 아이템 선택 ───
 
 class AlertRemoveSelectView(ui.View):
-    def __init__(self, items_with_alerts: list[dict], author_id: int):
+    PAGE_SIZE = 25
+
+    def __init__(self, items_with_alerts: list[dict], author_id: int, page: int = 0):
         super().__init__(timeout=120)
         self.author_id = author_id
-        self._items_map = {}
+        self.page = page
 
-        options = []
+        # 중복 제거한 아이템 리스트 구축
+        self._items_map = {}
+        self._unique_items = []
         seen = set()
         for s in items_with_alerts:
             iid = s["item_id"]
@@ -368,16 +425,67 @@ class AlertRemoveSelectView(ui.View):
             seen.add(iid)
             name = s.get("item_name") or iid
             self._items_map[iid] = name
-            options.append(discord.SelectOption(
-                label=name[:100], value=iid
-            ))
+            self._unique_items.append({"item_id": iid, "item_name": name})
 
+        self._build()
+
+    def _build(self):
+        self.clear_items()
+        start = self.page * self.PAGE_SIZE
+        page_items = self._unique_items[start:start + self.PAGE_SIZE]
+
+        options = [
+            discord.SelectOption(
+                label=item["item_name"][:100], value=item["item_id"]
+            ) for item in page_items
+        ]
         self.select = ui.Select(
             placeholder="알림을 해제할 아이템을 선택하세요",
-            options=options[:25]
+            options=options
         )
         self.select.callback = self._select_callback
         self.add_item(self.select)
+
+        total_pages = (len(self._unique_items) + self.PAGE_SIZE - 1) // self.PAGE_SIZE
+        if total_pages > 1:
+            prev_btn = ui.Button(
+                label="◀ 이전", style=discord.ButtonStyle.secondary,
+                disabled=self.page == 0, row=1
+            )
+            prev_btn.callback = self._prev_callback
+            self.add_item(prev_btn)
+
+            page_label = ui.Button(
+                label=f"{self.page + 1}/{total_pages}",
+                style=discord.ButtonStyle.secondary, disabled=True, row=1
+            )
+            self.add_item(page_label)
+
+            next_btn = ui.Button(
+                label="다음 ▶", style=discord.ButtonStyle.secondary,
+                disabled=self.page >= total_pages - 1, row=1
+            )
+            next_btn.callback = self._next_callback
+            self.add_item(next_btn)
+
+    async def _prev_callback(self, interaction: Interaction):
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "본인이 실행한 명령어만 응답할 수 있습니다.", ephemeral=True)
+            return
+        self.page = max(0, self.page - 1)
+        self._build()
+        await interaction.response.edit_message(view=self)
+
+    async def _next_callback(self, interaction: Interaction):
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "본인이 실행한 명령어만 응답할 수 있습니다.", ephemeral=True)
+            return
+        total_pages = (len(self._unique_items) + self.PAGE_SIZE - 1) // self.PAGE_SIZE
+        self.page = min(total_pages - 1, self.page + 1)
+        self._build()
+        await interaction.response.edit_message(view=self)
 
     async def _select_callback(self, interaction: Interaction):
         if interaction.user.id != self.author_id:
