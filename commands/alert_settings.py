@@ -4,8 +4,10 @@ from discord import app_commands, Interaction, ui
 from core.db import (
     get_all_watch_items, get_user_alerts,
     upsert_user_alert, delete_user_alert,
+    get_watch_item_by_name,
 )
 from core.logger import logger
+from commands.auction_chart import item_name_autocomplete
 
 ALERT_TYPE_LABELS = {
     "surge": "급등",
@@ -306,202 +308,29 @@ class AlertTypeView(ui.View):
         )
 
 
-# ─── View: 아이템 선택 ───
+# ─── Autocomplete ───
 
-class ItemSelectView(ui.View):
-    PAGE_SIZE = 25
-
-    def __init__(self, items: list[dict], author_id: int, page: int = 0):
-        super().__init__(timeout=120)
-        self.author_id = author_id
-        self.all_items = items
-        self.page = page
-        self._items_map = {}
-        self._build()
-
-    def _build(self):
-        self.clear_items()
-        start = self.page * self.PAGE_SIZE
-        page_items = self.all_items[start:start + self.PAGE_SIZE]
-
-        self._items_map = {
-            item["item_id"]: item for item in page_items
-        }
-
-        options = [
-            discord.SelectOption(
-                label=item["item_name"][:100],
-                value=item["item_id"]
-            ) for item in page_items
-        ]
-        self.select = ui.Select(
-            placeholder="알림을 설정할 아이템을 선택하세요",
-            options=options
-        )
-        self.select.callback = self._select_callback
-        self.add_item(self.select)
-
-        total_pages = (len(self.all_items) + self.PAGE_SIZE - 1) // self.PAGE_SIZE
-        if total_pages > 1:
-            prev_btn = ui.Button(
-                label="◀ 이전", style=discord.ButtonStyle.secondary,
-                disabled=self.page == 0, row=1
-            )
-            prev_btn.callback = self._prev_callback
-            self.add_item(prev_btn)
-
-            page_label = ui.Button(
-                label=f"{self.page + 1}/{total_pages}",
-                style=discord.ButtonStyle.secondary, disabled=True, row=1
-            )
-            self.add_item(page_label)
-
-            next_btn = ui.Button(
-                label="다음 ▶", style=discord.ButtonStyle.secondary,
-                disabled=self.page >= total_pages - 1, row=1
-            )
-            next_btn.callback = self._next_callback
-            self.add_item(next_btn)
-
-    async def _prev_callback(self, interaction: Interaction):
-        if interaction.user.id != self.author_id:
-            await interaction.response.send_message(
-                "본인이 실행한 명령어만 응답할 수 있습니다.", ephemeral=True)
-            return
-        self.page = max(0, self.page - 1)
-        self._build()
-        await interaction.response.edit_message(view=self)
-
-    async def _next_callback(self, interaction: Interaction):
-        if interaction.user.id != self.author_id:
-            await interaction.response.send_message(
-                "본인이 실행한 명령어만 응답할 수 있습니다.", ephemeral=True)
-            return
-        total_pages = (len(self.all_items) + self.PAGE_SIZE - 1) // self.PAGE_SIZE
-        self.page = min(total_pages - 1, self.page + 1)
-        self._build()
-        await interaction.response.edit_message(view=self)
-
-    async def _select_callback(self, interaction: Interaction):
-        if interaction.user.id != self.author_id:
-            await interaction.response.send_message(
-                "본인이 실행한 명령어만 응답할 수 있습니다.",
-                ephemeral=True
-            )
-            return
-
-        item = self._items_map[self.select.values[0]]
-        settings = await get_user_alerts(
-            interaction.user.id, item["item_id"]
-        )
-        embed = _build_settings_embed(item["item_name"], settings)
-        view = AlertTypeView(
-            item["item_id"], item["item_name"],
-            interaction.user.id, settings
-        )
-        await interaction.response.edit_message(
-            content=None, embed=embed, view=view
-        )
-
-
-# ─── View: 알림 해제용 아이템 선택 ───
-
-class AlertRemoveSelectView(ui.View):
-    PAGE_SIZE = 25
-
-    def __init__(self, items_with_alerts: list[dict], author_id: int, page: int = 0):
-        super().__init__(timeout=120)
-        self.author_id = author_id
-        self.page = page
-
-        # 중복 제거한 아이템 리스트 구축
-        self._items_map = {}
-        self._unique_items = []
-        seen = set()
-        for s in items_with_alerts:
-            iid = s["item_id"]
-            if iid in seen:
-                continue
-            seen.add(iid)
-            name = s.get("item_name") or iid
-            self._items_map[iid] = name
-            self._unique_items.append({"item_id": iid, "item_name": name})
-
-        self._build()
-
-    def _build(self):
-        self.clear_items()
-        start = self.page * self.PAGE_SIZE
-        page_items = self._unique_items[start:start + self.PAGE_SIZE]
-
-        options = [
-            discord.SelectOption(
-                label=item["item_name"][:100], value=item["item_id"]
-            ) for item in page_items
-        ]
-        self.select = ui.Select(
-            placeholder="알림을 해제할 아이템을 선택하세요",
-            options=options
-        )
-        self.select.callback = self._select_callback
-        self.add_item(self.select)
-
-        total_pages = (len(self._unique_items) + self.PAGE_SIZE - 1) // self.PAGE_SIZE
-        if total_pages > 1:
-            prev_btn = ui.Button(
-                label="◀ 이전", style=discord.ButtonStyle.secondary,
-                disabled=self.page == 0, row=1
-            )
-            prev_btn.callback = self._prev_callback
-            self.add_item(prev_btn)
-
-            page_label = ui.Button(
-                label=f"{self.page + 1}/{total_pages}",
-                style=discord.ButtonStyle.secondary, disabled=True, row=1
-            )
-            self.add_item(page_label)
-
-            next_btn = ui.Button(
-                label="다음 ▶", style=discord.ButtonStyle.secondary,
-                disabled=self.page >= total_pages - 1, row=1
-            )
-            next_btn.callback = self._next_callback
-            self.add_item(next_btn)
-
-    async def _prev_callback(self, interaction: Interaction):
-        if interaction.user.id != self.author_id:
-            await interaction.response.send_message(
-                "본인이 실행한 명령어만 응답할 수 있습니다.", ephemeral=True)
-            return
-        self.page = max(0, self.page - 1)
-        self._build()
-        await interaction.response.edit_message(view=self)
-
-    async def _next_callback(self, interaction: Interaction):
-        if interaction.user.id != self.author_id:
-            await interaction.response.send_message(
-                "본인이 실행한 명령어만 응답할 수 있습니다.", ephemeral=True)
-            return
-        total_pages = (len(self._unique_items) + self.PAGE_SIZE - 1) // self.PAGE_SIZE
-        self.page = min(total_pages - 1, self.page + 1)
-        self._build()
-        await interaction.response.edit_message(view=self)
-
-    async def _select_callback(self, interaction: Interaction):
-        if interaction.user.id != self.author_id:
-            await interaction.response.send_message(
-                "본인이 실행한 명령어만 응답할 수 있습니다.",
-                ephemeral=True
-            )
-            return
-
-        item_id = self.select.values[0]
-        item_name = self._items_map[item_id]
-        await delete_user_alert(interaction.user.id, item_id)
-        await interaction.response.edit_message(
-            content=f"**{item_name}**의 알림 설정을 모두 해제했습니다.",
-            embed=None, view=None
-        )
+async def _user_alert_item_autocomplete(
+    interaction: Interaction, current: str
+) -> list[app_commands.Choice[str]]:
+    """사용자가 알림 설정한 아이템 중에서 자동완성"""
+    settings = await get_user_alerts(interaction.user.id)
+    if not settings:
+        return []
+    seen = set()
+    items = []
+    for s in settings:
+        name = s.get("item_name") or s["item_id"]
+        if name in seen:
+            continue
+        seen.add(name)
+        items.append(name)
+    if current:
+        current_lower = current.lower()
+        items = [n for n in items if current_lower in n.lower()]
+    return [
+        app_commands.Choice(name=n, value=n) for n in items[:25]
+    ]
 
 
 # ─── 슬래시 커맨드 ───
@@ -510,24 +339,39 @@ class AlertRemoveSelectView(ui.View):
     name="시세알림",
     description="아이템별 시세 알림을 내 기준에 맞게 설정합니다 (DM 알림)"
 )
-async def alert_settings_cmd(interaction: Interaction):
-    logger.info(f"/시세알림 호출: 사용자={interaction.user.id}")
+@app_commands.describe(item_name="알림을 설정할 아이템 이름")
+@app_commands.autocomplete(item_name=item_name_autocomplete)
+async def alert_settings_cmd(interaction: Interaction, item_name: str):
+    logger.info(f"/시세알림 호출: 사용자={interaction.user.id}, 아이템={item_name}")
     await interaction.response.defer(thinking=True, ephemeral=True)
 
-    items = await get_all_watch_items()
-    if not items:
-        await interaction.followup.send(
-            "시세 추적 중인 아이템이 없습니다. "
-            "`/시세등록`으로 먼저 아이템을 등록해주세요.",
-            ephemeral=True
-        )
-        return
+    watch_item = await get_watch_item_by_name(item_name)
+    if not watch_item:
+        all_items = await get_all_watch_items()
+        matches = [i for i in all_items if item_name.lower() in i["item_name"].lower()]
+        if len(matches) == 1:
+            watch_item = matches[0]
+        elif matches:
+            names = "\n".join(f"- {i['item_name']}" for i in matches[:10])
+            await interaction.followup.send(
+                f"여러 아이템이 일치합니다. 자동완성에서 선택해주세요:\n{names}",
+                ephemeral=True
+            )
+            return
+        else:
+            await interaction.followup.send(
+                "등록되지 않은 아이템입니다. `/시세등록`으로 먼저 등록해주세요.",
+                ephemeral=True
+            )
+            return
 
-    view = ItemSelectView(items, interaction.user.id)
-    await interaction.followup.send(
-        "알림을 설정할 아이템을 선택하세요.",
-        view=view, ephemeral=True
+    settings = await get_user_alerts(interaction.user.id, watch_item["item_id"])
+    embed = _build_settings_embed(watch_item["item_name"], settings)
+    view = AlertTypeView(
+        watch_item["item_id"], watch_item["item_name"],
+        interaction.user.id, settings
     )
+    await interaction.followup.send(embed=embed, view=view, ephemeral=True)
 
 
 def _build_alert_embed(item_name: str, alerts: list[dict]) -> discord.Embed:
@@ -581,19 +425,21 @@ async def alert_list_cmd(interaction: Interaction):
     name="시세알림해제",
     description="아이템의 시세 알림 설정을 해제합니다"
 )
-async def alert_remove_cmd(interaction: Interaction):
-    logger.info(f"/시세알림해제 호출: 사용자={interaction.user.id}")
+@app_commands.describe(item_name="알림을 해제할 아이템 이름")
+@app_commands.autocomplete(item_name=_user_alert_item_autocomplete)
+async def alert_remove_cmd(interaction: Interaction, item_name: str):
+    logger.info(f"/시세알림해제 호출: 사용자={interaction.user.id}, 아이템={item_name}")
     await interaction.response.defer(thinking=True, ephemeral=True)
 
-    settings = await get_user_alerts(interaction.user.id)
-    if not settings:
+    watch_item = await get_watch_item_by_name(item_name)
+    if not watch_item:
         await interaction.followup.send(
-            "해제할 알림이 없습니다.", ephemeral=True
+            "등록되지 않은 아이템입니다.", ephemeral=True
         )
         return
 
-    view = AlertRemoveSelectView(settings, interaction.user.id)
+    await delete_user_alert(interaction.user.id, watch_item["item_id"])
     await interaction.followup.send(
-        "알림을 해제할 아이템을 선택하세요.",
-        view=view, ephemeral=True
+        f"**{watch_item['item_name']}**의 알림 설정을 모두 해제했습니다.",
+        ephemeral=True
     )
