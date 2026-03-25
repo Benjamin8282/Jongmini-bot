@@ -5,6 +5,7 @@ from core.time_utils import get_weekly_period
 
 @app_commands.command(name="주간현황", description="최근 목요일 6시부터 현재까지의 모험단 아이템 획득량 집계를 보여줍니다.")
 async def weekly_status(interaction: Interaction):
+    await interaction.response.defer(thinking=True)
     start_time, end_time = get_weekly_period()
 
     await aggregate_items_and_notify_for_period(

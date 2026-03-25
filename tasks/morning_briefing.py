@@ -97,8 +97,8 @@ async def _collect_item_data():
     results = await asyncio.gather(*(
         _fetch_single_item(item, h24_start, h48_start, h24_end, h24_boundary)
         for item in watch_items
-    ))
-    return [r for r in results if r is not None]
+    ), return_exceptions=True)
+    return [r for r in results if r is not None and not isinstance(r, Exception)]
 
 
 def _determine_cross_type(closes):
