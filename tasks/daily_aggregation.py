@@ -145,7 +145,7 @@ def _calc_adventure_scores(adventure_item_counts):
 async def _send_aggregation_result(bot, guild_id, embed, interaction, need_embed):
     """집계 결과를 interaction 또는 채널로 발송"""
     if interaction is not None:
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
         return None
 
     if need_embed:
@@ -191,7 +191,10 @@ async def _gather_all_character_items(grouped, periods, adventure_item_counts):
         for adventure_name, characters in grouped.items()
         for char in characters
     ]
-    await asyncio.gather(*tasks)
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for r in results:
+        if isinstance(r, Exception):
+            logger.warning(f"캐릭터 아이템 수집 중 오류: {r}")
 
 
 async def aggregate_items_and_notify_for_period(

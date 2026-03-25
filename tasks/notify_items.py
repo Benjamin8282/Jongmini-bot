@@ -243,7 +243,10 @@ async def notify_all_characters(bot, guild_id):
 
     for _adventure, characters in grouped.items():
         tasks = [notify_items_for_character(char, bot, guild_id, semaphore) for char in characters]
-        await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for r in results:
+            if isinstance(r, Exception):
+                logger.warning(f"캐릭터 알림 처리 중 오류: {r}")
 
 
 async def periodic_notify(bot, guild_id):

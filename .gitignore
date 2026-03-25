@@ -1,5 +1,7 @@
 /.idea/
-dundam_sample.json 
-dundam_sample.json 
-\"dundam_sample.json\" 
-tests/__pycache__/
+.env
+dundam_sample.json
+__pycache__/
+logs/
+data/
+*.pyc

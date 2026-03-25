@@ -1,4 +1,5 @@
 import platform
+import threading
 from io import BytesIO
 
 import matplotlib
@@ -50,6 +51,9 @@ def _apply_dark_theme(font_name: str):
 # 모듈 로드 시 1회 초기화 (스레드 안전: 이후 rcParams 변경 없음)
 _FONT_NAME = _get_korean_font()
 _apply_dark_theme(_FONT_NAME)
+
+# matplotlib pyplot 글로벌 상태 보호용 Lock
+_MPL_LOCK = threading.Lock()
 
 
 def _gold_formatter(x, pos):
@@ -257,6 +261,11 @@ def generate_overview_chart(items_data: list[dict]) -> BytesIO | None:
     if not items_data:
         return None
 
+    with _MPL_LOCK:
+        return _generate_overview_chart_impl(items_data)
+
+
+def _generate_overview_chart_impl(items_data: list[dict]) -> BytesIO | None:
     n = len(items_data)
     row_height = 1.4
     fig, axes = plt.subplots(
@@ -345,6 +354,15 @@ def generate_comparison_chart(
     if ohlc_a.empty and ohlc_b.empty:
         return None
 
+    with _MPL_LOCK:
+        return _generate_comparison_chart_impl(
+            name_a, ohlc_a, name_b, ohlc_b, interval_label, correlation
+        )
+
+
+def _generate_comparison_chart_impl(
+    name_a, ohlc_a, name_b, ohlc_b, interval_label, correlation,
+) -> BytesIO | None:
     fig, (ax_price, ax_vol) = plt.subplots(
         2, 1, figsize=(13, 7),
         gridspec_kw={"height_ratios": [4, 1]},
@@ -455,6 +473,13 @@ def generate_candlestick_chart(
     if ohlc_df.empty:
         return None
 
+    with _MPL_LOCK:
+        return _generate_candlestick_chart_impl(item_name, ohlc_df, interval_label)
+
+
+def _generate_candlestick_chart_impl(
+    item_name: str, ohlc_df: pd.DataFrame, interval_label: str
+) -> BytesIO | None:
     candle_count = len(ohlc_df)
     mav_kwargs = _build_mav_kwargs(candle_count)
 
@@ -618,6 +643,15 @@ def generate_activity_chart(
     if not dates or not index_values:
         return None
 
+    with _MPL_LOCK:
+        return _generate_activity_chart_impl(
+            dates, index_values, item_count, changepoints, outlier_dates, raw_index
+        )
+
+
+def _generate_activity_chart_impl(
+    dates, index_values, item_count, changepoints, outlier_dates, raw_index,
+) -> BytesIO | None:
     fig, ax = plt.subplots(figsize=(13, 5), facecolor=BG_COLOR)
     ax.set_facecolor(PANEL_COLOR)
 
@@ -709,6 +743,15 @@ def generate_dunspy_chart(
     if not dates or not index_values:
         return None
 
+    with _MPL_LOCK:
+        return _generate_dunspy_chart_impl(
+            dates, index_values, current, change, change_pct, item_count, base_date
+        )
+
+
+def _generate_dunspy_chart_impl(
+    dates, index_values, current, change, change_pct, item_count, base_date,
+) -> BytesIO | None:
     fig, ax = plt.subplots(figsize=(13, 5), facecolor=BG_COLOR)
     ax.set_facecolor(PANEL_COLOR)
 

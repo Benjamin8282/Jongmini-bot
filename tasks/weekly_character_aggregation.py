@@ -158,7 +158,13 @@ async def aggregate_weekly_items_by_character(bot, guild_id, interaction=None):
                 if rarity in RARITY_WEIGHTS:
                     character_item_counts[character_name][rarity] += 1
 
-    await asyncio.gather(*(process_character(char) for char in characters))
+    results = await asyncio.gather(
+        *(process_character(char) for char in characters),
+        return_exceptions=True
+    )
+    for r in results:
+        if isinstance(r, Exception):
+            logger.warning(f"캐릭터별 주간 집계 중 오류: {r}")
 
     rank_list = _build_rank_list(character_item_counts, characters)
     embed = format_character_rank_embed(rank_list, end_time)
