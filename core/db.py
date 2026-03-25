@@ -198,6 +198,16 @@ async def init_db():
                 PRIMARY KEY (user_id, item_name)
             )
         """)
+        # 모험단별 쉬었음(미접속) 기록 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS rest_days (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                adventure_name TEXT NOT NULL,
+                rest_date TEXT NOT NULL,
+                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(adventure_name, rest_date)
+            )
+        """)
         # 인덱스 생성 (모든 테이블 생성 이후)
         await conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_characters_adventure
@@ -226,6 +236,10 @@ async def init_db():
         await conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_uri_user_used
             ON user_recent_items(user_id, used_at DESC)
+        """)
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_rest_days_adv_date
+            ON rest_days(adventure_name, rest_date)
         """)
         await conn.commit()
         logger.info("DB 초기화 완료")
@@ -1101,4 +1115,39 @@ async def load_all_recent_items() -> dict[int, list[str]]:
             result.setdefault(user_id, []).append(item_name)
     except Exception as e:
         logger.error(f"최근 조회 아이템 로드 실패: {e}")
+    return result
+
+
+# ----- 쉬었음 기록 -----
+
+async def record_rest_days(rest_records: list[dict]):
+    """쉬었음 기록 벌크 저장. [{adventure_name, rest_date}, ...]"""
+    if not rest_records:
+        return
+    try:
+        conn = await get_conn()
+        await conn.executemany("""
+            INSERT OR IGNORE INTO rest_days (adventure_name, rest_date)
+            VALUES (:adventure_name, :rest_date)
+        """, rest_records)
+        await conn.commit()
+    except Exception as e:
+        logger.error(f"쉬었음 기록 저장 실패: {e}")
+
+
+async def get_all_rest_days_since(since: str) -> dict[str, list[str]]:
+    """전체 모험단의 since 이후 쉬었음 날짜 목록. {adventure_name: [dates]}"""
+    result: dict[str, list[str]] = {}
+    try:
+        conn = await get_conn()
+        cursor = await conn.execute("""
+            SELECT adventure_name, rest_date FROM rest_days
+            WHERE rest_date >= ?
+            ORDER BY adventure_name, rest_date
+        """, (since,))
+        rows = await cursor.fetchall()
+        for row in rows:
+            result.setdefault(row["adventure_name"], []).append(row["rest_date"])
+    except Exception as e:
+        logger.error(f"쉬었음 기록 조회 실패: {e}")
     return result
