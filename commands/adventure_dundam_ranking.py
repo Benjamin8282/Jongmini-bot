@@ -1,10 +1,11 @@
 import time
 from collections import defaultdict
-import aiohttp
+
 import discord
 from discord import app_commands, Interaction
 from discord.ui import View, Button
 from core.db import get_active_characters
+from core.dnf_api import get_session
 from core.dundam_api import fetch_all_with_rate_limit
 from core.models import SERVER_MAP
 
@@ -162,8 +163,8 @@ async def adventure_dundam_ranking(interaction: Interaction):
         await interaction.followup.send("등록된 캐릭터가 없습니다.")
         return
 
-    async with aiohttp.ClientSession() as session:
-        results = await fetch_all_with_rate_limit(session, characters, limit_per_second=5)
+    session = await get_session()
+    results = await fetch_all_with_rate_limit(session, characters, limit_per_second=5)
 
     valid_results = [r for r in results if r]
     if not valid_results:

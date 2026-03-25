@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from discord import app_commands, Interaction, ui
 
@@ -306,7 +308,8 @@ async def activity_index_cmd(interaction: Interaction, days: int = 30):
         await _send_insufficient_data(interaction)
         return
 
-    chart_buf = generate_activity_chart(
+    chart_buf = await asyncio.to_thread(
+        generate_activity_chart,
         result["dates"], result["index"], result["item_count"],
         changepoints=result.get("changepoints"),
         outlier_dates=list(result.get("outliers", {}).keys()),

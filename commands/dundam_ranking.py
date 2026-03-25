@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-import aiohttp
+
 import discord
 from discord import app_commands, Interaction
 from discord.ui import View, Button
@@ -7,6 +7,7 @@ from core.db import (
     get_active_characters,
     save_dundam_ranking_cache, get_dundam_ranking_cache, get_dundam_ranking_cache_timestamp,
 )
+from core.dnf_api import get_session
 from core.dundam_api import fetch_all_with_rate_limit, fetch_all_buffers_with_rate_limit
 from core.logger import logger
 
@@ -145,13 +146,13 @@ async def _fetch_ranked(mode: str, characters: list[dict], score_key: str) -> li
     """API에서 랭킹 데이터를 가져와 정렬. 실패 시 None."""
     sort_key = _SORT_KEYS[mode]
     try:
-        async with aiohttp.ClientSession() as session:
-            fetcher = _FETCH_DISPATCHERS[mode]
-            results = await fetcher(session, characters)
-            ranked = sorted(
-                [r for r in results if r],
-                key=lambda x: x[sort_key], reverse=True
-            )
+        session = await get_session()
+        fetcher = _FETCH_DISPATCHERS[mode]
+        results = await fetcher(session, characters)
+        ranked = sorted(
+            [r for r in results if r],
+            key=lambda x: x[sort_key], reverse=True
+        )
         return ranked if ranked else None
     except Exception as e:
         logger.warning(f"던담순위 실시간 조회 실패, 캐시 사용: {e}")

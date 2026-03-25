@@ -25,7 +25,7 @@ VOLUME_DOWN = "#3498ff80"
 ACCENT = "#ffd32a"
 
 
-def get_korean_font():
+def _get_korean_font():
     if platform.system() == "Windows":
         return "Malgun Gothic"
     else:
@@ -45,6 +45,11 @@ def _apply_dark_theme(font_name: str):
         "xtick.color": TEXT_COLOR,
         "ytick.color": TEXT_COLOR,
     })
+
+
+# 모듈 로드 시 1회 초기화 (스레드 안전: 이후 rcParams 변경 없음)
+_FONT_NAME = _get_korean_font()
+_apply_dark_theme(_FONT_NAME)
 
 
 def _gold_formatter(x, pos):
@@ -149,7 +154,7 @@ def _save_fig_to_buffer(fig) -> BytesIO:
     """fig를 PNG BytesIO로 저장하고 fig를 닫는다."""
     buf = BytesIO()
     try:
-        fig.savefig(buf, format="png", dpi=120, bbox_inches="tight",
+        fig.savefig(buf, format="png", dpi=120,
                     facecolor=BG_COLOR, edgecolor="none")
         buf.seek(0)
         return buf
@@ -206,7 +211,7 @@ def _hide_axes_decorations(ax):
         spine.set_visible(False)
 
 
-def _render_overview_row(ax, item, font_name, idx, n):
+def _render_overview_row(ax, item, idx, n):
     """시세현황 차트의 개별 아이템 행 렌더링."""
     prices = item["prices"]
     color, arrow = _pct_color_arrow(item["change_pct"])
@@ -220,30 +225,30 @@ def _render_overview_row(ax, item, font_name, idx, n):
     ax.set_xlim(0, len(prices) - 1)
     _hide_axes_decorations(ax)
 
-    _add_overview_labels(ax, item, font_name, color, arrow)
+    _add_overview_labels(ax, item, color, arrow)
 
     if idx < n - 1:
         ax.axhline(y=ax.get_ylim()[0], color=GRID_COLOR,
                    linewidth=0.5, alpha=0.5)
 
 
-def _add_overview_labels(ax, item, font_name, color, arrow):
+def _add_overview_labels(ax, item, color, arrow):
     """시세현황 좌측/우측 라벨 추가."""
     pct = item["change_pct"]
     ax.text(-0.02, 0.5, item["name"],
             transform=ax.transAxes, fontsize=11, fontweight="bold",
-            fontfamily=font_name, color=TEXT_COLOR,
+            fontfamily=_FONT_NAME, color=TEXT_COLOR,
             va="center", ha="right")
 
     price_text = f"{int(item['current']):,}G"
     pct_text = f"{arrow} {abs(pct):.1f}%"
     ax.text(1.02, 0.65, price_text,
             transform=ax.transAxes, fontsize=11, fontweight="bold",
-            fontfamily=font_name, color=TEXT_COLOR,
+            fontfamily=_FONT_NAME, color=TEXT_COLOR,
             va="center", ha="left")
     ax.text(1.02, 0.30, pct_text,
             transform=ax.transAxes, fontsize=10,
-            fontfamily=font_name, color=color,
+            fontfamily=_FONT_NAME, color=color,
             va="center", ha="left")
 
 
@@ -251,9 +256,6 @@ def generate_overview_chart(items_data: list[dict]) -> BytesIO | None:
     """여러 아이템의 24시간 스파크라인을 다크 테마로 생성"""
     if not items_data:
         return None
-
-    font_name = get_korean_font()
-    _apply_dark_theme(font_name)
 
     n = len(items_data)
     row_height = 1.4
@@ -265,7 +267,7 @@ def generate_overview_chart(items_data: list[dict]) -> BytesIO | None:
         axes = [axes]
 
     for idx, (ax, item) in enumerate(zip(axes, items_data)):
-        _render_overview_row(ax, item, font_name, idx, n)
+        _render_overview_row(ax, item, idx, n)
 
     fig.subplots_adjust(left=0.22, right=0.82, hspace=0.3,
                         top=0.95, bottom=0.05)
@@ -330,8 +332,7 @@ def _plot_comparison_volume(ax_vol, ohlc_a, ohlc_b, name_a, name_b, color_a, col
     ax_vol.yaxis.set_major_formatter(
         mticker.FuncFormatter(lambda x, p: f"{int(x):,}")
     )
-    font_name = get_korean_font()
-    ax_vol.set_ylabel("거래량", fontsize=9, color="#888888", fontfamily=font_name)
+    ax_vol.set_ylabel("거래량", fontsize=9, color="#888888", fontfamily=_FONT_NAME)
 
 
 def generate_comparison_chart(
@@ -343,9 +344,6 @@ def generate_comparison_chart(
     """두 아이템의 종가를 듀얼 Y축 라인 차트로 비교"""
     if ohlc_a.empty and ohlc_b.empty:
         return None
-
-    font_name = get_korean_font()
-    _apply_dark_theme(font_name)
 
     fig, (ax_price, ax_vol) = plt.subplots(
         2, 1, figsize=(13, 7),
@@ -367,10 +365,10 @@ def generate_comparison_chart(
 
     # 타이틀
     fig.text(0.06, 0.96, f"{name_a}  vs  {name_b}",
-             fontsize=15, fontweight="bold", fontfamily=font_name,
+             fontsize=15, fontweight="bold", fontfamily=_FONT_NAME,
              color=TEXT_COLOR, va="top")
     fig.text(0.06, 0.92, interval_label,
-             fontsize=10, fontfamily=font_name,
+             fontsize=10, fontfamily=_FONT_NAME,
              color="#888888", va="top")
 
     _plot_comparison_volume(ax_vol, ohlc_a, ohlc_b, name_a, name_b, color_a, color_b)
@@ -457,17 +455,13 @@ def generate_candlestick_chart(
     if ohlc_df.empty:
         return None
 
-    font_name = get_korean_font()
-    _apply_dark_theme(font_name)
-
-    style = _build_candlestick_style(font_name)
     candle_count = len(ohlc_df)
     mav_kwargs = _build_mav_kwargs(candle_count)
 
     fig, axes = mpf.plot(
         ohlc_df,
         type="candle",
-        style=style,
+        style=_build_candlestick_style(_FONT_NAME),
         title="",
         ylabel="",
         ylabel_lower="",
@@ -484,10 +478,10 @@ def generate_candlestick_chart(
 
     # 타이틀 커스텀
     fig.text(0.06, 0.95, item_name,
-             fontsize=16, fontweight="bold", fontfamily=font_name,
+             fontsize=16, fontweight="bold", fontfamily=_FONT_NAME,
              color=TEXT_COLOR, va="top")
     fig.text(0.06, 0.91, interval_label,
-             fontsize=10, fontfamily=font_name,
+             fontsize=10, fontfamily=_FONT_NAME,
              color="#888888", va="top")
 
     # 현재가 표시 (우측)
@@ -509,12 +503,12 @@ def generate_candlestick_chart(
 
     # 하단 볼륨 라벨
     ax_volume.set_ylabel("거래량", fontsize=9, color="#888888",
-                         fontfamily=font_name)
+                         fontfamily=_FONT_NAME)
 
     return _save_fig_to_buffer(fig)
 
 
-def _draw_changepoints(ax, x, changepoints, font_name):
+def _draw_changepoints(ax, x, changepoints):
     """변화점 수직선 + 체제 배경색 그리기."""
     cp_dates = pd.to_datetime(changepoints)
     regime_colors = ["#2a2a4a", "#1e3a2a"]
@@ -529,7 +523,7 @@ def _draw_changepoints(ax, x, changepoints, font_name):
         ax.text(cp, ax.get_ylim()[1] if ax.get_ylim()[1] > 100
                 else 120, "CP",
                 fontsize=8, color="#ff6348", ha="center",
-                fontfamily=font_name, fontweight="bold",
+                fontfamily=_FONT_NAME, fontweight="bold",
                 zorder=4)
 
 
@@ -544,7 +538,7 @@ def _draw_outlier_markers(ax, x, y, outlier_dates):
                     markersize=7, zorder=5, alpha=0.8)
 
 
-def _draw_current_value_dot(ax, x, y, font_name, baseline=100):
+def _draw_current_value_dot(ax, x, y, baseline=100):
     """현재값 점 + 라벨 그리기."""
     if len(y) == 0:
         return
@@ -557,7 +551,7 @@ def _draw_current_value_dot(ax, x, y, font_name, baseline=100):
         xy=(x[-1], last_val),
         xytext=(10, 10), textcoords="offset points",
         fontsize=11, fontweight="bold", color=dot_color,
-        fontfamily=font_name
+        fontfamily=_FONT_NAME
     )
 
 
@@ -602,10 +596,10 @@ def _build_activity_subtitle(item_count: int, changepoints: list[str] | None) ->
     return subtitle
 
 
-def _draw_activity_overlays(ax, x, y, font_name, changepoints, outlier_dates):
+def _draw_activity_overlays(ax, x, y, changepoints, outlier_dates):
     """활동지수 차트의 변화점/이상치 오버레이 그리기."""
     if changepoints:
-        _draw_changepoints(ax, x, changepoints, font_name)
+        _draw_changepoints(ax, x, changepoints)
     if outlier_dates:
         _draw_outlier_markers(ax, x, y, outlier_dates)
 
@@ -624,27 +618,24 @@ def generate_activity_chart(
     if not dates or not index_values:
         return None
 
-    font_name = get_korean_font()
-    _apply_dark_theme(font_name)
-
     fig, ax = plt.subplots(figsize=(13, 5), facecolor=BG_COLOR)
     ax.set_facecolor(PANEL_COLOR)
 
     x = pd.to_datetime(dates)
     y = np.array(index_values, dtype=float)
 
-    _draw_activity_overlays(ax, x, y, font_name, changepoints, outlier_dates)
+    _draw_activity_overlays(ax, x, y, changepoints, outlier_dates)
     _draw_activity_lines(ax, x, y, raw_index, dates)
-    _draw_current_value_dot(ax, x, y, font_name, baseline=100)
+    _draw_current_value_dot(ax, x, y, baseline=100)
 
     # 타이틀
     fig.text(0.06, 0.96, "활동지수 (거래량 기반 추정)",
-             fontsize=15, fontweight="bold", fontfamily=font_name,
+             fontsize=15, fontweight="bold", fontfamily=_FONT_NAME,
              color=TEXT_COLOR, va="top")
 
     subtitle = _build_activity_subtitle(item_count, changepoints)
     fig.text(0.06, 0.91, subtitle,
-             fontsize=10, fontfamily=font_name,
+             fontsize=10, fontfamily=_FONT_NAME,
              color="#888888", va="top")
 
     _add_legend(ax, loc="upper right")
@@ -672,7 +663,7 @@ def _draw_dunspy_lines(ax, x, y, current):
     ax.plot(x, y, color=line_color, linewidth=2.5, alpha=0.9)
 
 
-def _draw_dunspy_high_low(ax, x, y, font_name):
+def _draw_dunspy_high_low(ax, x, y):
     """던스피 기간 고/저 수평선 + 라벨."""
     high_val = max(y)
     low_val = min(y)
@@ -682,13 +673,13 @@ def _draw_dunspy_high_low(ax, x, y, font_name):
                linestyle=":", alpha=0.5)
     ax.text(x[0], high_val, f" H {high_val:.1f}",
             fontsize=8, color=UP_COLOR, va="bottom",
-            fontfamily=font_name, alpha=0.7)
+            fontfamily=_FONT_NAME, alpha=0.7)
     ax.text(x[0], low_val, f" L {low_val:.1f}",
             fontsize=8, color=DOWN_COLOR, va="top",
-            fontfamily=font_name, alpha=0.7)
+            fontfamily=_FONT_NAME, alpha=0.7)
 
 
-def _draw_dunspy_current(ax, x, y, current, change, change_pct, font_name):
+def _draw_dunspy_current(ax, x, y, current, change, change_pct):
     """던스피 현재값 점 + 라벨."""
     if len(y) == 0:
         return
@@ -701,7 +692,7 @@ def _draw_dunspy_current(ax, x, y, current, change, change_pct, font_name):
         xy=(x[-1], current),
         xytext=(10, 12), textcoords="offset points",
         fontsize=12, fontweight="bold", color=dot_color,
-        fontfamily=font_name,
+        fontfamily=_FONT_NAME,
         bbox=dict(boxstyle="round,pad=0.3",
                   facecolor=PANEL_COLOR, edgecolor=dot_color,
                   alpha=0.8)
@@ -718,9 +709,6 @@ def generate_dunspy_chart(
     if not dates or not index_values:
         return None
 
-    font_name = get_korean_font()
-    _apply_dark_theme(font_name)
-
     fig, ax = plt.subplots(figsize=(13, 5), facecolor=BG_COLOR)
     ax.set_facecolor(PANEL_COLOR)
 
@@ -728,18 +716,18 @@ def generate_dunspy_chart(
     y = np.array(index_values, dtype=float)
 
     _draw_dunspy_lines(ax, x, y, current)
-    _draw_dunspy_high_low(ax, x, y, font_name)
-    _draw_dunspy_current(ax, x, y, current, change, change_pct, font_name)
+    _draw_dunspy_high_low(ax, x, y)
+    _draw_dunspy_current(ax, x, y, current, change, change_pct)
 
     # 타이틀
     fig.text(0.06, 0.96, "DUNSPY 던스피 종합지수",
-             fontsize=16, fontweight="bold", fontfamily=font_name,
+             fontsize=16, fontweight="bold", fontfamily=_FONT_NAME,
              color=TEXT_COLOR, va="top")
     subtitle = (
         f"바스켓 {item_count}종목 | 기준일 {base_date} = 1,000"
     )
     fig.text(0.06, 0.91, subtitle,
-             fontsize=10, fontfamily=font_name,
+             fontsize=10, fontfamily=_FONT_NAME,
              color="#888888", va="top")
 
     # 축 설정

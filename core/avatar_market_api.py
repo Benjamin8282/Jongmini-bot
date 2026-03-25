@@ -1,9 +1,9 @@
 import os
 import time
 
-import aiohttp
 from dotenv import load_dotenv
 
+from core.dnf_api import get_session
 from core.logger import logger
 
 load_dotenv()
@@ -26,36 +26,45 @@ def _is_cache_valid(cache: dict, duration: int) -> bool:
 async def _fetch_json(url: str, params: dict) -> dict | None:
     """공통 GET 요청 후 JSON 반환. 실패 시 None."""
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as resp:
-                if resp.status == 200:
-                    return await resp.json()
-                logger.warning(f"아바타 마켓 API 실패: HTTP {resp.status} - {url}")
+        session = await get_session()
+        async with session.get(url, params=params) as resp:
+            if resp.status == 200:
+                return await resp.json()
+            logger.warning(f"아바타 마켓 API 실패: HTTP {resp.status} - {url}")
     except Exception as e:
         logger.error(f"아바타 마켓 API 예외: {e} - {url}")
     return None
 
 
-def _build_sale_params(title, job_id, hashtag, avatar_rarity, limit):
-    """판매 검색 파라미터 구성."""
+_OPTIONAL_PARAMS = {
+    "title": "title",
+    "job_id": "jobId",
+    "hashtag": "hashtag",
+    "avatar_rarity": "avatarRarity",
+    "slot_id": "slotId",
+}
+
+
+def _build_params(limit, **kwargs):
+    """검색 파라미터 구성. None이 아닌 값만 포함."""
     params = {"apikey": API_KEY, "limit": limit}
-    if title:
-        params["title"] = title
-    if job_id:
-        params["jobId"] = job_id
-    if hashtag:
-        params["hashtag"] = hashtag
-    if avatar_rarity:
-        params["avatarRarity"] = avatar_rarity
+    for key, api_key in _OPTIONAL_PARAMS.items():
+        val = kwargs.get(key)
+        if val:
+            params[api_key] = val
     return params
 
 
 async def fetch_avatar_sale(
-    title=None, job_id=None, hashtag=None, avatar_rarity=None, limit=20
+    title=None, job_id=None, hashtag=None,
+    avatar_rarity=None, slot_id=None, limit=20,
 ) -> list[dict]:
     """아바타 마켓 판매 중인 상품 검색."""
     url = f"{BASE_URL}/avatar-market/sale"
-    params = _build_sale_params(title, job_id, hashtag, avatar_rarity, limit)
+    params = _build_params(
+        limit, title=title, job_id=job_id, hashtag=hashtag,
+        avatar_rarity=avatar_rarity, slot_id=slot_id,
+    )
     data = await _fetch_json(url, params)
     if data is None:
         return []
@@ -65,11 +74,15 @@ async def fetch_avatar_sale(
 
 
 async def fetch_avatar_sold(
-    title=None, job_id=None, hashtag=None, avatar_rarity=None, limit=50
+    title=None, job_id=None, hashtag=None,
+    avatar_rarity=None, slot_id=None, limit=50,
 ) -> list[dict]:
     """아바타 마켓 시세(판매 완료) 검색."""
     url = f"{BASE_URL}/avatar-market/sold"
-    params = _build_sale_params(title, job_id, hashtag, avatar_rarity, limit)
+    params = _build_params(
+        limit, title=title, job_id=job_id, hashtag=hashtag,
+        avatar_rarity=avatar_rarity, slot_id=slot_id,
+    )
     data = await _fetch_json(url, params)
     if data is None:
         return []

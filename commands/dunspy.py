@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from discord import app_commands, Interaction
 
@@ -80,7 +82,8 @@ async def _build_dunspy(display_days: int = 30):
     if data is None:
         return "바스켓 아이템이 부족하거나 가격 데이터가 없습니다."
 
-    chart_buf = generate_dunspy_chart(
+    chart_buf = await asyncio.to_thread(
+        generate_dunspy_chart,
         dates=data["dates"],
         index_values=data["index"],
         current=data["current"],
@@ -110,7 +113,7 @@ class DunspyControlView(discord.ui.View):
         if self.message:
             try:
                 await self.message.delete()
-            except Exception:
+            except discord.HTTPException:
                 pass
 
     def _update_buttons(self):
