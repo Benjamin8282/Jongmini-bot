@@ -9,13 +9,13 @@ async def monthly_status(interaction: Interaction):
 
     start_time, end_time = get_monthly_period()
 
-    embed = await aggregate_items_and_notify_for_period(
+    embed, _ = await aggregate_items_and_notify_for_period(
         interaction.client,
         str(interaction.guild_id),
         start_time,
         end_time,
-        interaction=None,  # 실제 응답은 followup으로 보내기 때문에 None으로 넘김
-        period="월간",  # 집계 기간 표시
+        interaction=None,
+        period="월간",
         need_embed=True
     )
 

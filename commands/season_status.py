@@ -12,7 +12,7 @@ async def season_status(interaction: Interaction):
 
     start_time, end_time = get_season_period()
 
-    embed = await aggregate_items_and_notify_for_period(
+    embed, _ = await aggregate_items_and_notify_for_period(
         interaction.client,
         str(interaction.guild_id),
         start_time,

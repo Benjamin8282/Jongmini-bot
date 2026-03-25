@@ -8,7 +8,8 @@ from core.db import (
     get_all_characters_grouped_by_adventure,
     get_output_channel,
     get_last_aggregation_time,
-    update_last_aggregation_time
+    update_last_aggregation_time,
+    record_rest_days,
 )
 from core.logger import logger
 from tasks.morning_briefing import send_morning_briefing
@@ -203,7 +204,7 @@ async def aggregate_items_and_notify_for_period(
     grouped = await get_all_characters_grouped_by_adventure()
     if not grouped:
         logger.info("DB에 등록된 캐릭터가 없습니다.")
-        return
+        return None, {}
 
     adventure_item_counts = defaultdict(lambda: defaultdict(int))
     periods = _split_periods(start_time, end_time)
@@ -213,7 +214,8 @@ async def aggregate_items_and_notify_for_period(
     adventure_scores = _calc_adventure_scores(adventure_item_counts)
     embed = format_rank_embed(adventure_scores, base_time, period=period)
 
-    return await _send_aggregation_result(bot, guild_id, embed, interaction, need_embed)
+    result = await _send_aggregation_result(bot, guild_id, embed, interaction, need_embed)
+    return result, dict(adventure_item_counts)
 
 
 async def _send_season_final_summary(bot, guild_id):
@@ -233,12 +235,34 @@ async def _send_season_final_summary(bot, guild_id):
         logger.error(f"시즌 최종 집계 발송 실패: {e}")
 
 
+async def _detect_and_record_rest_days(adventure_item_counts, start_time):
+    """아이템 0건 모험단을 쉬었음으로 기록."""
+    grouped = await get_all_characters_grouped_by_adventure()
+    if not grouped:
+        return
+    rest_date = start_time.strftime("%Y-%m-%d")
+    rest_records = []
+    for adv_name in grouped:
+        total = sum(adventure_item_counts.get(adv_name, {}).values())
+        if total == 0:
+            rest_records.append({"adventure_name": adv_name, "rest_date": rest_date})
+    if rest_records:
+        await record_rest_days(rest_records)
+        names = ", ".join(r["adventure_name"] for r in rest_records)
+        logger.info(f"쉬었음 기록: {rest_date} — {names}")
+
+
 async def aggregate_daily_items_and_notify(bot, guild_id):
     """
     6시 정기 집계용 (전날 6시 ~ 오늘 5시 59분 59초)
     """
     start_time, end_time = get_daily_aggregation_period()
-    await aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=end_time, period="일간")
+    _, item_counts = await aggregate_items_and_notify_for_period(
+        bot, guild_id, start_time, end_time, base_time=end_time, period="일간"
+    )
+
+    # 쉬었음 감지 및 기록
+    await _detect_and_record_rest_days(item_counts, start_time)
 
     # 시즌 종료일이면 시즌 최종 집계 발송
     await _send_season_final_summary(bot, guild_id)
