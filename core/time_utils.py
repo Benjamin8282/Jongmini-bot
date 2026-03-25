@@ -2,7 +2,12 @@ from datetime import datetime, timedelta, timezone
 
 KST = timezone(timedelta(hours=9))
 
-SEASON_START_DATE = datetime(2025, 1, 8, 6, 0, 0, tzinfo=KST)  # 중천 시즌 시작일 오전 6시
+PREV_SEASON_NAME = "중천"
+PREV_SEASON_START = datetime(2025, 1, 8, 6, 0, 0, tzinfo=KST)
+PREV_SEASON_END = datetime(2026, 3, 26, 6, 0, 0, tzinfo=KST)
+
+SEASON_NAME = "천해천"
+SEASON_START_DATE = datetime(2026, 3, 26, 6, 0, 0, tzinfo=KST)  # 천해천 시즌 시작일 오전 6시
 
 
 def get_weekly_period():

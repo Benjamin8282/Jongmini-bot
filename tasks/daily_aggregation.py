@@ -15,7 +15,10 @@ from tasks.morning_briefing import send_morning_briefing
 import discord
 
 from core.models import RARITY_WEIGHTS
-from core.time_utils import KST, get_daily_aggregation_period
+from core.time_utils import (
+    KST, get_daily_aggregation_period,
+    PREV_SEASON_NAME, PREV_SEASON_START, PREV_SEASON_END,
+)
 
 MAX_RETRY_DURATION = 7 * 60 * 60  # 7시간
 RETRY_INTERVAL = 60  # 1분
@@ -213,12 +216,32 @@ async def aggregate_items_and_notify_for_period(
     return await _send_aggregation_result(bot, guild_id, embed, interaction, need_embed)
 
 
+async def _send_season_final_summary(bot, guild_id):
+    """시즌 종료일에 시즌 총 집계를 발송한다."""
+    now = datetime.now(KST)
+    if not (now.date() == PREV_SEASON_END.date() and now.hour >= 6):
+        return
+    # 이미 발송했는지 중복 방지 (같은 날 6시 집계는 1회만 실행됨)
+    logger.info(f"{PREV_SEASON_NAME} 시즌 종료 — 최종 집계 발송")
+    try:
+        await aggregate_items_and_notify_for_period(
+            bot, guild_id,
+            PREV_SEASON_START, PREV_SEASON_END,
+            period=f"{PREV_SEASON_NAME} 시즌 최종",
+        )
+    except Exception as e:
+        logger.error(f"시즌 최종 집계 발송 실패: {e}")
+
+
 async def aggregate_daily_items_and_notify(bot, guild_id):
     """
     6시 정기 집계용 (전날 6시 ~ 오늘 5시 59분 59초)
     """
     start_time, end_time = get_daily_aggregation_period()
     await aggregate_items_and_notify_for_period(bot, guild_id, start_time, end_time, base_time=end_time, period="일간")
+
+    # 시즌 종료일이면 시즌 최종 집계 발송
+    await _send_season_final_summary(bot, guild_id)
 
     # 6시 집계 결과만 DB에 기록
     await update_last_aggregation_time(datetime.now(KST).strftime("%Y%m%dT%H%M"))
