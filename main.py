@@ -116,6 +116,15 @@ class JongminiBot(commands.Bot):
         self.dundam_queue = DundamQueueManager.get_instance()
         logger.info("JongminiBot 인스턴스 생성됨")
 
+    async def close(self):
+        """봇 종료 시 리소스 정리."""
+        from core.db import close_db
+        from core.dnf_api import close_session
+        await close_session()
+        await close_db()
+        logger.info("봇 리소스 정리 완료")
+        await super().close()
+
     async def setup_hook(self):
         logger.info("봇 setup_hook 시작 - DB 초기화 및 명령어 등록")
         await init_db()

@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 
 import discord
@@ -164,10 +165,12 @@ def _calc_corr_result(ohlc_a, ohlc_b) -> dict | None:
 
 
 async def _fetch_pair_records(item_id_a, item_id_b, period_days):
-    """두 아이템의 가격 이력을 조회."""
+    """두 아이템의 가격 이력을 병렬 조회."""
     start_str, end_str = _fetch_time_range(period_days)
-    records_a = await get_price_history(item_id_a, start_str, end_str)
-    records_b = await get_price_history(item_id_b, start_str, end_str)
+    records_a, records_b = await asyncio.gather(
+        get_price_history(item_id_a, start_str, end_str),
+        get_price_history(item_id_b, start_str, end_str),
+    )
     return records_a, records_b
 
 
@@ -188,17 +191,20 @@ async def _build_comparison(
         return err
 
     interval_label = _get_interval_label(interval_minutes)
-    ohlc_a = aggregate_to_ohlc(records_a, interval_minutes)
-    ohlc_b = aggregate_to_ohlc(records_b, interval_minutes)
+    ohlc_a, ohlc_b = await asyncio.gather(
+        asyncio.to_thread(aggregate_to_ohlc, records_a, interval_minutes),
+        asyncio.to_thread(aggregate_to_ohlc, records_b, interval_minutes),
+    )
 
     if _both_ohlc_empty(ohlc_a, ohlc_b):
         return "OHLC 데이터를 생성할 수 없습니다."
 
     corr_result = _calc_corr_result(ohlc_a, ohlc_b)
     corr_val = corr_result["correlation"] if corr_result else None
-    chart_buf = generate_comparison_chart(
+    chart_buf = await asyncio.to_thread(
+        generate_comparison_chart,
         item_name_a, ohlc_a, item_name_b, ohlc_b,
-        interval_label, corr_val
+        interval_label, corr_val,
     )
     if not chart_buf:
         return "차트 생성에 실패했습니다."
@@ -231,7 +237,7 @@ class CompareControlView(ui.View):
         if self.message:
             try:
                 await self.message.delete()
-            except Exception:
+            except discord.HTTPException:
                 pass
 
     def _update_buttons(self):

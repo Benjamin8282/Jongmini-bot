@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 
 import discord
@@ -66,8 +67,26 @@ def _build_item_result(item_name, item_id, records_24h, records_48h, h24_boundar
     }
 
 
+_BRIEFING_SEM = asyncio.Semaphore(5)
+
+
+async def _fetch_single_item(item, h24_start, h48_start, h24_end, h24_boundary):
+    """단일 아이템의 24시간/48시간 데이터 + 교차 시그널을 병렬 수집."""
+    async with _BRIEFING_SEM:
+        item_id = item["item_id"]
+        item_name = item["item_name"]
+
+        records_24h, records_48h, signal = await asyncio.gather(
+            get_price_history(item_id, h24_start, h24_end),
+            get_price_history(item_id, h48_start, h24_end),
+            _detect_cross_signal(item_id, item_name),
+        )
+
+    return _build_item_result(item_name, item_id, records_24h, records_48h, h24_boundary, signal)
+
+
 async def _collect_item_data():
-    """전 감시 아이템의 24시간/48시간 데이터 수집"""
+    """전 감시 아이템의 24시간/48시간 데이터 병렬 수집"""
     watch_items = await get_all_watch_items()
     if not watch_items:
         return []
@@ -75,21 +94,11 @@ async def _collect_item_data():
     now = datetime.now(KST)
     h24_start, h48_start, h24_end, h24_boundary = _compute_time_ranges(now)
 
-    results = []
-    for item in watch_items:
-        item_id = item["item_id"]
-        item_name = item["item_name"]
-
-        records_24h = await get_price_history(item_id, h24_start, h24_end)
-        records_48h = await get_price_history(item_id, h48_start, h24_end)
-
-        signal = await _detect_cross_signal(item_id, item_name)
-
-        result = _build_item_result(item_name, item_id, records_24h, records_48h, h24_boundary, signal)
-        if result:
-            results.append(result)
-
-    return results
+    results = await asyncio.gather(*(
+        _fetch_single_item(item, h24_start, h48_start, h24_end, h24_boundary)
+        for item in watch_items
+    ))
+    return [r for r in results if r is not None]
 
 
 def _determine_cross_type(closes):
@@ -116,7 +125,7 @@ async def _detect_cross_signal(item_id: str, item_name: str) -> str | None:
     if not records:
         return None
 
-    ohlc = aggregate_to_ohlc(records, interval_minutes=1440)
+    ohlc = await asyncio.to_thread(aggregate_to_ohlc, records, 1440)
     if len(ohlc) < 20:
         return None
 
@@ -275,7 +284,7 @@ async def send_morning_briefing(bot, guild_id: str):
 
     # 스파크라인 차트 생성
     chart_data = sorted(items_data, key=lambda x: abs(x["change_pct"]), reverse=True)
-    chart_buf = generate_overview_chart(chart_data)
+    chart_buf = await asyncio.to_thread(generate_overview_chart, chart_data)
 
     channel_id = await get_output_channel(guild_id, 'economy')
     if not channel_id:

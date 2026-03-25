@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 
 import discord
@@ -150,18 +151,20 @@ async def _build_chart(item_id: str, item_name: str, interval_minutes: int, peri
         return f"해당 기간({period_days}일) 거래 기록이 없습니다."
 
     interval_label = _get_interval_label(interval_minutes)
-    ohlc_df = aggregate_to_ohlc(records, interval_minutes)
+    ohlc_df = await asyncio.to_thread(aggregate_to_ohlc, records, interval_minutes)
     if ohlc_df.empty:
         return "OHLC 데이터를 생성할 수 없습니다."
 
-    chart_buf = generate_candlestick_chart(item_name, ohlc_df, interval_label)
+    chart_buf = await asyncio.to_thread(generate_candlestick_chart, item_name, ohlc_df, interval_label)
     if not chart_buf:
         return "차트 생성에 실패했습니다."
 
     file = discord.File(chart_buf, filename="auction_chart.png")
     embed = _build_price_embed(item_name, item_id, ohlc_df, records, period_days, interval_label)
-    analysis_embed = _build_analysis_embed(ohlc_df)
-    recommend_embed = _build_recommend_embed(records)
+    analysis_embed, recommend_embed = await asyncio.gather(
+        asyncio.to_thread(_build_analysis_embed, ohlc_df),
+        asyncio.to_thread(_build_recommend_embed, records),
+    )
 
     return embed, file, analysis_embed, recommend_embed
 
@@ -182,7 +185,7 @@ class ChartControlView(ui.View):
         if self.message:
             try:
                 await self.message.delete()
-            except Exception:
+            except discord.HTTPException:
                 pass
 
     def _update_buttons(self):

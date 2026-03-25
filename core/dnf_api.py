@@ -3,19 +3,38 @@ from core.logger import logger
 
 import aiohttp
 from dotenv import load_dotenv
-import aiosqlite
-from pathlib import Path
 
 from datetime import datetime
+
+from core.db import get_conn
 
 load_dotenv()
 API_KEY = os.getenv("NEOPLE_API_KEY")
 
 BASE_URL = "https://api.neople.co.kr/df"
-DB_PATH = Path("data/characters.db")
 
 # 글로벌 메모리 캐시
 ITEM_DETAIL_MEMCACHE = {}
+
+# 공유 HTTP 세션
+_session: aiohttp.ClientSession | None = None
+
+
+async def get_session() -> aiohttp.ClientSession:
+    """공유 HTTP 세션 반환. 최초 호출 시 생성."""
+    global _session
+    if _session is None or _session.closed:
+        connector = aiohttp.TCPConnector(limit=50, limit_per_host=10)
+        _session = aiohttp.ClientSession(connector=connector)
+    return _session
+
+
+async def close_session():
+    """봇 종료 시 HTTP 세션 정리."""
+    global _session
+    if _session is not None and not _session.closed:
+        await _session.close()
+    _session = None
 
 
 async def search_characters(server_id: str, character_name: str):
@@ -27,14 +46,14 @@ async def search_characters(server_id: str, character_name: str):
     }
 
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    logger.info(f"search_characters 성공: {len(data.get('rows', []))}개 캐릭터 반환")
-                    return data
-                else:
-                    logger.warning(f"search_characters 실패: HTTP {response.status}")
+        session = await get_session()
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                logger.info(f"search_characters 성공: {len(data.get('rows', []))}개 캐릭터 반환")
+                return data
+            else:
+                logger.warning(f"search_characters 실패: HTTP {response.status}")
     except Exception as e:
         logger.error(f"search_characters 예외 발생: {e}")
 
@@ -53,14 +72,14 @@ async def get_character_image_bytes(server_id: str, character_id: str):
     url = f"https://img-api.neople.co.kr/df/servers/{server_id}/characters/{character_id}?zoom={zoom}"
 
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status == 200:
-                    img_bytes = await response.read()
-                    logger.info(f"get_character_image_bytes 성공: {len(img_bytes)} 바이트 수신")
-                    return img_bytes
-                else:
-                    logger.warning(f"get_character_image_bytes 실패: HTTP {response.status}")
+        session = await get_session()
+        async with session.get(url) as response:
+            if response.status == 200:
+                img_bytes = await response.read()
+                logger.info(f"get_character_image_bytes 성공: {len(img_bytes)} 바이트 수신")
+                return img_bytes
+            else:
+                logger.warning(f"get_character_image_bytes 실패: HTTP {response.status}")
     except Exception as e:
         logger.error(f"get_character_image_bytes 예외 발생: {e}")
 
@@ -73,14 +92,14 @@ async def get_character_details(server_id: str, character_id: str) -> dict:
     params = {"apikey": API_KEY}
 
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    logger.info("get_character_details 성공")
-                    return data
-                else:
-                    logger.warning(f"get_character_details 실패: HTTP {response.status}")
+        session = await get_session()
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                logger.info("get_character_details 성공")
+                return data
+            else:
+                logger.warning(f"get_character_details 실패: HTTP {response.status}")
     except Exception as e:
         logger.error(f"get_character_details 예외 발생: {e}")
 
@@ -106,12 +125,12 @@ async def fetch_timeline(server_id: str, character_id: str, start_date: str = No
         "limit": 100
     }
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, params=params) as resp:
-            if resp.status == 200:
-                return await resp.json()
-            else:
-                return None
+    session = await get_session()
+    async with session.get(url, params=params) as resp:
+        if resp.status == 200:
+            return await resp.json()
+        else:
+            return None
 
 
 def _build_timeline_params(start_date: str | None, end_date: str | None) -> dict:
@@ -162,15 +181,15 @@ async def fetch_timeline_with_pagination(
     all_rows = []
     next_token = None
 
-    async with aiohttp.ClientSession() as session:
-        while True:
-            page_result = await _fetch_single_timeline_page(session, url, params, next_token)
-            if page_result is None:
-                return None
-            rows, next_token = page_result
-            all_rows.extend(rows)
-            if not next_token:
-                break
+    session = await get_session()
+    while True:
+        page_result = await _fetch_single_timeline_page(session, url, params, next_token)
+        if page_result is None:
+            return None
+        rows, next_token = page_result
+        all_rows.extend(rows)
+        if not next_token:
+            break
 
     return {"timeline": {"rows": all_rows}}
 
@@ -185,10 +204,10 @@ async def preload_item_cache():
     global ITEM_DETAIL_MEMCACHE
     ITEM_DETAIL_MEMCACHE = {}
     try:
-        async with aiosqlite.connect(DB_PATH) as conn:
-            async with conn.execute("SELECT item_id, item_available_level FROM item_cache") as cursor:
-                async for row in cursor:
-                    ITEM_DETAIL_MEMCACHE[row[0]] = row[1]
+        conn = await get_conn()
+        async with conn.execute("SELECT item_id, item_available_level FROM item_cache") as cursor:
+            async for row in cursor:
+                ITEM_DETAIL_MEMCACHE[row[0]] = row[1]
         logger.info(f"메모리 캐시 preload 완료: {len(ITEM_DETAIL_MEMCACHE)}개 아이템")
     except Exception as e:
         logger.error(f"메모리 캐시 preload 실패: {e}")
@@ -201,15 +220,15 @@ async def preload_item_cache():
 async def _fetch_item_from_db(item_id: str) -> int | None:
     """DB 캐시에서 아이템 레벨 조회. 없으면 None."""
     try:
-        async with aiosqlite.connect(DB_PATH) as conn:
-            cursor = await conn.execute(
-                "SELECT item_available_level FROM item_cache WHERE item_id = ?", (item_id,))
-            row = await cursor.fetchone()
-            if row:
-                level = row[0]
-                ITEM_DETAIL_MEMCACHE[item_id] = level  # 메모리 캐시 동기화
-                logger.info(f"[dbcache] 캐시 히트: {item_id} - {level}")
-                return level
+        conn = await get_conn()
+        cursor = await conn.execute(
+            "SELECT item_available_level FROM item_cache WHERE item_id = ?", (item_id,))
+        row = await cursor.fetchone()
+        if row:
+            level = row[0]
+            ITEM_DETAIL_MEMCACHE[item_id] = level  # 메모리 캐시 동기화
+            logger.info(f"[dbcache] 캐시 히트: {item_id} - {level}")
+            return level
     except Exception as e:
         logger.error(f"DB 캐시 조회 중 오류: {e}")
     return None
@@ -218,12 +237,12 @@ async def _fetch_item_from_db(item_id: str) -> int | None:
 async def _save_item_to_db(item_id: str, level: int):
     """아이템 레벨을 DB 캐시에 저장."""
     try:
-        async with aiosqlite.connect(DB_PATH) as conn:
-            await conn.execute(
-                "INSERT OR REPLACE INTO item_cache (item_id, item_available_level) VALUES (?, ?)",
-                (item_id, level)
-            )
-            await conn.commit()
+        conn = await get_conn()
+        await conn.execute(
+            "INSERT OR REPLACE INTO item_cache (item_id, item_available_level) VALUES (?, ?)",
+            (item_id, level)
+        )
+        await conn.commit()
         logger.info(f"아이템 캐시 저장 완료: {item_id} - 레벨 {level}")
     except Exception as e:
         logger.error(f"아이템 캐시 저장 실패: {e}")
@@ -234,17 +253,17 @@ async def _fetch_item_from_api(item_id: str) -> int | None:
     url = f"{BASE_URL}/items/{item_id}"
     params = {"apikey": API_KEY}
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    level = data.get("itemAvailableLevel", 0)
-                    logger.info(f"아이템 상세 조회 성공: {item_id} - 레벨 {level}")
-                    ITEM_DETAIL_MEMCACHE[item_id] = level
-                    await _save_item_to_db(item_id, level)
-                    return level
-                else:
-                    logger.warning(f"아이템 상세 조회 실패: HTTP {response.status} - {item_id}")
+        session = await get_session()
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                level = data.get("itemAvailableLevel", 0)
+                logger.info(f"아이템 상세 조회 성공: {item_id} - 레벨 {level}")
+                ITEM_DETAIL_MEMCACHE[item_id] = level
+                await _save_item_to_db(item_id, level)
+                return level
+            else:
+                logger.warning(f"아이템 상세 조회 실패: HTTP {response.status} - {item_id}")
     except Exception as e:
         logger.error(f"아이템 상세 조회 예외 발생: {e}")
     return None
@@ -286,15 +305,15 @@ async def fetch_auction_sold(item_name: str) -> list[dict] | None:
         "apikey": API_KEY
     }
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    rows = data.get("rows", [])
-                    logger.info(f"경매장 시세 조회 성공: {item_name} - {len(rows)}건")
-                    return rows
-                else:
-                    logger.warning(f"경매장 시세 조회 실패: HTTP {response.status}")
+        session = await get_session()
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                rows = data.get("rows", [])
+                logger.info(f"경매장 시세 조회 성공: {item_name} - {len(rows)}건")
+                return rows
+            else:
+                logger.warning(f"경매장 시세 조회 실패: HTTP {response.status}")
     except Exception as e:
         logger.error(f"경매장 시세 조회 예외: {e}")
     return None
@@ -310,15 +329,15 @@ async def fetch_item_search(item_name: str) -> list[dict] | None:
         "apikey": API_KEY
     }
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    rows = data.get("rows", [])
-                    logger.info(f"아이템 검색 성공: {item_name} - {len(rows)}건")
-                    return rows
-                else:
-                    logger.warning(f"아이템 검색 실패: HTTP {response.status}")
+        session = await get_session()
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                rows = data.get("rows", [])
+                logger.info(f"아이템 검색 성공: {item_name} - {len(rows)}건")
+                return rows
+            else:
+                logger.warning(f"아이템 검색 실패: HTTP {response.status}")
     except Exception as e:
         logger.error(f"아이템 검색 예외: {e}")
     return None

@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 
 import discord
@@ -28,13 +29,13 @@ def _calc_item_data(records: list, item_name: str) -> dict | None:
 
 
 async def _collect_items_data(watch_items: list[dict], start_str: str, end_str: str) -> list[dict]:
-    """모든 감시 아이템의 24시간 시세 데이터 수집."""
-    items_data = []
-    for item in watch_items:
+    """모든 감시 아이템의 24시간 시세 데이터 병렬 수집."""
+    async def _fetch_one(item):
         records = await get_price_history(item["item_id"], start_str, end_str)
-        data = _calc_item_data(records, item["item_name"])
-        if data:
-            items_data.append(data)
+        return _calc_item_data(records, item["item_name"])
+
+    results = await asyncio.gather(*(_fetch_one(item) for item in watch_items))
+    items_data = [d for d in results if d is not None]
     items_data.sort(key=lambda x: abs(x["change_pct"]), reverse=True)
     return items_data
 
@@ -59,7 +60,7 @@ async def auction_overview(interaction: Interaction):
         await interaction.followup.send("최근 24시간 거래 기록이 있는 아이템이 없습니다.")
         return
 
-    chart_buf = generate_overview_chart(items_data)
+    chart_buf = await asyncio.to_thread(generate_overview_chart, items_data)
     if not chart_buf:
         await interaction.followup.send("차트 생성에 실패했습니다.")
         return

@@ -7,7 +7,6 @@ import tempfile
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-import aiosqlite
 import discord
 import paramiko
 from discord import app_commands
@@ -16,7 +15,7 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side, numbers
 from openpyxl.utils import get_column_letter
 
 from core._sftp_auth import get_passphrase
-from core.db import get_all_watch_items, DB_PATH
+from core.db import get_all_watch_items, get_conn
 from core.logger import logger
 
 KST = timezone(timedelta(hours=9))
@@ -64,23 +63,21 @@ async def _fetch_export_data(item_id: str | None, days: int | None) -> tuple[lis
 
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
-    async with aiosqlite.connect(DB_PATH) as conn:
-        conn.row_factory = aiosqlite.Row
+    conn = await get_conn()
+    cursor = await conn.execute(
+        f"SELECT COUNT(*) as cnt FROM auction_price_history aph {where}", params
+    )
+    total = (await cursor.fetchone())["cnt"]
 
-        cursor = await conn.execute(
-            f"SELECT COUNT(*) as cnt FROM auction_price_history aph {where}", params
-        )
-        total = (await cursor.fetchone())["cnt"]
-
-        cursor = await conn.execute(f"""
-            SELECT aph.item_id, aw.item_name, aph.sold_date,
-                   aph.unit_price, aph.price, aph.count
-            FROM auction_price_history aph
-            LEFT JOIN auction_watch_items aw ON aph.item_id = aw.item_id
-            {where}
-            ORDER BY aw.item_name, aph.sold_date
-        """, params)
-        rows = await cursor.fetchall()
+    cursor = await conn.execute(f"""
+        SELECT aph.item_id, aw.item_name, aph.sold_date,
+               aph.unit_price, aph.price, aph.count
+        FROM auction_price_history aph
+        LEFT JOIN auction_watch_items aw ON aph.item_id = aw.item_id
+        {where}
+        ORDER BY aw.item_name, aph.sold_date
+    """, params)
+    rows = await cursor.fetchall()
 
     return [dict(r) for r in rows], total
 
