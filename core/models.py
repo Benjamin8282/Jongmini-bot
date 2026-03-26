@@ -34,11 +34,11 @@ RARITY_WEIGHTS = {
     "레전더리": 1
 }
 
-# 서약 장비(code 550) 등급별 가중치
+# 서약 장비(code 550, 552) 등급별 가중치
 COVENANT_RARITY_WEIGHTS = {
     "태초": 100,
     "에픽": 10,
     "레전더리": 4
 }
 
-COVENANT_CODE = 550
+COVENANT_CODES = {550, 552}

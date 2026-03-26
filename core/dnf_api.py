@@ -126,7 +126,7 @@ async def fetch_timeline(server_id: str, character_id: str, start_date: str = No
         "apikey": API_KEY,
         "startDate": start_date,
         "endDate": end_date,
-        "code": "505,504,507,508,513,550",
+        "code": "505,504,507,508,513,550,552",
         "limit": 100
     }
 
@@ -150,7 +150,7 @@ def _build_timeline_params(start_date: str | None, end_date: str | None) -> dict
         "apikey": API_KEY,
         "startDate": start_date,
         "endDate": end_date,
-        "code": "505,504,507,508,513,550",
+        "code": "505,504,507,508,513,550,552",
         "limit": 100
     }
 

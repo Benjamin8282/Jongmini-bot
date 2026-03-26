@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from core.db import get_all_characters, get_output_channel  # 캐릭터 목록 조회 함수
 from core.logger import logger
-from core.models import RARITY_WEIGHTS, COVENANT_RARITY_WEIGHTS, COVENANT_CODE
+from core.models import RARITY_WEIGHTS, COVENANT_RARITY_WEIGHTS, COVENANT_CODES
 from core.dnf_api import fetch_timeline, fetch_item_detail
 import discord
 import asyncio
@@ -189,7 +189,7 @@ async def aggregate_weekly_items_by_character(bot, guild_id, interaction=None):
                 rarity = item.get("data", {}).get("itemRarity")
                 code = item.get("code")
                 if rarity in RARITY_WEIGHTS:
-                    if code == COVENANT_CODE:
+                    if code in COVENANT_CODES:
                         character_covenant_counts[character_name][rarity] += 1
                     else:
                         character_item_counts[character_name][rarity] += 1

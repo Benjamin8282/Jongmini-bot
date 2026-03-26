@@ -15,7 +15,7 @@ from core.logger import logger
 from tasks.morning_briefing import send_morning_briefing
 import discord
 
-from core.models import RARITY_WEIGHTS, COVENANT_RARITY_WEIGHTS, COVENANT_CODE
+from core.models import RARITY_WEIGHTS, COVENANT_RARITY_WEIGHTS, COVENANT_CODES
 from core.time_utils import (
     KST, get_daily_aggregation_period,
     PREV_SEASON_NAME, PREV_SEASON_START, PREV_SEASON_END,
@@ -83,7 +83,7 @@ async def process_character(char, adventure_name, start_date_str, end_date_str,
             rarity = item.get("data", {}).get("itemRarity")
             code = item.get("code")
             if rarity in RARITY_WEIGHTS:
-                if code == COVENANT_CODE:
+                if code in COVENANT_CODES:
                     adventure_covenant_counts[adventure_name][rarity] += 1
                 else:
                     adventure_item_counts[adventure_name][rarity] += 1
@@ -221,7 +221,7 @@ async def _gather_all_character_items(grouped, periods, adventure_item_counts, a
                     rarity = item.get("data", {}).get("itemRarity")
                     code = item.get("code")
                     if rarity in RARITY_WEIGHTS:
-                        if code == COVENANT_CODE:
+                        if code in COVENANT_CODES:
                             adventure_covenant_counts[adventure_name][rarity] += 1
                         else:
                             adventure_item_counts[adventure_name][rarity] += 1
