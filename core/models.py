@@ -27,9 +27,18 @@ SERVER_CHOICES = [
 
 ALLOWED_RARITIES = {"에픽", "태초"}
 
-# 아이템 등급별 가중치 (태초 100, 에픽 10, 레전더리 4)
+# 일반 아이템 등급별 가중치
 RARITY_WEIGHTS = {
+    "태초": 25,
+    "에픽": 2,
+    "레전더리": 1
+}
+
+# 서약 장비(code 550) 등급별 가중치
+COVENANT_RARITY_WEIGHTS = {
     "태초": 100,
     "에픽": 10,
     "레전더리": 4
 }
+
+COVENANT_CODE = 550

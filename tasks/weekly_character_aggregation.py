@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from core.db import get_all_characters, get_output_channel  # 캐릭터 목록 조회 함수
 from core.logger import logger
-from core.models import RARITY_WEIGHTS
+from core.models import RARITY_WEIGHTS, COVENANT_RARITY_WEIGHTS, COVENANT_CODE
 from core.dnf_api import fetch_timeline, fetch_item_detail
 import discord
 import asyncio
@@ -32,6 +32,18 @@ async def filter_items_level_115(timeline_rows):
     return [item for item in results if item is not None]
 
 
+def _format_counts_line(label, counts, score):
+    """등급별 카운트를 한 줄로 포맷"""
+    parts = []
+    for rarity in ("태초", "에픽", "레전더리"):
+        c = counts.get(rarity, 0)
+        if c > 0:
+            parts.append(f"{rarity}:{c}")
+    if not parts:
+        return ""
+    return f"{label} {', '.join(parts)} ({score}점)"
+
+
 def format_character_rank_embed(rank_list, timestamp):
     embed = discord.Embed(
         title="캐릭터별 주간 아이템 획득량 순위",
@@ -40,30 +52,43 @@ def format_character_rank_embed(rank_list, timestamp):
     )
     prev_score = None
     prev_rank = 0
-    count_same_score = 0  # 현재까지 동점자 수
+    count_same_score = 0
 
     display_list = rank_list[:20]
 
     for entry in display_list:
         score = entry['score']
         counts = entry['counts']
+        cov_counts = entry.get('covenant_counts', {})
+        regular_score = entry.get('regular_score', score)
+        covenant_score = entry.get('covenant_score', 0)
         character_name = entry['character_name']
         adventure_name = entry.get('adventure_name', '모험단 없음')
 
         if score == prev_score:
-            # 동점자: 순위 유지, 동점자 수 증가
             rank = prev_rank
             count_same_score += 1
         else:
-            # 점수 다르면 이전 순위 + 동점자 수 + 1
             rank = prev_rank + count_same_score + 1
             count_same_score = 0
             prev_score = score
             prev_rank = rank
 
-        line = (f"점수: {score} "
-                f"(태초:{counts.get('태초', 0)}, 에픽:{counts.get('에픽', 0)}, 레전더리:{counts.get('레전더리', 0)})")
-        embed.add_field(name=f"{rank}위 {character_name} ({adventure_name})", value=line, inline=False)
+        lines = [f"**총 {score}점**"]
+
+        regular_line = _format_counts_line("일반 —", counts, regular_score)
+        if regular_line:
+            lines.append(regular_line)
+
+        covenant_line = _format_counts_line("⚔️서약 —", cov_counts, covenant_score)
+        if covenant_line:
+            lines.append(covenant_line)
+
+        embed.add_field(
+            name=f"{rank}위 {character_name} ({adventure_name})",
+            value="\n".join(lines),
+            inline=False
+        )
 
     return embed
 
@@ -79,21 +104,27 @@ def _compute_weekly_period(now):
     return start_time, now
 
 
-def _build_rank_list(character_item_counts, characters):
-    """캐릭터별 아이템 카운트에서 순위 리스트 생성"""
-    # 캐릭터명 -> 모험단명 매핑 생성
+def _build_rank_list(character_item_counts, character_covenant_counts, characters):
+    """캐릭터별 아이템 카운트에서 순위 리스트 생성 (일반 + 서약 분리)"""
     adventure_map = {
         char['character_name']: char.get('adventure_name', '모험단 없음')
         for char in characters
     }
 
+    all_names = set(character_item_counts.keys()) | set(character_covenant_counts.keys())
     rank_list = []
-    for character_name, counts in character_item_counts.items():
-        score = sum(RARITY_WEIGHTS.get(r, 0) * c for r, c in counts.items())
+    for character_name in all_names:
+        counts = dict(character_item_counts.get(character_name, {}))
+        cov_counts = dict(character_covenant_counts.get(character_name, {}))
+        regular_score = sum(RARITY_WEIGHTS.get(r, 0) * c for r, c in counts.items())
+        covenant_score = sum(COVENANT_RARITY_WEIGHTS.get(r, 0) * c for r, c in cov_counts.items())
         rank_list.append({
             "character_name": character_name,
-            "score": score,
+            "score": regular_score + covenant_score,
+            "regular_score": regular_score,
+            "covenant_score": covenant_score,
             "counts": counts,
+            "covenant_counts": cov_counts,
             "adventure_name": adventure_map.get(character_name, '모험단 없음')
         })
 
@@ -137,6 +168,7 @@ async def aggregate_weekly_items_by_character(bot, guild_id, interaction=None):
         return
 
     character_item_counts = defaultdict(lambda: defaultdict(int))
+    character_covenant_counts = defaultdict(lambda: defaultdict(int))
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
     async def process_character(char):
@@ -155,8 +187,12 @@ async def aggregate_weekly_items_by_character(bot, guild_id, interaction=None):
 
             for item in filtered_items:
                 rarity = item.get("data", {}).get("itemRarity")
+                code = item.get("code")
                 if rarity in RARITY_WEIGHTS:
-                    character_item_counts[character_name][rarity] += 1
+                    if code == COVENANT_CODE:
+                        character_covenant_counts[character_name][rarity] += 1
+                    else:
+                        character_item_counts[character_name][rarity] += 1
 
     results = await asyncio.gather(
         *(process_character(char) for char in characters),
@@ -166,7 +202,7 @@ async def aggregate_weekly_items_by_character(bot, guild_id, interaction=None):
         if isinstance(r, Exception):
             logger.warning(f"캐릭터별 주간 집계 중 오류: {r}")
 
-    rank_list = _build_rank_list(character_item_counts, characters)
+    rank_list = _build_rank_list(character_item_counts, character_covenant_counts, characters)
     embed = format_character_rank_embed(rank_list, end_time)
 
     await _send_embed_result(bot, guild_id, embed, interaction)
