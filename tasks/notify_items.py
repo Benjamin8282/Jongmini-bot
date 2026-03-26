@@ -65,7 +65,12 @@ def _build_description(adventure_name, character_name, item):
         507: lambda d: f" 레이드 카드 보상에서 {item_name}[{item_rarity}](을)를 획득했습니다.",
         550: lambda d: (
             f" {d.get('channelName')} {d.get('channelNo')}채널 "
-            f"{d.get('dungeonName')}에서 **신규 던전 보상**으로 "
+            f"{d.get('dungeonName')}에서 **서약결정 보상**으로 "
+            f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
+        ),
+        552: lambda d: (
+            f" {d.get('channelName')} {d.get('channelNo')}채널 "
+            f"{d.get('dungeonName')}에서 **서약 장비**로 "
             f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
         ),
     }
@@ -86,15 +91,15 @@ def format_item_announce_embed(adventure_name, character_name, item, event_date)
     description = _build_description(adventure_name, character_name, item)
 
     code = item.get("code")
-    if code == 550:
-        color = 0xE91E63  # 신규 던전 보상 강조색 (핫핑크)
+    if code in (550, 552):
+        color = 0xE91E63  # 서약 장비 강조색 (핫핑크)
 
     embed = discord.Embed(
         description=description,
         color=color
     )
-    if code == 550:
-        embed.title = "🌟 신규 던전 보상 획득!"
+    if code in (550, 552):
+        embed.title = "⚔️ 서약 장비 획득!"
     embed.set_footer(text=date_str)
     return embed
 
@@ -260,12 +265,12 @@ async def notify_all_characters(bot, guild_id):
                 logger.warning(f"캐릭터 알림 처리 중 오류: {r}")
 
 
-async def catchup_code550(bot, guild_id):
-    """배포 시 1회 실행: 2026-03-26 10:00 KST 이후 누락된 code=550 아이템 알림."""
-    logger.info("=== code 550 캐치업 시작 ===")
+async def catchup_covenant(bot, guild_id):
+    """배포 시 1회 실행: 2026-03-26 10:00 KST 이후 누락된 서약 장비(code 550/552) 알림."""
+    logger.info("=== 서약 장비 캐치업 시작 (code 550/552) ===")
     channel = await _resolve_output_channel(bot, guild_id)
     if not channel:
-        logger.warning("code 550 캐치업: 출력 채널 없음, 건너뜀")
+        logger.warning("서약 캐치업: 출력 채널 없음, 건너뜀")
         return
 
     grouped = await get_all_characters_grouped_by_adventure()
@@ -276,6 +281,7 @@ async def catchup_code550(bot, guild_id):
     end_date = datetime.now(KST).strftime("%Y%m%dT%H%M")
     semaphore = asyncio.Semaphore(50)
     found_count = 0
+    covenant_codes = {550, 552}
 
     async def _catchup_character(char):
         nonlocal found_count
@@ -293,13 +299,13 @@ async def catchup_code550(bot, guild_id):
             if not rows:
                 return
 
-            # code 550만 필터링
-            rows_550 = [r for r in rows if r.get("code") == 550]
-            if not rows_550:
+            # code 550/552 필터링
+            rows_covenant = [r for r in rows if r.get("code") in covenant_codes]
+            if not rows_covenant:
                 return
 
             # 레벨 115 + 허용 희귀도 필터
-            valid = await filter_valid_items(rows_550)
+            valid = await filter_valid_items(rows_covenant)
             valid = [
                 item for item in valid
                 if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
@@ -315,9 +321,9 @@ async def catchup_code550(bot, guild_id):
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for r in results:
             if isinstance(r, Exception):
-                logger.warning(f"code 550 캐치업 오류: {r}")
+                logger.warning(f"서약 캐치업 오류: {r}")
 
-    logger.info(f"=== code 550 캐치업 완료: {found_count}건 발송 ===")
+    logger.info(f"=== 서약 캐치업 완료: {found_count}건 발송 ===")
 
 
 async def periodic_notify(bot, guild_id):
