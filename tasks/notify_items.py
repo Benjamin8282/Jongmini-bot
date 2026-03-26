@@ -63,6 +63,11 @@ def _build_description(adventure_name, character_name, item):
             f"항아리/상자에서 {item_name}[{item_rarity}](을)를 획득했습니다."
         ),
         507: lambda d: f" 레이드 카드 보상에서 {item_name}[{item_rarity}](을)를 획득했습니다.",
+        550: lambda d: (
+            f" {d.get('channelName')} {d.get('channelNo')}채널 "
+            f"{d.get('dungeonName')}에서 **신규 던전 보상**으로 "
+            f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
+        ),
     }
 
     template = _CODE_TEMPLATES.get(code)
@@ -80,10 +85,16 @@ def format_item_announce_embed(adventure_name, character_name, item, event_date)
 
     description = _build_description(adventure_name, character_name, item)
 
+    code = item.get("code")
+    if code == 550:
+        color = 0xE91E63  # 신규 던전 보상 강조색 (핫핑크)
+
     embed = discord.Embed(
         description=description,
         color=color
     )
+    if code == 550:
+        embed.title = "🌟 신규 던전 보상 획득!"
     embed.set_footer(text=date_str)
     return embed
 
@@ -247,6 +258,66 @@ async def notify_all_characters(bot, guild_id):
         for r in results:
             if isinstance(r, Exception):
                 logger.warning(f"캐릭터 알림 처리 중 오류: {r}")
+
+
+async def catchup_code550(bot, guild_id):
+    """배포 시 1회 실행: 2026-03-26 10:00 KST 이후 누락된 code=550 아이템 알림."""
+    logger.info("=== code 550 캐치업 시작 ===")
+    channel = await _resolve_output_channel(bot, guild_id)
+    if not channel:
+        logger.warning("code 550 캐치업: 출력 채널 없음, 건너뜀")
+        return
+
+    grouped = await get_all_characters_grouped_by_adventure()
+    if not grouped:
+        return
+
+    start_date = "20260326T1000"
+    end_date = datetime.now(KST).strftime("%Y%m%dT%H%M")
+    semaphore = asyncio.Semaphore(50)
+    found_count = 0
+
+    async def _catchup_character(char):
+        nonlocal found_count
+        async with semaphore:
+            server_id = char['server_id']
+            character_id = char['character_id']
+            character_name = char['character_name']
+            adventure_name = char.get('adventure_name', '모험단명 없음')
+
+            timeline = await dnf_api.fetch_timeline(
+                server_id, character_id,
+                start_date=start_date, end_date=end_date
+            )
+            rows = _extract_timeline_rows(timeline, character_name)
+            if not rows:
+                return
+
+            # code 550만 필터링
+            rows_550 = [r for r in rows if r.get("code") == 550]
+            if not rows_550:
+                return
+
+            # 레벨 115 + 허용 희귀도 필터
+            valid = await filter_valid_items(rows_550)
+            valid = [
+                item for item in valid
+                if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
+            ]
+            if not valid:
+                return
+
+            found_count += len(valid)
+            await _send_item_embeds(channel, valid, adventure_name, character_name)
+
+    for _adventure, characters in grouped.items():
+        tasks = [_catchup_character(char) for char in characters]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for r in results:
+            if isinstance(r, Exception):
+                logger.warning(f"code 550 캐치업 오류: {r}")
+
+    logger.info(f"=== code 550 캐치업 완료: {found_count}건 발송 ===")
 
 
 async def periodic_notify(bot, guild_id):
