@@ -33,13 +33,21 @@ def parse_event_date(item):
 
 
 def get_rarity_color(rarity: str) -> int:
-    # 등급별 16진수 색상을 int로 반환
     mapping = {
         "레전더리": 0xFF7800,  # 주황
         "에픽": 0xFFB400,  # 노란
         "태초": 0x58d3dc  # 청록
     }
-    return mapping.get(rarity, 0x000000)  # 기본 검정
+    return mapping.get(rarity, 0x000000)
+
+
+def get_covenant_rarity_color(rarity: str) -> int:
+    mapping = {
+        "레전더리": 0xFF5500,  # 진한 주황
+        "에픽": 0xFFD700,  # 골드
+        "태초": 0x00F5FF  # 밝은 청록
+    }
+    return mapping.get(rarity, 0xFFD700)
 
 
 def _build_description(adventure_name, character_name, item):
@@ -92,13 +100,15 @@ def format_item_announce_embed(adventure_name, character_name, item, event_date)
 
     code = item.get("code")
     if code in (550, 552):
-        color = 0xE91E63  # 서약 장비 강조색 (핫핑크)
+        color = get_covenant_rarity_color(item_rarity)
 
     embed = discord.Embed(
         description=description,
         color=color
     )
-    if code in (550, 552):
+    if code == 550:
+        embed.title = "✦ 서약결정 획득!"
+    elif code == 552:
         embed.title = "⚔️ 서약 장비 획득!"
     embed.set_footer(text=date_str)
     return embed
