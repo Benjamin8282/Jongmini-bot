@@ -16,7 +16,7 @@ from core.db import init_db
 # tasks import
 from tasks.daily_aggregation import daily_aggregation_task
 from tasks.monthly_aggregation import monthly_aggregation_task
-from tasks.notify_items import periodic_notify, catchup_covenant
+from tasks.notify_items import periodic_notify
 from tasks.weekly_aggregation import weekly_aggregation_task
 # from tasks.weekly_character_aggregation import aggregate_weekly_items_by_character  # 캐릭터별 주간 집계 task (미사용)
 from tasks.poll_auction_prices import poll_auction_prices
@@ -189,11 +189,6 @@ async def on_ready():
     now = datetime.now(tz=bot.scheduler.timezone)
     logger.info(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
     print(f"현재 시간: {now.isoformat()} (타임존: {bot.scheduler.timezone})")
-
-    # [1회성] 서약 장비(550/552) 누락 데이터 캐치업 (배포 후 제거)
-    if not hasattr(bot, '_catchup_done'):
-        bot._catchup_done = True
-        await catchup_covenant(bot, GUILD_ID)
 
     # 백그라운드 task 시작
     _ensure_background_tasks(bot, GUILD_ID)

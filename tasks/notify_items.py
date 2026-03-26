@@ -275,67 +275,6 @@ async def notify_all_characters(bot, guild_id):
                 logger.warning(f"캐릭터 알림 처리 중 오류: {r}")
 
 
-async def catchup_covenant(bot, guild_id):
-    """배포 시 1회 실행: 2026-03-26 10:00 KST 이후 누락된 서약 장비(code 550/552) 알림."""
-    logger.info("=== 서약 장비 캐치업 시작 (code 550/552) ===")
-    channel = await _resolve_output_channel(bot, guild_id)
-    if not channel:
-        logger.warning("서약 캐치업: 출력 채널 없음, 건너뜀")
-        return
-
-    grouped = await get_all_characters_grouped_by_adventure()
-    if not grouped:
-        return
-
-    start_date = "20260326T1000"
-    end_date = datetime.now(KST).strftime("%Y%m%dT%H%M")
-    semaphore = asyncio.Semaphore(50)
-    found_count = 0
-    covenant_codes = {550, 552}
-
-    async def _catchup_character(char):
-        nonlocal found_count
-        async with semaphore:
-            server_id = char['server_id']
-            character_id = char['character_id']
-            character_name = char['character_name']
-            adventure_name = char.get('adventure_name', '모험단명 없음')
-
-            timeline = await dnf_api.fetch_timeline(
-                server_id, character_id,
-                start_date=start_date, end_date=end_date
-            )
-            rows = _extract_timeline_rows(timeline, character_name)
-            if not rows:
-                return
-
-            # code 550/552 필터링
-            rows_covenant = [r for r in rows if r.get("code") in covenant_codes]
-            if not rows_covenant:
-                return
-
-            # 레벨 115 + 허용 희귀도 필터
-            valid = await filter_valid_items(rows_covenant)
-            valid = [
-                item for item in valid
-                if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
-            ]
-            if not valid:
-                return
-
-            found_count += len(valid)
-            await _send_item_embeds(channel, valid, adventure_name, character_name)
-
-    for _adventure, characters in grouped.items():
-        tasks = [_catchup_character(char) for char in characters]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        for r in results:
-            if isinstance(r, Exception):
-                logger.warning(f"서약 캐치업 오류: {r}")
-
-    logger.info(f"=== 서약 캐치업 완료: {found_count}건 발송 ===")
-
-
 async def periodic_notify(bot, guild_id):
     while True:
         logger.info(f"=== DNF 타임라인 주기적 체크 시작: {datetime.now(KST)} ===")
