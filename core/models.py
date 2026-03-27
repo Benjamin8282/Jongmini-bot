@@ -42,3 +42,13 @@ COVENANT_RARITY_WEIGHTS = {
 }
 
 COVENANT_CODES = {550, 551, 552, 553, 554, 555, 556}
+
+MAX_MIST_LEVEL = 100
+
+
+def parse_exp_rate(exp_rate: str) -> float:
+    """'45%' -> 45.0, 파싱 실패 시 0.0"""
+    try:
+        return float(exp_rate.replace("%", ""))
+    except (ValueError, AttributeError):
+        return 0.0

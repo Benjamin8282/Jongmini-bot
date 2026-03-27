@@ -1224,7 +1224,7 @@ async def upsert_mist_assimilation(
                 representative_char_id = excluded.representative_char_id,
                 level = excluded.level,
                 exp_rate = excluded.exp_rate,
-                max_reached_at = excluded.max_reached_at,
+                max_reached_at = COALESCE(excluded.max_reached_at, mist_assimilation.max_reached_at),
                 last_checked = excluded.last_checked
         """, (adventure_name, server_id, char_id, level, exp_rate, max_reached_at))
         await conn.commit()

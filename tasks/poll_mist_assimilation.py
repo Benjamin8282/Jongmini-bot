@@ -12,22 +12,15 @@ from core.db import (
     get_output_channel,
 )
 from core.logger import logger
-from core.models import SERVER_MAP
+from core.models import SERVER_MAP, MAX_MIST_LEVEL
 
 POLL_INTERVAL = 30  # 30초
 KST = timezone(timedelta(hours=9))
 
 
-def _parse_exp_rate(exp_rate: str) -> float:
-    """'45%' -> 45.0, 파싱 실패 시 0.0"""
-    try:
-        return float(exp_rate.replace("%", ""))
-    except (ValueError, AttributeError):
-        return 0.0
-
-
 def _build_level_up_embed(adventure_name: str, server_id: str,
-                          old_level: int, new_level: int, exp_rate: str) -> discord.Embed:
+                          old_level: int, new_level: int,
+                          exp_rate: str) -> discord.Embed:
     server_name = SERVER_MAP.get(server_id, server_id)
     embed = discord.Embed(
         title="🌫️ 안개융화 레벨 업!",
@@ -36,25 +29,25 @@ def _build_level_up_embed(adventure_name: str, server_id: str,
             f"안개융화 레벨이 **{old_level} → {new_level}**(으)로 상승했습니다!\n"
             f"경험치: {exp_rate}"
         ),
-        color=0x7B68EE,  # 미디엄 슬레이트 블루
+        color=0x7B68EE,
     )
     return embed
 
 
-async def _resolve_item_channel(bot, guild_id):
+async def _resolve_item_channel(bot, guild_id) -> discord.TextChannel | None:
     channel_id = await get_output_channel(guild_id, 'item')
     if not channel_id:
         return None
     return bot.get_channel(int(channel_id))
 
 
-async def _poll_adventure_mist(bot, guild_id, adventure_name, characters, semaphore):
+async def _poll_adventure_mist(bot, guild_id, characters, semaphore):
     """단일 모험단의 안개융화 폴링"""
     async with semaphore:
         char = characters[0]
         server_id = char['server_id']
         character_id = char['character_id']
-        raw_adventure = char.get('adventure_name', adventure_name)
+        adventure_name = char['adventure_name']
 
         mist_data = await dnf_api.fetch_mist_assimilation(server_id, character_id)
         if mist_data is None:
@@ -63,38 +56,33 @@ async def _poll_adventure_mist(bot, guild_id, adventure_name, characters, semaph
         new_level = mist_data.get("level", 0)
         exp_rate = mist_data.get("expRate", "0%")
 
-        existing = await get_mist_assimilation(raw_adventure, server_id)
-
-        MAX_LEVEL = 100
+        existing = await get_mist_assimilation(adventure_name, server_id)
 
         if existing is None:
-            # 최초 등록 — 알림 없이 저장만
-            max_reached = datetime.now(KST).isoformat() if new_level >= MAX_LEVEL else None
+            max_reached = datetime.now(KST).isoformat() if new_level >= MAX_MIST_LEVEL else None
             await upsert_mist_assimilation(
-                raw_adventure, server_id, character_id, new_level, exp_rate, max_reached
+                adventure_name, server_id, character_id, new_level, exp_rate, max_reached
             )
-            logger.info(f"[안개융화] 초기 등록: {raw_adventure} Lv.{new_level} ({exp_rate})")
+            logger.info(f"[안개융화] 초기 등록: {adventure_name} Lv.{new_level} ({exp_rate})")
             return
 
         old_level = existing['level']
 
         if new_level > old_level:
-            # 레벨 상승 — 알림 발송
             channel = await _resolve_item_channel(bot, guild_id)
             if channel:
                 embed = _build_level_up_embed(
-                    raw_adventure, server_id, old_level, new_level, exp_rate
+                    adventure_name, server_id, old_level, new_level, exp_rate
                 )
                 await channel.send(embed=embed)
-                logger.info(f"[안개융화] 레벨업 알림: {raw_adventure} {old_level} → {new_level}")
+                logger.info(f"[안개융화] 레벨업 알림: {adventure_name} {old_level} → {new_level}")
 
-        # 레벨 또는 경험치 변동 시 갱신
         if new_level != old_level or exp_rate != existing['exp_rate']:
             max_reached = existing.get('max_reached_at')
-            if new_level >= MAX_LEVEL and not max_reached:
+            if new_level >= MAX_MIST_LEVEL and not max_reached:
                 max_reached = datetime.now(KST).isoformat()
             await upsert_mist_assimilation(
-                raw_adventure, server_id, character_id,
+                adventure_name, server_id, character_id,
                 new_level, exp_rate, max_reached
             )
 
@@ -106,8 +94,8 @@ async def poll_all_mist(bot, guild_id):
 
     semaphore = asyncio.Semaphore(10)
     tasks = [
-        _poll_adventure_mist(bot, guild_id, adv, chars, semaphore)
-        for adv, chars in grouped.items()
+        _poll_adventure_mist(bot, guild_id, chars, semaphore)
+        for chars in grouped.values()
     ]
     results = await asyncio.gather(*tasks, return_exceptions=True)
     for r in results:
