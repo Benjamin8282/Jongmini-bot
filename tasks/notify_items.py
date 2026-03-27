@@ -14,7 +14,7 @@ from core.db import (
 )
 
 from core.logger import logger
-from core.models import ALLOWED_RARITIES  # 서버명 매핑용
+from core.models import ALLOWED_RARITIES, COVENANT_CODES
 
 DEFAULT_PERIOD_SEC = 20  # 타임라인 주기적 체크 주기 (초 단위)
 DEFAULT_LOOKBACK_MINUTES = 30  # 기록 없으면 최근 30분간 조회
@@ -59,33 +59,58 @@ def _build_description(adventure_name, character_name, item):
     base = f"{adventure_name} 모험단의 {character_name} 모험가가"
 
     _CODE_TEMPLATES = {
-        505: lambda d: (
-            f" {d.get('channelName')} {d.get('channelNo')}채널 "
-            f"{d.get('dungeonName')}에서 드랍으로 {item_name}[{item_rarity}](을)를 획득했습니다."
-        ),
-        513: lambda d: (
-            f" {d.get('dungeonName')}에서 던전 카드 보상으로 {item_name}[{item_rarity}](을)를 획득했습니다."
-        ),
-        504: lambda d: (
-            f" {d.get('channelName')} {d.get('channelNo')}채널 "
-            f"항아리/상자에서 {item_name}[{item_rarity}](을)를 획득했습니다."
-        ),
-        507: lambda d: f" 레이드 카드 보상에서 {item_name}[{item_rarity}](을)를 획득했습니다.",
         550: lambda d: (
             f" {d.get('channelName')} {d.get('channelNo')}채널 "
-            f"{d.get('dungeonName')}에서 **서약결정 보상**으로 "
+            f"{d.get('dungeonName')}에서 **서약 던전 드랍**으로 "
+            f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
+        ),
+        551: lambda d: (
+            f" **서약 레이드 카드 보상**으로 "
             f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
         ),
         552: lambda d: (
             f" {d.get('channelName')} {d.get('channelNo')}채널 "
-            f"{d.get('dungeonName')}에서 **서약 장비**로 "
+            f"{d.get('dungeonName')}에서 **서약 항아리&상자**로 "
+            f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
+        ),
+        553: lambda d: (
+            f" **서약 업그레이드**로 "
+            f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
+        ),
+        554: lambda d: (
+            f" **서약 제작서**로 "
+            f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
+        ),
+        555: lambda d: (
+            f" **서약 무기고**에서 "
+            f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
+        ),
+        556: lambda d: (
+            f" **초월의 돌**로 서약 초월하여 "
             f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
         ),
     }
 
     template = _CODE_TEMPLATES.get(code)
-    suffix = template(data) if template else f" {item_name}[{item_rarity}](을)를 획득했습니다."
+    suffix = template(data) if template else f" **✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
     return base + suffix
+
+
+def _is_covenant_decision(item) -> bool:
+    """아이템 이름에 '결정'이 포함되면 서약 결정, 아니면 빛의 서약(서약 장비)"""
+    item_name = item.get("data", {}).get("itemName", "")
+    return "결정" in item_name
+
+
+_COVENANT_TITLES = {
+    550: "서약 던전 드랍",
+    551: "서약 레이드 보상",
+    552: "서약 항아리&상자",
+    553: "서약 업그레이드",
+    554: "서약 제작서",
+    555: "서약 무기고",
+    556: "서약 초월",
+}
 
 
 def format_item_announce_embed(adventure_name, character_name, item, event_date):
@@ -94,22 +119,26 @@ def format_item_announce_embed(adventure_name, character_name, item, event_date)
 
     data = item.get("data", {})
     item_rarity = data.get("itemRarity", "알 수 없음")
-    color = get_rarity_color(item_rarity)
 
     description = _build_description(adventure_name, character_name, item)
 
     code = item.get("code")
-    if code in (550, 552):
+    is_decision = _is_covenant_decision(item)
+
+    if is_decision:
+        color = get_rarity_color(item_rarity)
+    else:
         color = get_covenant_rarity_color(item_rarity)
 
     embed = discord.Embed(
         description=description,
         color=color
     )
-    if code == 550:
-        embed.title = "✦ 서약결정 획득!"
-    elif code == 552:
-        embed.title = "⚔️ 서약 장비 획득!"
+    base_title = _COVENANT_TITLES.get(code, "서약 획득")
+    if is_decision:
+        embed.title = f"✦ {base_title}! (서약 결정)"
+    else:
+        embed.title = f"⚡ {base_title}! (빛의 서약)"
     embed.set_footer(text=date_str)
     return embed
 
@@ -249,8 +278,12 @@ async def notify_items_for_character(char, bot, guild_id, semaphore):
         if not channel:
             return
 
-        if filtered_items:
-            await _send_item_embeds(channel, filtered_items, adventure_name, character_name)
+        covenant_items = [
+            item for item in filtered_items
+            if item.get("code") in COVENANT_CODES
+        ]
+        if covenant_items:
+            await _send_item_embeds(channel, covenant_items, adventure_name, character_name)
 
         if max_event_time is not None:
             async with last_processed_lock:
