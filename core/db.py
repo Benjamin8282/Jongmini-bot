@@ -241,6 +241,18 @@ async def init_db():
             CREATE INDEX IF NOT EXISTS idx_rest_days_adv_date
             ON rest_days(adventure_name, rest_date)
         """)
+        # 안개융화 모험단별 추적 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS mist_assimilation (
+                adventure_name TEXT NOT NULL,
+                server_id TEXT NOT NULL,
+                representative_char_id TEXT NOT NULL,
+                level INTEGER DEFAULT 0,
+                exp_rate TEXT DEFAULT '0%',
+                last_checked TEXT,
+                PRIMARY KEY (adventure_name, server_id)
+            )
+        """)
         await conn.commit()
         logger.info("DB 초기화 완료")
     except Exception as e:
@@ -1151,3 +1163,61 @@ async def get_all_rest_days_since(since: str) -> dict[str, list[str]]:
     except Exception as e:
         logger.error(f"쉬었음 기록 조회 실패: {e}")
     return result
+
+
+# ----- 안개융화 추적 -----
+
+async def get_all_mist_assimilation() -> list[dict]:
+    """전체 모험단 안개융화 데이터 조회 (순위용)"""
+    try:
+        conn = await get_conn()
+        cursor = await conn.execute("""
+            SELECT adventure_name, server_id, representative_char_id,
+                   level, exp_rate, last_checked
+            FROM mist_assimilation
+            ORDER BY level DESC, exp_rate DESC
+        """)
+        rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"안개융화 전체 조회 실패: {e}")
+        return []
+
+
+async def get_mist_assimilation(adventure_name: str, server_id: str) -> dict | None:
+    """특정 모험단의 안개융화 데이터 조회"""
+    try:
+        conn = await get_conn()
+        cursor = await conn.execute("""
+            SELECT adventure_name, server_id, representative_char_id,
+                   level, exp_rate, last_checked
+            FROM mist_assimilation
+            WHERE adventure_name = ? AND server_id = ?
+        """, (adventure_name, server_id))
+        row = await cursor.fetchone()
+        return dict(row) if row else None
+    except Exception as e:
+        logger.error(f"안개융화 조회 실패: {e}")
+        return None
+
+
+async def upsert_mist_assimilation(
+    adventure_name: str, server_id: str, char_id: str,
+    level: int, exp_rate: str
+):
+    """안개융화 데이터 저장/갱신"""
+    try:
+        conn = await get_conn()
+        await conn.execute("""
+            INSERT INTO mist_assimilation
+                (adventure_name, server_id, representative_char_id, level, exp_rate, last_checked)
+            VALUES (?, ?, ?, ?, ?, datetime('now'))
+            ON CONFLICT(adventure_name, server_id) DO UPDATE SET
+                representative_char_id = excluded.representative_char_id,
+                level = excluded.level,
+                exp_rate = excluded.exp_rate,
+                last_checked = excluded.last_checked
+        """, (adventure_name, server_id, char_id, level, exp_rate))
+        await conn.commit()
+    except Exception as e:
+        logger.error(f"안개융화 저장 실패: {e}")

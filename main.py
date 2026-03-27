@@ -20,6 +20,7 @@ from tasks.notify_items import periodic_notify
 from tasks.weekly_aggregation import weekly_aggregation_task
 # from tasks.weekly_character_aggregation import aggregate_weekly_items_by_character  # 캐릭터별 주간 집계 task (미사용)
 from tasks.poll_auction_prices import poll_auction_prices
+from tasks.poll_mist_assimilation import periodic_poll_mist
 
 # commands import
 from commands.hello import hello_command
@@ -51,6 +52,7 @@ from commands.avatar_search import avatar_search
 from commands.avatar_price import avatar_price
 from commands.export_data import export_data
 from commands.rest_days import rest_days_cmd
+from commands.mist_ranking import mist_ranking
 
 load_dotenv()
 
@@ -78,6 +80,7 @@ _BACKGROUND_TASKS = [
     ("weekly_aggregation_task", lambda b, g: weekly_aggregation_task(b, g), "주간 모험단 집계 task 시작됨"),
     ("monthly_aggregation_task", lambda b, g: monthly_aggregation_task(b, g), "월간 모험단 집계 task 시작됨"),
     ("auction_poll_task", lambda b, g: poll_auction_prices(b, g), "경매장 시세 폴링 task 시작됨"),
+    ("mist_poll_task", lambda b, g: periodic_poll_mist(b, g), "안개융화 폴링 task 시작됨"),
 ]
 
 
@@ -171,6 +174,7 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(avatar_price)
         self.tree.add_command(export_data)
         self.tree.add_command(rest_days_cmd)
+        self.tree.add_command(mist_ranking)
         logger.info("커맨드 등록 완료 (sync는 on_ready에서 실행)")
 
 

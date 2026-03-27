@@ -298,6 +298,27 @@ async def fetch_item_detail(item_id: str) -> int:
 
 
 # ===============================
+# 안개융화 API
+# ===============================
+
+async def fetch_mist_assimilation(server_id: str, character_id: str) -> dict | None:
+    """안개융화 조회. {'level': int, 'expRate': str, 'status': [...]} 반환"""
+    url = f"{BASE_URL}/servers/{server_id}/characters/{character_id}/equip/mist-assimilation"
+    params = {"apikey": API_KEY}
+    try:
+        session = await get_session()
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                return data.get("mistAssimilation")
+            else:
+                logger.warning(f"안개융화 조회 실패: HTTP {response.status} - {character_id}")
+    except Exception as e:
+        logger.error(f"안개융화 조회 예외: {e}")
+    return None
+
+
+# ===============================
 # 경매장 시세 API
 # ===============================
 
