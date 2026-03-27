@@ -14,7 +14,7 @@ from core.db import (
 from core.logger import logger
 from core.models import SERVER_MAP
 
-POLL_INTERVAL = 300  # 5분
+POLL_INTERVAL = 30  # 30초
 KST = timezone(timedelta(hours=9))
 
 
