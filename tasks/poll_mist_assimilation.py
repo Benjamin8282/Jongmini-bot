@@ -1,6 +1,6 @@
 import asyncio
 import traceback
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 import discord
 
@@ -65,10 +65,13 @@ async def _poll_adventure_mist(bot, guild_id, adventure_name, characters, semaph
 
         existing = await get_mist_assimilation(raw_adventure, server_id)
 
+        MAX_LEVEL = 100
+
         if existing is None:
             # 최초 등록 — 알림 없이 저장만
+            max_reached = datetime.now(KST).isoformat() if new_level >= MAX_LEVEL else None
             await upsert_mist_assimilation(
-                raw_adventure, server_id, character_id, new_level, exp_rate
+                raw_adventure, server_id, character_id, new_level, exp_rate, max_reached
             )
             logger.info(f"[안개융화] 초기 등록: {raw_adventure} Lv.{new_level} ({exp_rate})")
             return
@@ -87,8 +90,12 @@ async def _poll_adventure_mist(bot, guild_id, adventure_name, characters, semaph
 
         # 레벨 또는 경험치 변동 시 갱신
         if new_level != old_level or exp_rate != existing['exp_rate']:
+            max_reached = existing.get('max_reached_at')
+            if new_level >= MAX_LEVEL and not max_reached:
+                max_reached = datetime.now(KST).isoformat()
             await upsert_mist_assimilation(
-                raw_adventure, server_id, character_id, new_level, exp_rate
+                raw_adventure, server_id, character_id,
+                new_level, exp_rate, max_reached
             )
 
 

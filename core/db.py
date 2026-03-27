@@ -249,10 +249,18 @@ async def init_db():
                 representative_char_id TEXT NOT NULL,
                 level INTEGER DEFAULT 0,
                 exp_rate TEXT DEFAULT '0%',
+                max_reached_at TEXT,
                 last_checked TEXT,
                 PRIMARY KEY (adventure_name, server_id)
             )
         """)
+        # 기존 테이블에 max_reached_at 컬럼 마이그레이션
+        try:
+            await conn.execute(
+                "ALTER TABLE mist_assimilation ADD COLUMN max_reached_at TEXT"
+            )
+        except Exception:
+            pass
         await conn.commit()
         logger.info("DB 초기화 완료")
     except Exception as e:
@@ -1173,9 +1181,8 @@ async def get_all_mist_assimilation() -> list[dict]:
         conn = await get_conn()
         cursor = await conn.execute("""
             SELECT adventure_name, server_id, representative_char_id,
-                   level, exp_rate, last_checked
+                   level, exp_rate, max_reached_at, last_checked
             FROM mist_assimilation
-            ORDER BY level DESC, exp_rate DESC
         """)
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
@@ -1190,7 +1197,7 @@ async def get_mist_assimilation(adventure_name: str, server_id: str) -> dict | N
         conn = await get_conn()
         cursor = await conn.execute("""
             SELECT adventure_name, server_id, representative_char_id,
-                   level, exp_rate, last_checked
+                   level, exp_rate, max_reached_at, last_checked
             FROM mist_assimilation
             WHERE adventure_name = ? AND server_id = ?
         """, (adventure_name, server_id))
@@ -1203,21 +1210,23 @@ async def get_mist_assimilation(adventure_name: str, server_id: str) -> dict | N
 
 async def upsert_mist_assimilation(
     adventure_name: str, server_id: str, char_id: str,
-    level: int, exp_rate: str
+    level: int, exp_rate: str, max_reached_at: str | None = None
 ):
     """안개융화 데이터 저장/갱신"""
     try:
         conn = await get_conn()
         await conn.execute("""
             INSERT INTO mist_assimilation
-                (adventure_name, server_id, representative_char_id, level, exp_rate, last_checked)
-            VALUES (?, ?, ?, ?, ?, datetime('now'))
+                (adventure_name, server_id, representative_char_id,
+                 level, exp_rate, max_reached_at, last_checked)
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
             ON CONFLICT(adventure_name, server_id) DO UPDATE SET
                 representative_char_id = excluded.representative_char_id,
                 level = excluded.level,
                 exp_rate = excluded.exp_rate,
+                max_reached_at = excluded.max_reached_at,
                 last_checked = excluded.last_checked
-        """, (adventure_name, server_id, char_id, level, exp_rate))
+        """, (adventure_name, server_id, char_id, level, exp_rate, max_reached_at))
         await conn.commit()
     except Exception as e:
         logger.error(f"안개융화 저장 실패: {e}")
