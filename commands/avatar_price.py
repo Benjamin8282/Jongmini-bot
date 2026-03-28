@@ -2,7 +2,7 @@ import discord
 from discord import app_commands, Interaction
 from statistics import median
 
-from commands.avatar_search import JOB_CHOICES, RARITY_CHOICES
+from commands.avatar_search import JOB_CHOICES, RARITY_CHOICES, SLOT_CHOICES
 from commands.total import PaginationView
 from core.avatar_market_api import fetch_avatar_sold
 from core.logger import logger
@@ -97,25 +97,29 @@ async def _send_results(
 @app_commands.describe(
     직업="검색할 직업 (선택)",
     레어리티="아바타 등급 (선택)",
+    부위="아바타 부위 (선택)",
 )
-@app_commands.choices(직업=JOB_CHOICES, 레어리티=RARITY_CHOICES)
+@app_commands.choices(직업=JOB_CHOICES, 레어리티=RARITY_CHOICES, 부위=SLOT_CHOICES)
 async def avatar_price(
     interaction: Interaction,
     직업: app_commands.Choice[str] = None,
     레어리티: app_commands.Choice[str] = None,
+    부위: app_commands.Choice[str] = None,
 ):
     logger.info(
         f"/아바타시세 호출: 사용자={interaction.user.id}, "
-        f"직업={직업}, 레어리티={레어리티}"
+        f"직업={직업}, 레어리티={레어리티}, 부위={부위}"
     )
     # noinspection PyUnresolvedReferences
     await interaction.response.defer(thinking=True)
 
     job_id = 직업.value if 직업 else None
     rarity_val = 레어리티.value if 레어리티 else None
+    slot_id = 부위.value if 부위 else None
     goods_list = await fetch_avatar_sold(
         job_id=job_id,
         avatar_rarity=rarity_val,
+        slot_id=slot_id,
     )
 
     if not goods_list:
