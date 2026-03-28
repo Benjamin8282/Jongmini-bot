@@ -391,6 +391,10 @@ def _generate_comparison_chart_impl(
 
     _plot_comparison_volume(ax_vol, ohlc_a, ohlc_b, name_a, name_b, color_a, color_b)
 
+    # x축 날짜 포맷
+    for ax in [ax_price, ax_vol]:
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:%M"))
+
     # 그리드
     for ax in [ax_price, ax_vol]:
         _setup_grid(ax)
@@ -495,6 +499,7 @@ def _generate_candlestick_chart_impl(
         returnfig=True,
         tight_layout=False,
         scale_padding={"left": 0.4, "right": 0.8, "top": 0.6, "bottom": 0.5},
+        datetime_format="%m/%d %H:%M",
         **mav_kwargs
     )
 
