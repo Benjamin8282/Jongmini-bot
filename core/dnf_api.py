@@ -270,6 +270,22 @@ async def _fetch_item_from_api(item_id: str) -> int | None:
     return None
 
 
+async def fetch_item_name(item_id: str) -> str | None:
+    """item_id로 현재 아이템 이름 조회. 실패 시 None 반환."""
+    url = f"{BASE_URL}/items/{item_id}"
+    params = {"apikey": API_KEY}
+    try:
+        session = await get_session()
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                return data.get("itemName")
+            logger.warning(f"아이템 이름 조회 실패: HTTP {response.status} - {item_id}")
+    except Exception as e:
+        logger.error(f"아이템 이름 조회 예외: {e}")
+    return None
+
+
 async def fetch_item_detail(item_id: str) -> int:
     """
     1. 메모리 캐시 → 2. DB → 3. API 순서로 조회, 없으면 0 반환

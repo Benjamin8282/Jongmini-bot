@@ -700,6 +700,23 @@ async def add_watch_item(item_id: str, item_name: str, user_id: int) -> bool:
         return False
 
 
+async def update_watch_item_name(item_id: str, new_name: str):
+    """감시 아이템 이름 업데이트 (시즌 변경 등으로 API 이름이 바뀐 경우)"""
+    try:
+        conn = await get_conn()
+        cursor = await conn.execute(
+            "UPDATE auction_watch_items SET item_name = ? WHERE item_id = ?",
+            (new_name, item_id)
+        )
+        await conn.commit()
+        if cursor.rowcount == 0:
+            logger.warning(f"감시 아이템 이름 업데이트: 대상 없음 ({item_id})")
+        else:
+            logger.info(f"감시 아이템 이름 업데이트: {item_id} → {new_name}")
+    except Exception as e:
+        logger.error(f"감시 아이템 이름 업데이트 실패: {e}")
+
+
 async def remove_watch_item(item_id: str):
     """감시 아이템 해제 (가격 이력은 보존)"""
     logger.info(f"시세 감시 아이템 해제: {item_id}")
