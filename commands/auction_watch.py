@@ -217,7 +217,7 @@ async def _register_single_item(interaction: Interaction, item: dict, embeds: li
     is_new = await add_watch_item(item["itemId"], item["itemName"], interaction.user.id)
     if is_new:
         count = await fetch_and_save_item_prices(item["itemId"], item["itemName"])
-        embeds[0].set_footer(text=f"시세 추적 등록 완료 | 최초 수집: {count}건")
+        embeds[0].set_footer(text=f"시세 추적 등록 완료 | 최초 수집: {count or 0}건")
         await interaction.followup.send(
             content=f"'{item['itemName']}' 시세 추적을 시작합니다.",
             embed=embeds[0]
@@ -234,7 +234,7 @@ async def _register_selected_item(interaction: Interaction, item: dict):
     if is_new:
         count = await fetch_and_save_item_prices(item["itemId"], item["itemName"])
         await interaction.followup.send(
-            f"'{item['itemName']}' 시세 추적 등록 완료 (최초 수집: {count}건)",
+            f"'{item['itemName']}' 시세 추적 등록 완료 (최초 수집: {count or 0}건)",
             ephemeral=True
         )
     else:
@@ -294,6 +294,89 @@ async def auction_watch_unregister(interaction: Interaction):
         await remove_watch_item(view.selected_item["item_id"])
 
 
+class WatchItemListView(ui.View):
+    """시세 목록 페이지네이션 UI"""
+    PAGE_SIZE = 10  # Discord embed 최대 10개
+
+    def __init__(self, items: list[dict], author_id: int):
+        super().__init__(timeout=120)
+        self.all_items = items
+        self.author_id = author_id
+        self.page = 0
+        self._build_buttons()
+
+    @property
+    def total_pages(self) -> int:
+        return (len(self.all_items) + self.PAGE_SIZE - 1) // self.PAGE_SIZE
+
+    def _page_embeds(self) -> list[discord.Embed]:
+        start = self.page * self.PAGE_SIZE
+        page_items = self.all_items[start:start + self.PAGE_SIZE]
+        embeds = []
+        for item in page_items:
+            registered_at = (item.get("registered_at") or "알 수 없음")[:10]
+            embed = discord.Embed(
+                title=item["item_name"],
+                description=f"등록일: {registered_at}",
+                color=0x3498DB
+            )
+            embed.set_thumbnail(
+                url=ITEM_IMAGE_URL.format(item_id=item["item_id"])
+            )
+            embeds.append(embed)
+        return embeds
+
+    def _page_content(self) -> str:
+        total = len(self.all_items)
+        if self.total_pages <= 1:
+            return f"시세 추적 중인 아이템 ({total}개)"
+        return f"시세 추적 중인 아이템 ({total}개) — {self.page + 1}/{self.total_pages} 페이지"
+
+    def _build_buttons(self):
+        self.clear_items()
+        if self.total_pages <= 1:
+            return
+        prev_btn = ui.Button(
+            label="◀ 이전", style=discord.ButtonStyle.secondary,
+            disabled=self.page == 0
+        )
+        prev_btn.callback = self._prev_callback
+        self.add_item(prev_btn)
+
+        page_label = ui.Button(
+            label=f"{self.page + 1}/{self.total_pages}",
+            style=discord.ButtonStyle.secondary, disabled=True
+        )
+        self.add_item(page_label)
+
+        next_btn = ui.Button(
+            label="다음 ▶", style=discord.ButtonStyle.secondary,
+            disabled=self.page >= self.total_pages - 1
+        )
+        next_btn.callback = self._next_callback
+        self.add_item(next_btn)
+
+    async def _prev_callback(self, interaction: Interaction):
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "본인이 실행한 명령어만 응답할 수 있습니다.", ephemeral=True)
+            return
+        self.page = max(0, self.page - 1)
+        self._build_buttons()
+        await interaction.response.edit_message(
+            content=self._page_content(), embeds=self._page_embeds(), view=self)
+
+    async def _next_callback(self, interaction: Interaction):
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "본인이 실행한 명령어만 응답할 수 있습니다.", ephemeral=True)
+            return
+        self.page = min(self.total_pages - 1, self.page + 1)
+        self._build_buttons()
+        await interaction.response.edit_message(
+            content=self._page_content(), embeds=self._page_embeds(), view=self)
+
+
 @app_commands.command(name="시세목록", description="현재 시세 추적 중인 아이템 목록을 조회합니다")
 async def auction_watch_list(interaction: Interaction):
     logger.info(f"/시세목록 호출: 사용자={interaction.user.id}")
@@ -303,20 +386,9 @@ async def auction_watch_list(interaction: Interaction):
         await interaction.response.send_message("등록된 시세 추적 아이템이 없습니다.")
         return
 
-    embeds = []
-    for item in items[:10]:
-        registered_at = (item.get("registered_at") or "알 수 없음")[:10]
-        embed = discord.Embed(
-            title=item["item_name"],
-            description=f"등록일: {registered_at}",
-            color=0x3498DB
-        )
-        embed.set_thumbnail(
-            url=ITEM_IMAGE_URL.format(item_id=item["item_id"])
-        )
-        embeds.append(embed)
-
+    view = WatchItemListView(items, interaction.user.id)
     await interaction.response.send_message(
-        content=f"시세 추적 중인 아이템 ({len(items)}개)",
-        embeds=embeds
+        content=view._page_content(),
+        embeds=view._page_embeds(),
+        view=view if view.total_pages > 1 else None
     )
