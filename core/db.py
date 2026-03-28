@@ -241,7 +241,7 @@ async def init_db():
             CREATE INDEX IF NOT EXISTS idx_rest_days_adv_date
             ON rest_days(adventure_name, rest_date)
         """)
-        # 안개융화 모험단별 추적 테이블
+        # 안개서약 모험단별 추적 테이블
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS mist_assimilation (
                 adventure_name TEXT NOT NULL,
@@ -1190,10 +1190,10 @@ async def get_all_rest_days_since(since: str) -> dict[str, list[str]]:
     return result
 
 
-# ----- 안개융화 추적 -----
+# ----- 안개서약 추적 -----
 
 async def get_all_mist_assimilation() -> list[dict]:
-    """전체 모험단 안개융화 데이터 조회 (순위용)"""
+    """전체 모험단 안개서약 데이터 조회 (순위용)"""
     try:
         conn = await get_conn()
         cursor = await conn.execute("""
@@ -1204,12 +1204,12 @@ async def get_all_mist_assimilation() -> list[dict]:
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
     except Exception as e:
-        logger.error(f"안개융화 전체 조회 실패: {e}")
+        logger.error(f"안개서약 전체 조회 실패: {e}")
         return []
 
 
 async def get_mist_assimilation(adventure_name: str, server_id: str) -> dict | None:
-    """특정 모험단의 안개융화 데이터 조회"""
+    """특정 모험단의 안개서약 데이터 조회"""
     try:
         conn = await get_conn()
         cursor = await conn.execute("""
@@ -1221,7 +1221,7 @@ async def get_mist_assimilation(adventure_name: str, server_id: str) -> dict | N
         row = await cursor.fetchone()
         return dict(row) if row else None
     except Exception as e:
-        logger.error(f"안개융화 조회 실패: {e}")
+        logger.error(f"안개서약 조회 실패: {e}")
         return None
 
 
@@ -1229,7 +1229,7 @@ async def upsert_mist_assimilation(
     adventure_name: str, server_id: str, char_id: str,
     level: int, exp_rate: str, max_reached_at: str | None = None
 ):
-    """안개융화 데이터 저장/갱신"""
+    """안개서약 데이터 저장/갱신"""
     try:
         conn = await get_conn()
         await conn.execute("""
@@ -1246,4 +1246,4 @@ async def upsert_mist_assimilation(
         """, (adventure_name, server_id, char_id, level, exp_rate, max_reached_at))
         await conn.commit()
     except Exception as e:
-        logger.error(f"안개융화 저장 실패: {e}")
+        logger.error(f"안개서약 저장 실패: {e}")

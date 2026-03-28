@@ -23,10 +23,10 @@ def _build_level_up_embed(adventure_name: str, server_id: str,
                           exp_rate: str) -> discord.Embed:
     server_name = SERVER_MAP.get(server_id, server_id)
     embed = discord.Embed(
-        title="🌫️ 안개융화 레벨 업!",
+        title="🌫️ 안개서약 레벨 업!",
         description=(
             f"**{adventure_name}** ({server_name}) 모험단의 "
-            f"안개융화 레벨이 **{old_level} → {new_level}**(으)로 상승했습니다!\n"
+            f"안개서약 레벨이 **{old_level} → {new_level}**(으)로 상승했습니다!\n"
             f"경험치: {exp_rate}"
         ),
         color=0x7B68EE,
@@ -42,7 +42,7 @@ async def _resolve_item_channel(bot, guild_id) -> discord.TextChannel | None:
 
 
 async def _poll_adventure_mist(bot, guild_id, characters, semaphore):
-    """단일 모험단의 안개융화 폴링"""
+    """단일 모험단의 안개서약 폴링"""
     async with semaphore:
         char = characters[0]
         server_id = char['server_id']
@@ -63,7 +63,7 @@ async def _poll_adventure_mist(bot, guild_id, characters, semaphore):
             await upsert_mist_assimilation(
                 adventure_name, server_id, character_id, new_level, exp_rate, max_reached
             )
-            logger.info(f"[안개융화] 초기 등록: {adventure_name} Lv.{new_level} ({exp_rate})")
+            logger.info(f"[안개서약] 초기 등록: {adventure_name} Lv.{new_level} ({exp_rate})")
             return
 
         old_level = existing['level']
@@ -75,7 +75,7 @@ async def _poll_adventure_mist(bot, guild_id, characters, semaphore):
                     adventure_name, server_id, old_level, new_level, exp_rate
                 )
                 await channel.send(embed=embed)
-                logger.info(f"[안개융화] 레벨업 알림: {adventure_name} {old_level} → {new_level}")
+                logger.info(f"[안개서약] 레벨업 알림: {adventure_name} {old_level} → {new_level}")
 
         if new_level != old_level or exp_rate != existing['exp_rate']:
             max_reached = existing.get('max_reached_at')
@@ -100,7 +100,7 @@ async def poll_all_mist(bot, guild_id):
     results = await asyncio.gather(*tasks, return_exceptions=True)
     for r in results:
         if isinstance(r, Exception):
-            logger.warning(f"[안개융화] 폴링 오류: {r}")
+            logger.warning(f"[안개서약] 폴링 오류: {r}")
 
 
 async def periodic_poll_mist(bot, guild_id):
@@ -108,7 +108,7 @@ async def periodic_poll_mist(bot, guild_id):
         try:
             await poll_all_mist(bot, guild_id)
         except Exception as e:
-            logger.error(f"[안개융화] 폴링 루프 오류: {e}")
+            logger.error(f"[안개서약] 폴링 루프 오류: {e}")
             logger.error(traceback.format_exc())
         finally:
             await asyncio.sleep(POLL_INTERVAL)

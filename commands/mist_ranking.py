@@ -7,13 +7,13 @@ from core.models import SERVER_MAP, parse_exp_rate
 MAX_EMBED_DESC = 4000
 
 
-@app_commands.command(name="안개융화순위", description="모험단별 안개융화 레벨 순위를 조회합니다.")
+@app_commands.command(name="안개서약순위", description="모험단별 안개서약 레벨 순위를 조회합니다.")
 async def mist_ranking(interaction: Interaction):
     await interaction.response.defer()
 
     rows = await get_all_mist_assimilation()
     if not rows:
-        await interaction.followup.send("등록된 안개융화 데이터가 없습니다.")
+        await interaction.followup.send("등록된 안개서약 데이터가 없습니다.")
         return
 
     # 만렙 그룹: 달성 시점 빠른 순 (ASC)
@@ -47,7 +47,7 @@ async def mist_ranking(interaction: Interaction):
         description = description[:MAX_EMBED_DESC] + "\n\n...(이하 생략)"
 
     embed = discord.Embed(
-        title="🌫️ 안개융화 순위",
+        title="🌫️ 안개서약 순위",
         description=description,
         color=0x7B68EE,
     )

@@ -73,7 +73,7 @@ _BACKGROUND_TASKS = [
     ("weekly_aggregation_task", lambda b, g: weekly_aggregation_task(b, g), "주간 모험단 집계 task 시작됨"),
     ("monthly_aggregation_task", lambda b, g: monthly_aggregation_task(b, g), "월간 모험단 집계 task 시작됨"),
     ("auction_poll_task", lambda b, g: poll_auction_prices(b, g), "경매장 시세 폴링 task 시작됨"),
-    ("mist_poll_task", lambda b, g: periodic_poll_mist(b, g), "안개융화 폴링 task 시작됨"),
+    ("mist_poll_task", lambda b, g: periodic_poll_mist(b, g), "안개서약 폴링 task 시작됨"),
 ]
 
 
