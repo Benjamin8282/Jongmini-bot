@@ -4,7 +4,7 @@ from collections import defaultdict
 from core.db import get_all_characters, get_output_channel  # 캐릭터 목록 조회 함수
 from core.logger import logger
 from core.models import RARITY_WEIGHTS, COVENANT_RARITY_WEIGHTS, COVENANT_CODES
-from core.dnf_api import fetch_timeline, fetch_item_detail
+from core.dnf_api import fetch_timeline, fetch_item_detail, get_cached_item_rarity
 import discord
 import asyncio
 
@@ -25,6 +25,9 @@ async def filter_items_level_115(timeline_rows):
         async with semaphore:
             level = await fetch_item_detail(item_id)
             if level == 115:
+                correct_rarity = get_cached_item_rarity(item_id)
+                if correct_rarity:
+                    item["data"]["itemRarity"] = correct_rarity
                 return item
         return None
 
