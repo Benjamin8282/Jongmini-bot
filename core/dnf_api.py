@@ -15,6 +15,7 @@ BASE_URL = "https://api.neople.co.kr/df"
 
 # 글로벌 메모리 캐시
 ITEM_DETAIL_MEMCACHE = {}
+ITEM_RARITY_MEMCACHE: dict[str, str] = {}
 
 # 공유 HTTP 세션
 _session: aiohttp.ClientSession | None = None
@@ -259,8 +260,11 @@ async def _fetch_item_from_api(item_id: str) -> int | None:
             if response.status == 200:
                 data = await response.json()
                 level = data.get("itemAvailableLevel", 0)
+                rarity = data.get("itemRarity")
                 logger.info(f"아이템 상세 조회 성공: {item_id} - 레벨 {level}")
                 ITEM_DETAIL_MEMCACHE[item_id] = level
+                if rarity:
+                    ITEM_RARITY_MEMCACHE[item_id] = rarity
                 await _save_item_to_db(item_id, level)
                 return level
             else:
@@ -268,6 +272,11 @@ async def _fetch_item_from_api(item_id: str) -> int | None:
     except Exception as e:
         logger.error(f"아이템 상세 조회 예외 발생: {e}")
     return None
+
+
+def get_cached_item_rarity(item_id: str) -> str | None:
+    """메모리 캐시에서 아이템 희귀도 조회. fetch_item_detail 호출 후 사용."""
+    return ITEM_RARITY_MEMCACHE.get(item_id)
 
 
 async def fetch_item_name(item_id: str) -> str | None:

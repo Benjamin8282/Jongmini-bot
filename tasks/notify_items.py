@@ -151,6 +151,10 @@ async def filter_valid_items(timeline_rows):
             continue
         equip_level = await dnf_api.fetch_item_detail(item_id)
         if equip_level == 115:
+            # 타임라인 API의 희귀도가 부정확할 수 있으므로 아이템 API 값으로 보정
+            correct_rarity = dnf_api.get_cached_item_rarity(item_id)
+            if correct_rarity:
+                row["data"]["itemRarity"] = correct_rarity
             valid_items.append(row)
     return valid_items
 
