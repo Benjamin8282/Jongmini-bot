@@ -26,12 +26,14 @@ SYSTEM_PROMPT = (
     "- 띄어쓰기로 변형해도 동일 (예: '대 종 민' = '대종민', '대 황 종 민' = '대황종민')\n"
     "\n"
     "safe (위반 아님):\n"
-    "- 단순 언급, 비판, 욕설, 조롱\n"
+    "- 단순 언급, 비판, 욕설, 비난, 조롱, 저주 (예: '개종민 죽어라', '종민 꺼져', '추방해라')\n"
     "- 동명이인이나 관련 없는 맥락\n"
     "- 찬양/옹호에 대해 이야기하는 메타 발언 (예: '찬양한걸로 치고', '찬양하면 안됨')\n"
     "- 봇 규칙이나 모더레이션을 언급하는 대화\n"
     "- 풍자, 반어법, 농담\n"
     "- 되묻기, 인용, 따옴표 (예: '개종민 만세라고?', '누가 대종민이래')\n"
+    "- 디스코드 이모지 (:이모지이름: 형식) — 이모지만 있는 메시지는 무조건 safe\n"
+    "- 해당 인물과 무관한 일상 대화\n"
     "\n"
     "핵심: 발화자가 실제로 해당 인물을 좋게 평가하는 의도가 있을 때만 violation.\n"
     "\n"
@@ -185,35 +187,40 @@ class BedrockModerator:
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.warning(f"[모더레이션] 메시지 전송 실패: {e}")
 
+    @staticmethod
+    def _is_emoji_only(text: str) -> bool:
+        """디스코드 커스텀/유니코드 이모지만으로 구성된 메시지인지 확인."""
+        cleaned = re.sub(r"<a?:\w+:\d+>", "", text)  # 커스텀 이모지 제거
+        cleaned = re.sub(r":\w+:", "", cleaned)  # :이모지이름: 제거
+        cleaned = cleaned.strip()
+        return len(cleaned) == 0
+
     async def check_message(self, message: discord.Message) -> bool:
         """메시지 분석. 위반이면 True 반환."""
         if not message.content or not message.guild:
             return False
         if message.author.bot:
             return False
+        if self._is_emoji_only(message.content):
+            return False
         self._reset_counts_if_new_day()
         user_id = message.author.id
-        # 카운트를 먼저 증가시켜 연속 메시지 레이스 방지
-        self._warn_counts[user_id] += 1
-        count = self._warn_counts[user_id]
-        is_repeat = count > 1
+        is_repeat = self._warn_counts[user_id] >= 1
 
-        logger.info(f"[모더레이션] 분석 시작: {message.author} - '{message.content[:50]}'")
+        logger.info(f"[모더레이션] 분석 시작: {message.author}(count={self._warn_counts[user_id]}) - '{message.content[:50]}'")
         try:
             result = await self._invoke_bedrock(message.content, is_repeat)
             logger.info(f"[모더레이션] 분석 완료: violation={result['violation']}")
         except asyncio.TimeoutError:
             logger.error("[모더레이션] Bedrock 호출 타임아웃 (10초)")
-            self._warn_counts[user_id] = max(0, self._warn_counts[user_id] - 1)
             return False
         except Exception as e:
             logger.error(f"[모더레이션] Bedrock 호출 실패: {e}")
-            self._warn_counts[user_id] = max(0, self._warn_counts[user_id] - 1)
             return False
 
         if result["violation"]:
-            await self._handle_violation(message, result["msg"], is_punish=count > 1)
+            self._warn_counts[user_id] += 1
+            is_punish = self._warn_counts[user_id] > 1
+            await self._handle_violation(message, result["msg"], is_punish=is_punish)
             return True
-
-        self._warn_counts[user_id] -= 1  # violation 아니면 롤백
         return False
