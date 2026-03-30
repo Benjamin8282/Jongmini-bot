@@ -8,7 +8,7 @@ from core.dnf_api import preload_item_cache
 from core.dundam_queue import DundamQueueManager
 from core.logger import logger
 import discord
-from core.chat_moderator import ChatModerator
+from core.bedrock_moderator import BedrockModerator
 from discord.ext import commands
 from dotenv import load_dotenv
 from core.db import init_db
@@ -50,7 +50,7 @@ from commands.alert_settings import (
 from commands.dunspy import dunspy_cmd
 from commands.avatar_search import avatar_search
 from commands.avatar_price import avatar_price
-from commands.export_data import export_data
+#from commands.export_data import export_data
 from commands.rest_days import rest_days_cmd
 from commands.mist_ranking import mist_ranking
 
@@ -116,7 +116,7 @@ class JongminiBot(commands.Bot):
         intents.message_content = True
 
         super().__init__(command_prefix="!", intents=intents)
-        self.chat_moderator = ChatModerator()
+        self.moderator = BedrockModerator()
         self.dundam_queue = DundamQueueManager.get_instance()
         logger.info("JongminiBot 인스턴스 생성됨")
 
@@ -165,7 +165,7 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(dunspy_cmd)
         self.tree.add_command(avatar_search)
         self.tree.add_command(avatar_price)
-        self.tree.add_command(export_data)
+        #self.tree.add_command(export_data)
         self.tree.add_command(rest_days_cmd)
         self.tree.add_command(mist_ranking)
         logger.info("커맨드 등록 완료 (sync는 on_ready에서 실행)")
@@ -223,8 +223,7 @@ async def on_message(message: discord.Message):
     # process commands first
     await bot.process_commands(message)
 
-    # then handle with moderator
-    # await bot.chat_moderator.handle_message(message)
+    await bot.moderator.check_message(message)
 
 
 bot.run(TOKEN)
