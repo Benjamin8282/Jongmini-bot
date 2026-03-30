@@ -10,25 +10,9 @@ from core.db import (
 from core.dnf_api import get_session
 from core.dundam_api import fetch_all_with_rate_limit, fetch_all_buffers_with_rate_limit
 from core.logger import logger
+from core.models import format_score_korean
 
 KST = timezone(timedelta(hours=9))
-
-
-def format_score_korean(num: int) -> str:
-    if num >= 100_000_000:
-        억 = num // 100_000_000
-        만 = (num % 100_000_000) // 10_000
-        if 만 > 0:
-            return f"{억}억 {만}만"
-        return f"{억}억"
-    elif num >= 10_000:
-        만 = num // 10_000
-        나머지 = num % 10_000
-        if 나머지 > 0:
-            return f"{만}만 {나머지}"
-        return f"{만}만"
-    else:
-        return f"{num}"
 
 
 # 딜러/버퍼 모드별 설정

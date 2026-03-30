@@ -46,6 +46,30 @@ COVENANT_CODES = {550, 551, 552, 553, 554, 555, 556}
 MAX_MIST_LEVEL = 100
 
 
+def format_score_korean(num: int) -> str:
+    """숫자를 한국식 단위(조/억/만)로 포맷. 조 단위에서는 억까지만 표시."""
+    if num >= 1_000_000_000_000:
+        조 = num // 1_000_000_000_000
+        억 = (num % 1_000_000_000_000) // 100_000_000
+        if 억 > 0:
+            return f"{조}조 {억}억"
+        return f"{조}조"
+    elif num >= 100_000_000:
+        억 = num // 100_000_000
+        만 = (num % 100_000_000) // 10_000
+        if 만 > 0:
+            return f"{억}억 {만}만"
+        return f"{억}억"
+    elif num >= 10_000:
+        만 = num // 10_000
+        나머지 = num % 10_000
+        if 나머지 > 0:
+            return f"{만}만 {나머지}"
+        return f"{만}만"
+    else:
+        return f"{num}"
+
+
 def parse_exp_rate(exp_rate: str) -> float:
     """'45%' -> 45.0, 파싱 실패 시 0.0"""
     try:
