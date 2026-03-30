@@ -25,6 +25,7 @@ from tasks.poll_mist_assimilation import periodic_poll_mist
 # commands import
 from commands.hello import hello_command
 from commands.register import register_command
+from commands.batch_register import batch_register
 from commands.total import total_command
 from commands.set_output_channel import set_output_channel
 from commands.today_status import today_status
@@ -139,6 +140,7 @@ class JongminiBot(commands.Bot):
 
         self.tree.add_command(hello_command)
         self.tree.add_command(register_command)
+        self.tree.add_command(batch_register)
         self.tree.add_command(total_command)
         self.tree.add_command(set_output_channel)
         self.tree.add_command(today_status)

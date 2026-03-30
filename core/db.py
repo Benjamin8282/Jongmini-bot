@@ -292,18 +292,24 @@ async def save_character(character: dict):
         logger.error(f"캐릭터 저장 실패: {e}")
 
 
-async def register_character(user_id: int, character_id: str):
+async def register_character(user_id: int, character_id: str) -> bool:
+    """사용자-캐릭터 등록. 신규 등록이면 True, 이미 존재하면 False 반환."""
     logger.info(f"사용자 {user_id} 캐릭터 등록 시도: {character_id}")
     try:
         conn = await get_conn()
-        await conn.execute("""
+        cursor = await conn.execute("""
             INSERT OR IGNORE INTO registrations (user_id, character_id)
             VALUES (?, ?)
         """, (user_id, character_id))
         await conn.commit()
+        if cursor.rowcount == 0:
+            logger.info(f"사용자 {user_id} 이미 등록된 캐릭터: {character_id}")
+            return False
         logger.info(f"사용자 {user_id} 캐릭터 등록 성공: {character_id}")
+        return True
     except Exception as e:
         logger.error(f"사용자 {user_id} 캐릭터 등록 실패: {e}")
+        return False
 
 
 async def get_characters_by_adventure_name(adventure_name: str) -> list[dict]:
