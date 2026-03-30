@@ -57,7 +57,7 @@ async def filter_items_level_115(items):
             async with semaphore:
                 level = await dnf_api.fetch_item_detail(item_id)
                 if level == 115:
-                    correct_rarity = dnf_api.get_cached_item_rarity(item_id)
+                    correct_rarity = await dnf_api.get_item_rarity(item_id)
                     if correct_rarity:
                         item["data"]["itemRarity"] = correct_rarity
                     return item

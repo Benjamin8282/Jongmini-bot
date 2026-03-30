@@ -274,9 +274,25 @@ async def _fetch_item_from_api(item_id: str) -> int | None:
     return None
 
 
-def get_cached_item_rarity(item_id: str) -> str | None:
-    """메모리 캐시에서 아이템 희귀도 조회. fetch_item_detail 호출 후 사용."""
-    return ITEM_RARITY_MEMCACHE.get(item_id)
+async def get_item_rarity(item_id: str) -> str | None:
+    """아이템 희귀도 조회. 메모리 캐시 히트 시 즉시 반환, 미스 시 API 1회 호출."""
+    cached = ITEM_RARITY_MEMCACHE.get(item_id)
+    if cached:
+        return cached
+    url = f"{BASE_URL}/items/{item_id}"
+    params = {"apikey": API_KEY}
+    try:
+        session = await get_session()
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                rarity = data.get("itemRarity")
+                if rarity:
+                    ITEM_RARITY_MEMCACHE[item_id] = rarity
+                return rarity
+    except Exception as e:
+        logger.error(f"아이템 희귀도 조회 예외: {e}")
+    return None
 
 
 async def fetch_item_name(item_id: str) -> str | None:
