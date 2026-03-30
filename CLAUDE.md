@@ -141,7 +141,7 @@ pip install -r requirements.txt
 
 ### 릴리즈 버전 관리
 
-현재 버전: **v2.6.6**
+현재 버전: **v2.7.0**
 
 Semantic Versioning 규칙:
 - **MAJOR (x.0.0)**: 대규모 기능 추가, 기존 커맨드명/DB 스키마 변경 등 breaking change
