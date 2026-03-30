@@ -176,7 +176,8 @@ class BedrockModerator:
                     fallback = f"🔇 {user.mention} 개종민 찬양 반복 감지. 처단한다."
                     text = f"🔇 {ai_msg.replace('{user}', user.mention)}" if ai_msg else fallback
                     await message.channel.send(text)
-                    logger.info(f"[모더레이션] 타임아웃: {user}")
+                    self._warn_counts[user.id] = 0  # 타임아웃 후 리셋
+                    logger.info(f"[모더레이션] 타임아웃: {user} (카운트 리셋)")
                 except (discord.Forbidden, discord.HTTPException):
                     logger.warning(f"[모더레이션] 타임아웃 권한 부족: {user}")
                     immune_msg = await self._generate_immune_msg(user.mention)
