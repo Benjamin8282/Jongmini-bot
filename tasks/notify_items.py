@@ -58,10 +58,19 @@ def _build_description(adventure_name, character_name, item):
     item_rarity = data.get("itemRarity", "알 수 없음")
     base = f"{adventure_name} 모험단의 {character_name} 모험가가"
 
+    def _location(d):
+        channel = d.get('channelName')
+        channel_no = d.get('channelNo')
+        dungeon = d.get('dungeonName')
+        if channel and dungeon:
+            return f" {channel} {channel_no}채널 {dungeon}에서"
+        elif channel:
+            return f" {channel} {channel_no}채널에서"
+        return ""
+
     _CODE_TEMPLATES = {
         550: lambda d: (
-            f" {d.get('channelName')} {d.get('channelNo')}채널 "
-            f"{d.get('dungeonName')}에서 **서약 던전 드랍**으로 "
+            f"{_location(d)} **서약 던전 드랍**으로 "
             f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
         ),
         551: lambda d: (
@@ -69,8 +78,7 @@ def _build_description(adventure_name, character_name, item):
             f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
         ),
         552: lambda d: (
-            f" {d.get('channelName')} {d.get('channelNo')}채널 "
-            f"{d.get('dungeonName')}에서 **서약 항아리&상자**로 "
+            f"{_location(d)} **서약 항아리&상자**로 "
             f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
         ),
         553: lambda d: (
