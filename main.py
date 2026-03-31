@@ -8,7 +8,7 @@ from core.dnf_api import preload_item_cache
 from core.dundam_queue import DundamQueueManager
 from core.logger import logger
 import discord
-from core.bedrock_moderator import BedrockModerator
+
 from discord.ext import commands
 from dotenv import load_dotenv
 from core.db import init_db
@@ -117,7 +117,6 @@ class JongminiBot(commands.Bot):
         intents.message_content = True
 
         super().__init__(command_prefix="!", intents=intents)
-        self.moderator = BedrockModerator()
         self.dundam_queue = DundamQueueManager.get_instance()
         logger.info("JongminiBot 인스턴스 생성됨")
 
@@ -224,8 +223,6 @@ async def on_message(message: discord.Message):
 
     # process commands first
     await bot.process_commands(message)
-
-    await bot.moderator.check_message(message)
 
 
 bot.run(TOKEN)

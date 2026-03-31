@@ -38,7 +38,6 @@ pip install -r requirements.txt
   - `dunspy_index.py` - 던스피(DUNSPY) 종합지수 산출
   - `models.py` - 서버 매핑, 희귀도 가중치 등 상수
   - `time_utils.py` - KST 기준 기간 계산 유틸리티
-  - `chat_moderator.py` - 콘텐츠 모더레이션 (현재 비활성)
   - `logger.py` - 로깅 설정 (1MB 로테이션, 14일 보존)
 - **`tasks/`**: 백그라운드 태스크 (asyncio.create_task로 실행)
   - `notify_items.py` - 20초 간격 타임라인 모니터링 및 득템 알림 → **아이템 채널**
@@ -117,7 +116,6 @@ pip install -r requirements.txt
 - `DISCORD_TOKEN` - 디스코드 봇 토큰
 - `NEOPLE_API_KEY` - DNF 오픈 API 키
 - `GUILD_ID` - 디스코드 길드 ID
-- `MODERATE_ENDPOINT`, `MODERATE_API_KEY`, `MODERATE_KEY_NAME` - 모더레이션 API (선택)
 
 ## Git Workflow & 배포
 
@@ -141,7 +139,7 @@ pip install -r requirements.txt
 
 ### 릴리즈 버전 관리
 
-현재 버전: **v2.8.2**
+현재 버전: **v2.9.0**
 
 Semantic Versioning 규칙:
 - **MAJOR (x.0.0)**: 대규모 기능 추가, 기존 커맨드명/DB 스키마 변경 등 breaking change
