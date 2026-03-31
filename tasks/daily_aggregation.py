@@ -15,7 +15,7 @@ from core.logger import logger
 from tasks.morning_briefing import send_morning_briefing
 import discord
 
-from core.models import RARITY_WEIGHTS, COVENANT_RARITY_WEIGHTS, COVENANT_CODES
+from core.models import RARITY_WEIGHTS, COVENANT_RARITY_WEIGHTS, COVENANT_CODES, ENHANCE_CODES, SEALED_LOCK_CODES
 from core.time_utils import (
     KST, get_daily_aggregation_period,
     PREV_SEASON_NAME, PREV_SEASON_START, PREV_SEASON_END,
@@ -81,7 +81,13 @@ async def process_character(char, adventure_name, start_date_str, end_date_str,
             logger.warning(f"{char['character_name']} 타임라인 조회 실패")
             return
         rows = timeline_data.get("timeline", {}).get("rows", [])
-        filtered_rows = await filter_items_level_115(rows)
+        # 강화/증폭/봉인된 자물쇠는 집계 대상 아님
+        equipment_rows = [
+            r for r in rows
+            if r.get("code") not in ENHANCE_CODES
+            and r.get("code") not in SEALED_LOCK_CODES
+        ]
+        filtered_rows = await filter_items_level_115(equipment_rows)
         for item in filtered_rows:
             rarity = item.get("data", {}).get("itemRarity")
             code = item.get("code")
@@ -219,7 +225,13 @@ async def _gather_all_character_items(grouped, periods, adventure_item_counts, a
                     logger.warning(f"{char['character_name']} 타임라인 조회 실패 ({start_str}~{end_str})")
                     continue
                 rows = timeline_data.get("timeline", {}).get("rows", [])
-                filtered_rows = await filter_items_level_115(rows)
+                # 강화/증폭/봉인된 자물쇠는 집계 대상 아님
+                equipment_rows = [
+                    r for r in rows
+                    if r.get("code") not in ENHANCE_CODES
+                    and r.get("code") not in SEALED_LOCK_CODES
+                ]
+                filtered_rows = await filter_items_level_115(equipment_rows)
                 for item in filtered_rows:
                     rarity = item.get("data", {}).get("itemRarity")
                     code = item.get("code")

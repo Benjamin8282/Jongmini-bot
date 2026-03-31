@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from core.db import get_all_characters, get_output_channel  # 캐릭터 목록 조회 함수
 from core.logger import logger
-from core.models import RARITY_WEIGHTS, COVENANT_RARITY_WEIGHTS, COVENANT_CODES
+from core.models import RARITY_WEIGHTS, COVENANT_RARITY_WEIGHTS, COVENANT_CODES, ENHANCE_CODES, SEALED_LOCK_CODES
 from core.dnf_api import fetch_timeline, fetch_item_detail, get_item_rarity
 import discord
 import asyncio
@@ -186,6 +186,12 @@ async def aggregate_weekly_items_by_character(bot, guild_id, interaction=None):
                 return
 
             rows = timeline["timeline"]["rows"]
+            # 강화/증폭/봉인된 자물쇠는 집계 대상 아님
+            rows = [
+                r for r in rows
+                if r.get("code") not in ENHANCE_CODES
+                and r.get("code") not in SEALED_LOCK_CODES
+            ]
             filtered_items = await filter_items_level_115(rows)
 
             for item in filtered_items:

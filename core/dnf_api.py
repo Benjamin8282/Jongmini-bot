@@ -13,6 +13,8 @@ API_KEY = os.getenv("NEOPLE_API_KEY")
 
 BASE_URL = "https://api.neople.co.kr/df"
 
+TIMELINE_CODES = "401,402,501,505,504,507,508,513,550,551,552,553,554,555,556"
+
 # 글로벌 메모리 캐시
 ITEM_DETAIL_MEMCACHE = {}
 ITEM_RARITY_MEMCACHE: dict[str, str] = {}
@@ -123,7 +125,7 @@ async def fetch_timeline(server_id: str, character_id: str, start_date: str = No
         "apikey": API_KEY,
         "startDate": start_date,
         "endDate": end_date,
-        "code": "505,504,507,508,513,550,551,552,553,554,555,556",
+        "code": TIMELINE_CODES,
         "limit": 100
     }
 
@@ -147,7 +149,7 @@ def _build_timeline_params(start_date: str | None, end_date: str | None) -> dict
         "apikey": API_KEY,
         "startDate": start_date,
         "endDate": end_date,
-        "code": "505,504,507,508,513,550,551,552,553,554,555,556",
+        "code": TIMELINE_CODES,
         "limit": 100
     }
 

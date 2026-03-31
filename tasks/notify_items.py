@@ -14,7 +14,7 @@ from core.db import (
 )
 
 from core.logger import logger
-from core.models import ALLOWED_RARITIES, COVENANT_CODES
+from core.models import ALLOWED_RARITIES, COVENANT_CODES, ENHANCE_CODES, SEALED_LOCK_CODES
 
 DEFAULT_PERIOD_SEC = 20  # 타임라인 주기적 체크 주기 (초 단위)
 DEFAULT_LOOKBACK_MINUTES = 30  # 기록 없으면 최근 30분간 조회
@@ -151,6 +151,150 @@ def format_item_announce_embed(adventure_name, character_name, item, event_date)
     return embed
 
 
+def filter_enhance_items(rows: list[dict]) -> list[dict]:
+    """강화/증폭 이벤트 중 before >= 10인 것만 필터링 (알림 대상)."""
+    return [
+        row for row in rows
+        if row.get("code") in ENHANCE_CODES
+        and (row.get("data", {}).get("before") or 0) >= 10
+    ]
+
+
+def _all_enhance_items(rows: list[dict]) -> list[dict]:
+    """강화/증폭 이벤트 전체 반환 (커서 진행용)."""
+    return [row for row in rows if row.get("code") in ENHANCE_CODES]
+
+
+def filter_sealed_lock_items(rows: list[dict]) -> list[dict]:
+    """봉인된 자물쇠 이벤트 전체 반환."""
+    return [
+        row for row in rows
+        if row.get("code") in SEALED_LOCK_CODES
+    ]
+
+
+def format_enhance_embed(
+    adventure_name: str,
+    character_name: str,
+    item: dict,
+    event_date: str,
+) -> discord.Embed:
+    """강화(401)/증폭(402) 알림 임베드 생성."""
+    try:
+        dt = datetime.strptime(event_date, "%Y-%m-%d %H:%M")
+        date_str = dt.strftime("%Y.%m.%d(%H:%M)")
+    except ValueError:
+        date_str = event_date or "날짜 불명"
+
+    data = item.get("data", {})
+    code = item.get("code")
+    item_name = data.get("itemName", "알 수 없음")
+    item_rarity = data.get("itemRarity", "알 수 없음")
+    before = data.get("before") or 0
+    after = data.get("after") or 0
+    result = data.get("result", False) is True
+    safe = data.get("safe", False) is True
+    ticket = data.get("ticket")
+
+    action = "증폭" if code == 402 else "강화"
+    result_text = "성공" if result else "실패"
+    if result and after >= 12:
+        result_emoji = "🎆"
+    elif result:
+        result_emoji = "✅"
+    elif safe:
+        result_emoji = "🛡️"
+    else:
+        result_emoji = "💥"
+
+    base = f"{adventure_name} 모험단의 {character_name} 모험가가"
+    if result:
+        change_str = f"**{before}강 → {after}강**"
+    else:
+        change_str = f"**{before}강 유지**"
+    description = (
+        f"{base} **{item_name}[{item_rarity}]** {action}에 도전했습니다!\n\n"
+        f"{result_emoji} {change_str} ({result_text})"
+    )
+
+    if safe:
+        description += "\n🛡️ 안전 강화 적용"
+    if isinstance(ticket, dict):
+        ticket_name = ticket.get("itemName", "알 수 없음")
+        description += f"\n🎫 {ticket_name}"
+
+    color = 0x00FF00 if result else 0xFF0000
+    title_emoji = "🔨" if result else "💥"
+
+    embed = discord.Embed(
+        title=f"{title_emoji} {action} {result_text}! ({before}→{after})",
+        description=description,
+        color=color,
+    )
+    embed.set_footer(text=date_str)
+    return embed
+
+
+def format_sealed_lock_embed(
+    adventure_name: str,
+    character_name: str,
+    item: dict,
+    event_date: str,
+) -> discord.Embed:
+    """봉인된 자물쇠(501) 알림 임베드 생성."""
+    try:
+        dt = datetime.strptime(event_date, "%Y-%m-%d %H:%M")
+        date_str = dt.strftime("%Y.%m.%d(%H:%M)")
+    except ValueError:
+        date_str = event_date or "날짜 불명"
+
+    data = item.get("data", {})
+    item_name = data.get("itemName", "알 수 없음")
+    booster = data.get("booster", False) is True
+
+    base = f"{adventure_name} 모험단의 {character_name} 모험가가"
+    description = f"{base} 봉인된 자물쇠 아이템에서 **🔒 {item_name}**(을)를 획득했습니다!"
+
+    if booster:
+        description += "\n\n🎊 **x2 부스터 적용!** 두 배의 행운을 누렸습니다!"
+
+    color = 0xFFD700 if booster else 0x9B59B6
+
+    embed = discord.Embed(
+        title="🔒 봉인된 자물쇠 아이템 획득!" + (" 🎊x2!" if booster else ""),
+        description=description,
+        color=color,
+    )
+    embed.set_footer(text=date_str)
+    return embed
+
+
+async def _send_enhance_embeds(
+    channel: discord.TextChannel,
+    items: list[dict],
+    adventure_name: str,
+    character_name: str,
+) -> None:
+    """강화/증폭 알림 임베드 발송."""
+    for item in items:
+        event_date = item.get("date", "")
+        embed = format_enhance_embed(adventure_name, character_name, item, event_date)
+        await channel.send(embed=embed)
+
+
+async def _send_sealed_lock_embeds(
+    channel: discord.TextChannel,
+    items: list[dict],
+    adventure_name: str,
+    character_name: str,
+) -> None:
+    """봉인된 자물쇠 알림 임베드 발송."""
+    for item in items:
+        event_date = item.get("date", "")
+        embed = format_sealed_lock_embed(adventure_name, character_name, item, event_date)
+        await channel.send(embed=embed)
+
+
 async def filter_valid_items(timeline_rows):
     valid_items = []
     for row in timeline_rows:
@@ -202,6 +346,8 @@ def _is_new_event(event_dt, last_time):
 
 def _update_max_time(current_max, event_dt):
     """최대 이벤트 시간 갱신"""
+    if event_dt is None:
+        return current_max
     return event_dt if (current_max is None or event_dt > current_max) else current_max
 
 
@@ -253,8 +399,14 @@ def _extract_timeline_rows(timeline, character_name):
 
 
 async def _process_timeline_items(rows, character_id, last_time):
-    """타임라인 rows에서 유효 아이템 필터링 및 새 아이템 분리"""
-    filtered_items = await filter_valid_items(rows)
+    """타임라인 rows에서 유효 장비 아이템 필터링 및 새 아이템 분리."""
+    # 강화/증폭/봉인된 자물쇠는 별도 파이프라인에서 처리 — 여기서 제외
+    equipment_rows = [
+        row for row in rows
+        if row.get("code") not in ENHANCE_CODES
+        and row.get("code") not in SEALED_LOCK_CODES
+    ]
+    filtered_items = await filter_valid_items(equipment_rows)
     filtered_items = [
         item for item in filtered_items
         if item.get("data", {}).get("itemRarity") in ALLOWED_RARITIES
@@ -296,6 +448,21 @@ async def notify_items_for_character(char, bot, guild_id, semaphore):
         ]
         if covenant_items:
             await _send_item_embeds(channel, covenant_items, adventure_name, character_name)
+
+        # --- 강화/증폭 알림 (401/402) ---
+        # 커서는 모든 401/402 이벤트에서 진행, 알림은 before>=10만
+        _, enhance_cursor_time = _filter_new_items(_all_enhance_items(rows), last_time)
+        max_event_time = _update_max_time(max_event_time, enhance_cursor_time)
+        new_enhance_items, _ = _filter_new_items(filter_enhance_items(rows), last_time)
+        if new_enhance_items:
+            await _send_enhance_embeds(channel, new_enhance_items, adventure_name, character_name)
+
+        # --- 봉인된 자물쇠 알림 (501) ---
+        sealed_items_raw = filter_sealed_lock_items(rows)
+        new_sealed_items, sealed_max_time = _filter_new_items(sealed_items_raw, last_time)
+        max_event_time = _update_max_time(max_event_time, sealed_max_time)
+        if new_sealed_items:
+            await _send_sealed_lock_embeds(channel, new_sealed_items, adventure_name, character_name)
 
         if max_event_time is not None:
             async with last_processed_lock:
