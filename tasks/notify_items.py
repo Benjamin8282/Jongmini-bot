@@ -62,10 +62,13 @@ def _build_description(adventure_name, character_name, item):
         channel = d.get('channelName')
         channel_no = d.get('channelNo')
         dungeon = d.get('dungeonName')
+        ch_str = f" {channel_no}채널" if channel_no is not None else ""
         if channel and dungeon:
-            return f" {channel} {channel_no}채널 {dungeon}에서"
+            return f" {channel}{ch_str} {dungeon}에서"
         elif channel:
-            return f" {channel} {channel_no}채널에서"
+            return f" {channel}{ch_str}에서"
+        elif dungeon:
+            return f" {dungeon}에서"
         return ""
 
     _CODE_TEMPLATES = {
@@ -97,6 +100,10 @@ def _build_description(adventure_name, character_name, item):
             f" **초월의 돌**로 서약 초월하여 "
             f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
         ),
+        557: lambda d: (
+            f"{_location(d)} **서약 던전 카드 보상**으로 "
+            f"**✦ {item_name}[{item_rarity}] ✦**(을)를 획득했습니다!"
+        ),
     }
 
     template = _CODE_TEMPLATES.get(code)
@@ -118,12 +125,16 @@ _COVENANT_TITLES = {
     554: "서약 제작서",
     555: "서약 무기고",
     556: "서약 초월",
+    557: "서약 던전 카드 보상",
 }
 
 
 def format_item_announce_embed(adventure_name, character_name, item, event_date):
-    dt_pastime = datetime.strptime(event_date, "%Y-%m-%d %H:%M")
-    date_str = dt_pastime.strftime("%Y.%m.%d(%H:%M)")
+    try:
+        dt_pastime = datetime.strptime(event_date, "%Y-%m-%d %H:%M")
+        date_str = dt_pastime.strftime("%Y.%m.%d(%H:%M)")
+    except ValueError:
+        date_str = event_date or "날짜 불명"
 
     data = item.get("data", {})
     item_rarity = data.get("itemRarity", "알 수 없음")
@@ -211,7 +222,7 @@ def format_enhance_embed(
     if result:
         change_str = f"**{before}강 → {after}강**"
     else:
-        change_str = f"**{before}강 유지**"
+        change_str = f"**{before}강**"
     description = (
         f"{base} **{item_name}[{item_rarity}]** {action}에 도전했습니다!\n\n"
         f"{result_emoji} {change_str} ({result_text})"
