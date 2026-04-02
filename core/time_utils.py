@@ -10,29 +10,29 @@ SEASON_NAME = "천해천"
 SEASON_START_DATE = datetime(2026, 3, 26, 6, 0, 0, tzinfo=KST)  # 천해천 시즌 시작일 오전 6시
 
 
+def _current_week_start(now):
+    """현재 주의 시작 시각(목요일 06:00)을 반환합니다."""
+    weekday = now.weekday()
+    days_since_thursday = (weekday - 3) % 7
+    thursday = now - timedelta(days=days_since_thursday)
+    start = thursday.replace(hour=6, minute=0, second=0, microsecond=0)
+    if now < start:
+        start -= timedelta(days=7)
+    return start
+
+
 def get_weekly_period():
-    """한 주 단위 집계 기간을 반환합니다.
-    기간: 지난 주 목요일 6시부터 이번 주 목요일 6시까지 (혹은 지금 시각까지)"""
+    """현재 주 진행 범위 (목요일 06:00 ~ 현재). 커맨드용."""
     now = datetime.now(KST)
-    weekday = now.weekday()  # 월=0, 화=1, ..., 목=3, ...
+    return _current_week_start(now), now
 
-    # 이번 주 목요일 6시 구하기
-    days_until_thursday = (3 - weekday) % 7
-    this_thursday = (now + timedelta(days=days_until_thursday)).replace(hour=6, minute=0, second=0, microsecond=0)
 
-    # 지난 주 목요일 6시 구하기
-    last_thursday = this_thursday - timedelta(weeks=1)
-
-    if now >= this_thursday:
-        # 현재 시각이 이번 주 목요일 6시 이후면, 한 주 기간은 지난 주 목~이번 주 목 6시
-        start_time = last_thursday
-        end_time = this_thursday
-    else:
-        # 현재 시각이 이번 주 목요일 6시 이전이면, 기간은 지난 주 목~현재 시각
-        start_time = last_thursday
-        end_time = now
-
-    return start_time, end_time
+def get_completed_weekly_period():
+    """직전 완결 주 범위 (지난 목요일 06:00 ~ 이번 목요일 06:00). 정기 집계용."""
+    now = datetime.now(KST)
+    week_start = _current_week_start(now)
+    prev_week_start = week_start - timedelta(weeks=1)
+    return prev_week_start, week_start
 
 
 def get_monthly_period():

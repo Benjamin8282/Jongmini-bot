@@ -97,14 +97,10 @@ def format_character_rank_embed(rank_list, timestamp):
 
 
 def _compute_weekly_period(now):
-    """주간 집계 기간 계산. (start_time, end_time) 반환."""
-    weekday = now.weekday()
-    days_since_thursday = (weekday - 3) % 7
-    last_thursday = now - timedelta(days=days_since_thursday)
-    start_time = last_thursday.replace(hour=6, minute=0, second=0, microsecond=0)
-    if now < start_time:
-        start_time -= timedelta(days=7)
-    return start_time, now
+    """주간 집계 기간 계산. (start_time, end_time) 반환.
+    NOTE: core.time_utils.get_weekly_period()와 동일 로직. 호환성 유지용."""
+    from core.time_utils import _current_week_start
+    return _current_week_start(now), now
 
 
 def _build_rank_list(character_item_counts, character_covenant_counts, characters):
