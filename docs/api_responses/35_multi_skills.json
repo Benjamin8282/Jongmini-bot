@@ -1,0 +1,246 @@
+{
+  "rows": [
+    {
+      "name": "무즈 어퍼",
+      "type": "active",
+      "desc": "적을 높이 띄우는 어퍼컷. 발동 순간 슈퍼아머 판정이 있다.\n그래플러로 전직 시 독립 공격력으로 변경된다.",
+      "descDetail": "적을 높이 띄우는 어퍼컷. 발동 순간 슈퍼아머 판정이 있다.\n그래플러로 전직 시 독립 공격력으로 변경된다.",
+      "consumeItem": null,
+      "descSpecial": [
+        "[그래플러 전직 시]\n- 독립 공격력으로 적용"
+      ],
+      "maxLevel": 20,
+      "requiredLevel": 1,
+      "requiredLevelRange": 3,
+      "preRequiredSkill": null,
+      "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+      "jobName": "격투가(여)",
+      "jobGrowLevel": [],
+      "levelInfo": {
+        "optionDesc": "띄우기 공격력 : {value1}%\n띄우는 힘 비율 : {value2}%\n발동 속도 증가 : {value3}%",
+        "rows": [
+          {
+            "level": 1,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 191,
+              "value2": 131.4,
+              "value3": 10
+            }
+          },
+          {
+            "level": 2,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 221,
+              "value2": 132.8,
+              "value3": 11
+            }
+          },
+          {
+            "level": 3,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 252,
+              "value2": 134,
+              "value3": 12
+            }
+          },
+          {
+            "level": 4,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 282,
+              "value2": 135.4,
+              "value3": 13
+            }
+          },
+          {
+            "level": 5,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 313,
+              "value2": 136.5,
+              "value3": 14
+            }
+          },
+          {
+            "level": 6,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 343,
+              "value2": 138,
+              "value3": 15
+            }
+          },
+          {
+            "level": 7,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 374,
+              "value2": 139.1,
+              "value3": 16
+            }
+          },
+          {
+            "level": 8,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 404,
+              "value2": 140.5,
+              "value3": 17
+            }
+          },
+          {
+            "level": 9,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 435,
+              "value2": 141.7,
+              "value3": 18
+            }
+          },
+          {
+            "level": 10,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 465,
+              "value2": 143.1,
+              "value3": 19
+            }
+          },
+          {
+            "level": 11,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 495,
+              "value2": 147.7,
+              "value3": 20
+            }
+          },
+          {
+            "level": 12,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 526,
+              "value2": 152.2,
+              "value3": 21
+            }
+          },
+          {
+            "level": 13,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 556,
+              "value2": 157.1,
+              "value3": 22
+            }
+          },
+          {
+            "level": 14,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 587,
+              "value2": 162,
+              "value3": 23
+            }
+          },
+          {
+            "level": 15,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 617,
+              "value2": 166.5,
+              "value3": 24
+            }
+          },
+          {
+            "level": 16,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 648,
+              "value2": 171.4,
+              "value3": 26
+            }
+          },
+          {
+            "level": 17,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 678,
+              "value2": 176.2,
+              "value3": 27
+            }
+          },
+          {
+            "level": 18,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 709,
+              "value2": 180.8,
+              "value3": 28
+            }
+          },
+          {
+            "level": 19,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 739,
+              "value2": 185.7,
+              "value3": 29
+            }
+          },
+          {
+            "level": 20,
+            "consumeMp": null,
+            "coolTime": 2,
+            "castingTime": null,
+            "optionValue": {
+              "value1": 770,
+              "value2": 190.5,
+              "value3": 30
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+  "itemName": "형상화된 요기의 단서",
+  "itemRarity": "유니크",
+  "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+  "itemType": "스태커블",
+  "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+  "itemTypeDetail": "재료",
+  "itemAvailableLevel": 1,
+  "itemExplain": "요기를 추적하는 과정에서 떨어져 나온 유기체. 숙주에게 되돌아가려는듯 계속해서 움직이고 있다.\n\n<주요 사용처>\n- 요괴 섬멸 던전 입장\n\n<주요 획득처>\n- 배니부 상점 구매\n- 디그밍의 수수한/빛나는/화려한 답례품 오픈",
+  "itemExplainDetail": "요기를 추적하는 과정에서 떨어져 나온 유기체. 숙주에게 되돌아가려는듯 계속해서 움직이고 있다.\n\n<주요 사용처>\n- 요괴 섬멸 던전 입장\n\n<주요 획득처>\n- 배니부 상점 구매\n- 디그밍의 수수한/빛나는/화려한 답례품 오픈",
+  "itemFlavorText": "",
+  "fame": 0,
+  "setItemId": null,
+  "setItemName": null,
+  "obtainInfo": {
+    "dungeon": null,
+    "shop": [
+      {
+        "rows": [
+          {
+            "name": "가브리엘의 비밀상점"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "serverId": "casillas",
+  "characterId": "ab590098566252dad7fe024ab17f5fcc",
+  "characterName": "김철완",
+  "level": 115,
+  "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+  "jobName": "격투가(여)",
+  "jobGrowName": "眞 넨마스터",
+  "fame": 83413,
+  "adventureName": "영정은날막지못해",
+  "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+  "guildName": "SBH마스터즈",
+  "skill": {
+    "buff": {
+      "skillInfo": {
+        "skillId": "a6c8f69107f8c4f5d1a0c7a57d000290",
+        "name": "카이",
+        "option": {
+          "level": 20,
+          "desc": "시전 범위 : {value1}px\n지속 시간 : {value2}초\n기본/스킬 공격력 증가율 : {value3}%\n속성 공격력 증가율 : {value4}%",
+          "values": [
+            "450",
+            "-",
+            "61",
+            "21"
+          ]
+        }
+      },
+      "creature": [
+        {
+          "itemId": "ffcf6eecd01396c302b532fefa453fae",
+          "itemName": "Miss.바니바니",
+          "itemRarity": "레어",
+          "enchant": null
+        }
+      ]
+    }
+  }
+}

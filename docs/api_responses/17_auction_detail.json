@@ -1,0 +1,27 @@
+{
+  "auctionNo": 1484323262,
+  "regDate": "2026-03-08 11:21:41",
+  "expireDate": "2026-03-09 11:21:41",
+  "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+  "itemName": "형상화된 요기의 단서",
+  "itemAvailableLevel": 1,
+  "itemRarity": "유니크",
+  "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+  "itemType": "스태커블",
+  "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+  "itemTypeDetail": "재료",
+  "refine": 0,
+  "reinforce": 0,
+  "amplificationName": null,
+  "fame": 0,
+  "exchange": {
+    "count": 1,
+    "bindName": "계정귀속"
+  },
+  "count": 6,
+  "regCount": 6,
+  "price": -1,
+  "currentPrice": 1980504,
+  "unitPrice": 330084,
+  "averagePrice": 322048
+}
