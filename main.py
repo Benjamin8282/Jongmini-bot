@@ -51,7 +51,7 @@ from commands.alert_settings import (
 from commands.dunspy import dunspy_cmd
 from commands.avatar_search import avatar_search
 from commands.avatar_price import avatar_price
-#from commands.export_data import export_data
+from commands.export_data import export_data
 from commands.rest_days import rest_days_cmd
 from commands.mist_ranking import mist_ranking
 
@@ -166,7 +166,7 @@ class JongminiBot(commands.Bot):
         self.tree.add_command(dunspy_cmd)
         self.tree.add_command(avatar_search)
         self.tree.add_command(avatar_price)
-        #self.tree.add_command(export_data)
+        self.tree.add_command(export_data)
         self.tree.add_command(rest_days_cmd)
         self.tree.add_command(mist_ranking)
         logger.info("커맨드 등록 완료 (sync는 on_ready에서 실행)")
