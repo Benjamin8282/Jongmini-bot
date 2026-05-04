@@ -21,6 +21,9 @@ MAX_FILES_PER_MESSAGE = 10
 
 DATA_HEADERS = ["거래일시", "단가", "총액", "수량"]
 
+# Excel 시트당 최대 행 수 1,048,576 (헤더 1행 차지)
+MAX_ROWS_PER_SHEET = 1_048_575
+
 HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
 HEADER_FILL = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
 HEADER_ALIGN = Alignment(horizontal="center", vertical="center")
@@ -170,14 +173,29 @@ def _build_xlsx(rows: list[dict], export_time: str, days: int | None) -> bytes:
 
     item_stats = []
     for name, item_rows in sorted(grouped.items()):
-        sheet_name = _safe_sheet_name(name)
-        ws = wb.create_sheet(title=sheet_name)
-        _write_data_sheet(ws, item_rows)
+        if len(item_rows) <= MAX_ROWS_PER_SHEET:
+            sheet_name = _safe_sheet_name(name)
+            ws = wb.create_sheet(title=sheet_name)
+            _write_data_sheet(ws, item_rows)
+            first_sheet_name = sheet_name
+        else:
+            # 시트당 행 한도 초과 시 분할
+            n_chunks = (len(item_rows) + MAX_ROWS_PER_SHEET - 1) // MAX_ROWS_PER_SHEET
+            first_sheet_name = None
+            for i in range(n_chunks):
+                chunk = item_rows[i * MAX_ROWS_PER_SHEET:(i + 1) * MAX_ROWS_PER_SHEET]
+                suffix = f"_{i + 1}"
+                base = _safe_sheet_name(name)[:31 - len(suffix)]
+                chunk_sheet_name = f"{base}{suffix}"
+                ws = wb.create_sheet(title=chunk_sheet_name)
+                _write_data_sheet(ws, chunk)
+                if first_sheet_name is None:
+                    first_sheet_name = chunk_sheet_name
 
         prices = [r["unit_price"] for r in item_rows if r["unit_price"] > 0]
         item_stats.append({
             "name": name,
-            "sheet_name": sheet_name,
+            "sheet_name": first_sheet_name,
             "count": len(item_rows),
             "avg_price": round(sum(prices) / len(prices)) if prices else 0,
             "min_price": min(prices) if prices else 0,
