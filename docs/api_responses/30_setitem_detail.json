@@ -1,0 +1,81 @@
+{
+  "setItemId": "30b1fbe9358377dc71012f590b6e4dfc",
+  "setItemName": "칠흑의 베르테스 전신복",
+  "setItems": [
+    {
+      "slotId": "JACKET",
+      "slotName": "상의",
+      "itemId": "eb3e40b951c0ad131a1d392709a3fd2a",
+      "itemName": "(구)칠흑의 베르테스 상의",
+      "itemRarity": "레어"
+    },
+    {
+      "slotId": "PANTS",
+      "slotName": "하의",
+      "itemId": "0e57d8cf45df086eb25a4979a749ad90",
+      "itemName": "(구)칠흑의 베르테스 하의",
+      "itemRarity": "레어"
+    },
+    {
+      "slotId": "SHOULDER",
+      "slotName": "머리어깨",
+      "itemId": "d36efe1efa91707eb4c5c4380dfa17ce",
+      "itemName": "(구)칠흑의 베르테스 숄더",
+      "itemRarity": "레어"
+    },
+    {
+      "slotId": "WAIST",
+      "slotName": "벨트",
+      "itemId": "da4e55df01400dc08d8724d8da8d86ec",
+      "itemName": "(구)칠흑의 베르테스 벨트",
+      "itemRarity": "레어"
+    },
+    {
+      "slotId": "SHOES",
+      "slotName": "신발",
+      "itemId": "da93709538ef513e50c605e3e8555b51",
+      "itemName": "(구)칠흑의 베르테스 부츠",
+      "itemRarity": "레어"
+    }
+  ],
+  "setItemOption": [
+    {
+      "setEquipCount": 5,
+      "explain": "암속성 피격시 2% 확률로 자신을 가속상태로 만듬",
+      "detailExplain": "암속성 공격을 맞으면 2% 확률로 20초동안 자신을 가속상태로 만들어 이동속도 21%, 공격속도 21% 증가시킵니다.",
+      "status": [
+        {
+          "name": "명속성저항",
+          "value": -11
+        },
+        {
+          "name": "회피율",
+          "value": "5%"
+        }
+      ],
+      "reinforceSkill": [
+        {
+          "jobId": "41f1cdc2ff58bb5fdc287be0db2a8df3",
+          "jobName": "귀검사(남)",
+          "skills": [
+            {
+              "skillId": "8c2379737c5acc935c1731f67f607655",
+              "name": "대검 마스터리",
+              "value": "2"
+            },
+            {
+              "skillId": "ade01c1d6afc8a05055225045e89fe49",
+              "name": "파동검 빙인",
+              "value": "1"
+            },
+            {
+              "skillId": "ff171dc487807bb9aa28900ca9a46b41",
+              "name": "파동검 폭염",
+              "value": "1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

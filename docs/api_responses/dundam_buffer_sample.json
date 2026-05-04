@@ -1,0 +1,1066 @@
+{
+  "baseJob": "거너(여)",
+  "cluster": 0,
+  "refreshTime": 45,
+  "mistFusion": 23,
+  "afti1": "유니크",
+  "bufferRankingAll": 1101016,
+  "elementCountCheck": false,
+  "setsName": "영원히 이어지는 황금향",
+  "stats": [
+    {
+      "name": "물리 방어율",
+      "value": "46.3"
+    },
+    {
+      "name": "마법 방어율",
+      "value": "48.8"
+    },
+    {
+      "name": "힘",
+      "value": "8487"
+    },
+    {
+      "name": "지능",
+      "value": "5458"
+    },
+    {
+      "name": "체력",
+      "value": "5394"
+    },
+    {
+      "name": "정신력",
+      "value": "8487"
+    },
+    {
+      "name": "물리 공격",
+      "value": "2369"
+    },
+    {
+      "name": "마법 공격",
+      "value": "2390"
+    },
+    {
+      "name": "물리 크리티컬",
+      "value": "107.5 (107.5%)"
+    },
+    {
+      "name": "마법 크리티컬",
+      "value": "60.5 (60.5%)"
+    },
+    {
+      "name": "독립 공격",
+      "value": "2829"
+    },
+    {
+      "name": "모험가 명성",
+      "value": "70809"
+    },
+    {
+      "name": "공격 속도",
+      "value": "85"
+    },
+    {
+      "name": "캐스팅 속도",
+      "value": "81.5"
+    },
+    {
+      "name": "화속성 강화",
+      "value": "106 (236)"
+    },
+    {
+      "name": "수속성 강화",
+      "value": "100 (230)"
+    },
+    {
+      "name": "명속성 강화",
+      "value": "100 (230)"
+    },
+    {
+      "name": "암속성 강화",
+      "value": "100 (230)"
+    }
+  ],
+  "buffInfo": [
+    {
+      "buffSkillName": "squad::무기강화();",
+      "stat": "502",
+      "mag": "94",
+      "phys": "94",
+      "fixed": "94",
+      "buffSkillStat": "8,991"
+    },
+    {
+      "buffSkillName": "tactics::지역거부();",
+      "stat": "1,630",
+      "buffSkillStat": "9,221"
+    },
+    {
+      "buffSkillName": "tactics::고고도강하();",
+      "stat": "244",
+      "buffSkillStat": "9,221"
+    }
+  ],
+  "id": "348443e8b1b101521b215b8e1192e77a",
+  "damageList": {
+    "vsRanking33s": [
+      {
+        "dam": "327,444,762",
+        "name": "장비 아이템",
+        "count": "1"
+      },
+      {
+        "dam": "289,630,065",
+        "name": "apius::지역방어();",
+        "count": "1"
+      },
+      {
+        "dam": "250,143,069",
+        "name": "tactics::고고도강하();",
+        "count": "1"
+      },
+      {
+        "dam": "249,251,003",
+        "name": "tactics::전술전멸();",
+        "count": "1"
+      },
+      {
+        "dam": "129,855,326",
+        "name": "suit::방벽전개();",
+        "count": "2"
+      },
+      {
+        "dam": "50,732,668",
+        "name": "suit::섬멸운용();",
+        "count": "1"
+      },
+      {
+        "dam": "43,016,749",
+        "name": "[SCQC] 후퇴 기동",
+        "count": "3"
+      },
+      {
+        "dam": "31,445,873",
+        "name": "apius::고립부돌파();",
+        "count": "1"
+      },
+      {
+        "dam": "26,427,657",
+        "name": "[SCQC] 영거리 제압",
+        "count": "2"
+      },
+      {
+        "dam": "17,361,102",
+        "name": "suit::목표강습();",
+        "count": "3"
+      },
+      {
+        "dam": "16,350,752",
+        "name": "suit::과잉진압();",
+        "count": "1"
+      },
+      {
+        "dam": "15,369,970",
+        "name": "suit::과출력포();",
+        "count": "1"
+      },
+      {
+        "dam": "7,859,657",
+        "name": "suit::경로개척();",
+        "count": "1"
+      },
+      {
+        "dam": "1,454,888,651",
+        "name": "총 합"
+      }
+    ],
+    "vsSendbag": [
+      {
+        "dam": "139,864,113",
+        "name": "apius::지역방어();",
+        "count": "2"
+      },
+      {
+        "dam": "81,352,659",
+        "name": "장비 아이템",
+        "count": "1"
+      },
+      {
+        "dam": "60,397,802",
+        "name": "tactics::고고도강하();",
+        "count": "1"
+      },
+      {
+        "dam": "60,182,410",
+        "name": "tactics::전술전멸();",
+        "count": "1"
+      },
+      {
+        "dam": "47,030,943",
+        "name": "suit::방벽전개();",
+        "count": "3"
+      },
+      {
+        "dam": "24,499,113",
+        "name": "suit::섬멸운용();",
+        "count": "2"
+      },
+      {
+        "dam": "17,310,874",
+        "name": "[SCQC] 후퇴 기동",
+        "count": "5"
+      },
+      {
+        "dam": "9,781,078",
+        "name": "suit::목표강습();",
+        "count": "7"
+      },
+      {
+        "dam": "9,571,557",
+        "name": "[SCQC] 영거리 제압",
+        "count": "3"
+      },
+      {
+        "dam": "7,895,877",
+        "name": "suit::과잉진압();",
+        "count": "2"
+      },
+      {
+        "dam": "7,592,701",
+        "name": "apius::고립부돌파();",
+        "count": "1"
+      },
+      {
+        "dam": "7,422,252",
+        "name": "suit::과출력포();",
+        "count": "2"
+      },
+      {
+        "dam": "3,795,476",
+        "name": "suit::경로개척();",
+        "count": "2"
+      },
+      {
+        "dam": "476,696,854",
+        "name": "총 합"
+      }
+    ],
+    "vsRanking": [
+      {
+        "dam": "579,260,129",
+        "name": "apius::지역방어();",
+        "count": "2"
+      },
+      {
+        "dam": "336,438,911",
+        "name": "장비 아이템",
+        "count": "1"
+      },
+      {
+        "dam": "250,143,069",
+        "name": "tactics::고고도강하();",
+        "count": "1"
+      },
+      {
+        "dam": "249,251,003",
+        "name": "tactics::전술전멸();",
+        "count": "1"
+      },
+      {
+        "dam": "194,782,988",
+        "name": "suit::방벽전개();",
+        "count": "3"
+      },
+      {
+        "dam": "101,465,335",
+        "name": "suit::섬멸운용();",
+        "count": "2"
+      },
+      {
+        "dam": "71,694,582",
+        "name": "[SCQC] 후퇴 기동",
+        "count": "5"
+      },
+      {
+        "dam": "40,509,237",
+        "name": "suit::목표강습();",
+        "count": "7"
+      },
+      {
+        "dam": "39,641,486",
+        "name": "[SCQC] 영거리 제압",
+        "count": "3"
+      },
+      {
+        "dam": "32,701,503",
+        "name": "suit::과잉진압();",
+        "count": "2"
+      },
+      {
+        "dam": "31,445,873",
+        "name": "apius::고립부돌파();",
+        "count": "1"
+      },
+      {
+        "dam": "30,739,940",
+        "name": "suit::과출력포();",
+        "count": "2"
+      },
+      {
+        "dam": "15,719,314",
+        "name": "suit::경로개척();",
+        "count": "2"
+      },
+      {
+        "dam": "1,973,793,371",
+        "name": "총 합"
+      }
+    ]
+  },
+  "afti2": "유니크",
+  "avatars": [
+    {
+      "itemId": "851f5dae01e9ed0597e533cd78700f00",
+      "emblem3": "찬란한 붉은빛 엠블렘[정신력]",
+      "emblem2": "찬란한 붉은빛 엠블렘[정신력]",
+      "name": "패러메딕의 검은 나비핀",
+      "cloneItemId": "a891d14b0b7b7b9a03be999f7172a067",
+      "emblem1": "",
+      "slot": "모자 아바타",
+      "rarity": "레어",
+      "option": "정신력 55 증가"
+    },
+    {
+      "itemId": "9aa3ddebea88bbb5ae0e63c08c41c585",
+      "emblem3": "찬란한 붉은빛 엠블렘[정신력]",
+      "emblem2": "찬란한 붉은빛 엠블렘[정신력]",
+      "name": "패러메딕의 아래로 땋은 긴 머리",
+      "cloneItemId": "5e419e49c3a9102ee83ce68266c1f1de",
+      "emblem1": "",
+      "slot": "머리 아바타",
+      "rarity": "레어",
+      "option": "정신력 55 증가"
+    },
+    {
+      "itemId": "11a21974913f379c8f077238a2425960",
+      "emblem3": "찬란한 옐로우 엠블렘[정신력]",
+      "emblem2": "찬란한 옐로우 엠블렘[정신력]",
+      "name": "패러메딕의 수신기",
+      "cloneItemId": "bc33d11e8645af822936bf16842495d5",
+      "emblem1": "",
+      "slot": "얼굴 아바타",
+      "rarity": "레어",
+      "option": "공격 속도 6.0% 증가"
+    },
+    {
+      "itemId": "89ffef1a103e5cbb9fff8915791c0d6a",
+      "emblem3": "찬란한 그린 엠블렘[정신력]",
+      "emblem2": "찬란한 그린 엠블렘[정신력]",
+      "name": "패러메딕의 상의",
+      "cloneItemId": "1ebf4ff666dd66c644d031b1086433bc",
+      "emblem1": "플래티넘 엠블렘[apius::전장정보();]",
+      "slot": "상의 아바타",
+      "rarity": "레어",
+      "option": "tactics::지역거부(); 스킬Lv +1"
+    },
+    {
+      "itemId": "4e300beb038e59db243a669d3cc45ff4",
+      "emblem3": "찬란한 그린 엠블렘[정신력]",
+      "emblem2": "찬란한 그린 엠블렘[정신력]",
+      "name": "패러메딕의 하의",
+      "cloneItemId": "cae9f6b31360b2f4ee304b09d322a2c9",
+      "emblem1": "플래티넘 엠블렘[apius::전장정보();]",
+      "slot": "하의 아바타",
+      "rarity": "레어",
+      "option": "HP MAX 400 증가"
+    },
+    {
+      "itemId": "46b22977eea98f5217def291169de0ac",
+      "emblem3": "찬란한 푸른빛 엠블렘[이동속도]",
+      "emblem2": "찬란한 푸른빛 엠블렘[이동속도]",
+      "name": "패러메딕의 슈즈",
+      "cloneItemId": "19e15c6096340b102f8107b4af20808a",
+      "emblem1": "",
+      "slot": "신발 아바타",
+      "rarity": "레어",
+      "option": "이동 속도 6.0% 증가"
+    },
+    {
+      "itemId": "7e88a2414c9c2037a335cb957b1367d9",
+      "emblem3": "찬란한 노란빛 엠블렘[공격속도]",
+      "emblem2": "찬란한 노란빛 엠블렘[공격속도]",
+      "name": "패러메딕의 나비 문양 데콜테 타투",
+      "cloneItemId": "3c85af8251fd9b1a607aead3b3a07069",
+      "emblem1": "",
+      "slot": "목가슴 아바타",
+      "rarity": "레어",
+      "option": "공격 속도 6.0% 증가"
+    },
+    {
+      "itemId": "30cdfc48be31ee4c94043a7fcdd45d18",
+      "emblem3": "찬란한 푸른빛 엠블렘[이동속도]",
+      "emblem2": "찬란한 푸른빛 엠블렘[이동속도]",
+      "name": "패러메딕의 나비 문양 타투",
+      "cloneItemId": "dd9438576da7f75e32928ce59146d41e",
+      "emblem1": "",
+      "slot": "허리 아바타",
+      "rarity": "레어",
+      "option": "회피율 5.5% 증가"
+    },
+    {
+      "itemId": "6997321d175648e99eb75adf5c8e2625",
+      "emblem3": "찬란한 붉은빛 엠블렘[정신력]",
+      "emblem2": "찬란한 붉은빛 엠블렘[정신력]",
+      "name": "초월한 폭풍의 기세",
+      "cloneItemId": null,
+      "emblem1": "",
+      "slot": "오라 아바타",
+      "rarity": "레어",
+      "option": ""
+    },
+    {
+      "itemId": "def2984a18b8da733a2136b02d852893",
+      "emblem3": "찬란한 붉은빛 엠블렘[정신력]",
+      "emblem2": "찬란한 붉은빛 엠블렘[정신력]",
+      "name": "풀 메탈 헤비 리볼버",
+      "cloneItemId": "b95e898081e6b4cc3c616b03a694a722",
+      "cloneName": "레어 무기 클론 아바타[80Lv]",
+      "emblem1": "",
+      "slot": "무기 아바타",
+      "rarity": "레어",
+      "option": "정신력 55 증가"
+    }
+  ],
+  "damageUpList": {
+    "elementDamage": "111%",
+    "cooltimeDown": "15.0%",
+    "buffPower": "254165 ( 13% )",
+    "totalCooltime": "15.0%",
+    "power": "65991.7 ( 51.0% )",
+    "skillDamageUp": "905340%",
+    "maxResist": "0 (5)",
+    "cooltimeRecover": "0.0%",
+    "hbbuffPower": "282123"
+  },
+  "dealerRankingAll": 144998,
+  "buffForce": {
+    "buffCreatureId": "",
+    "buffAvatar": [
+      {
+        "itemId": "89ffef1a103e5cbb9fff8915791c0d6a",
+        "emblem3": "null",
+        "emblem2": "null",
+        "name": "레어 상의 클론 아바타",
+        "emblem1": "플래티넘 엠블렘[squad::무기강화();]",
+        "slot": "상의 아바타",
+        "option": "squad::무기강화(); 스킬Lv +1",
+        "rarity": "레어"
+      },
+      {
+        "itemId": "4e300beb038e59db243a669d3cc45ff4",
+        "emblem3": "null",
+        "emblem2": "null",
+        "name": "레어 하의 클론 아바타",
+        "emblem1": "플래티넘 엠블렘[squad::무기강화();]",
+        "slot": "하의 아바타",
+        "option": "HP MAX 400 증가",
+        "rarity": "레어"
+      }
+    ],
+    "buffCreature": ""
+  },
+  "rumination": 0,
+  "adventure": "GreatBeginning",
+  "switchingName": "squad::무기강화(); 스증",
+  "creatureId": "35ceaaa32c000f7c1eb4c8392376c1be",
+  "skillInfo": [
+    {
+      "skillName": "tactics::고고도강하();",
+      "skillPoint": 5,
+      "skillCool": "290.00",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "apius::고립부돌파();",
+      "skillPoint": 13,
+      "skillCool": "51.00",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "tactics::전술전멸();",
+      "skillPoint": 8,
+      "skillCool": "180.00",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "suit::과출력포();",
+      "skillPoint": 21,
+      "skillCool": "32.51",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "suit::과잉진압();",
+      "skillPoint": 23,
+      "skillCool": "34.00",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "suit::섬멸운용();",
+      "skillPoint": 26,
+      "skillCool": "34.00",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "apius::지역방어();",
+      "skillPoint": 31,
+      "skillCool": "21.68",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "tactics::지역거부();",
+      "skillPoint": 15,
+      "skillCool": "170.00",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "suit::경로개척();",
+      "skillPoint": 38,
+      "skillCool": "38.25",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "suit::방벽전개();",
+      "skillPoint": 41,
+      "skillCool": "18.06",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "[SCQC] 영거리 제압",
+      "skillPoint": 4,
+      "skillCool": "15.30",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "[SCQC] 후퇴 기동",
+      "skillPoint": 48,
+      "skillCool": "6.80",
+      "skillCoolde": "1.00"
+    },
+    {
+      "skillName": "suit::목표강습();",
+      "skillPoint": 53,
+      "skillCool": "5.10",
+      "skillCoolde": "1.00"
+    }
+  ],
+  "skillVP": "[SCQC] 추적 제압,suit::방벽전개(사수);,suit::경로개척(응집);,suit::과잉진압(제로백);,suit::과출력포(인터럽트);",
+  "name": "잘빠라메딕",
+  "gulid": "SBH마스터즈",
+  "job": "眞 패러메딕",
+  "fame": "70809",
+  "auraAva": "스탯+100 속강+40 공격력+50",
+  "creature": "베테랑 해상구조대 달이",
+  "switching": [
+    {
+      "reinforceNum": "+10",
+      "setName": "",
+      "itemid": "9173c5067d0e368b18bf2e87500f9ac0",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "공격속성 + 화\n 스탯 + 90\n",
+      "name": "우르반의 걸작",
+      "slot": "무기",
+      "ozma": "",
+      "rarity": "태초"
+    },
+    {
+      "reinforceNum": "+0",
+      "setName": "",
+      "itemid": "abe7ef2d01b6f67a9cfb22ed65c1dd5d",
+      "lv105Leveling": "",
+      "reinforceType": "강화",
+      "siroco": "",
+      "enchant": "squad::무기강화(); + 2",
+      "name": "모험가의 의지[빛]",
+      "slot": "칭호",
+      "ozma": "",
+      "rarity": "레어"
+    },
+    {
+      "reinforceNum": "+10",
+      "setName": "",
+      "itemid": "a1b024bc3c80c0028e8408a5e008f915",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "apius::전장정보(); + 3\n스탯 + 100\n",
+      "name": "찬란한 황금향의 플레이트 아머",
+      "slot": "상의",
+      "ozma": "",
+      "rarity": "에픽"
+    },
+    {
+      "reinforceNum": "+10",
+      "setName": "",
+      "itemid": "975d2fb3c5dd7e6c2f2fbdae37bdaed5",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "apius::전장정보(); + 3\n스탯 + 100\n",
+      "name": "화려한 황금향의 플레이트 숄더",
+      "slot": "머리어깨",
+      "ozma": "",
+      "rarity": "레전더리"
+    },
+    {
+      "reinforceNum": "+7",
+      "setName": "",
+      "itemid": "fa186dfbbdef647418f4581cedec7ea8",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "apius::전장정보(); + 3\n스탯 + 100\n",
+      "name": "찬란한 황금향의 플레이트 레깅스",
+      "slot": "하의",
+      "ozma": "",
+      "rarity": "에픽"
+    },
+    {
+      "reinforceNum": "+7",
+      "setName": "",
+      "itemid": "3501089b77395bbeeb11c4d96d51df70",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "apius::전장정보(); + 1\n스탯 + 100\n",
+      "name": "화려한 황금향의 플레이트 부츠",
+      "slot": "신발",
+      "ozma": "",
+      "rarity": "레전더리"
+    },
+    {
+      "reinforceNum": "+7",
+      "setName": "",
+      "itemid": "2be538b914d1b161d99bd54ef37a2308",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "apius::대응체계(); + 2\n스탯 + 100\n 크리 + 7%\n",
+      "name": "찬란한 황금향의 플레이트 코일",
+      "slot": "벨트",
+      "ozma": "",
+      "rarity": "에픽"
+    },
+    {
+      "reinforceNum": "+10",
+      "setName": "",
+      "itemid": "a072b7e6b059574e8b6a8a7dadd8d72f",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "스탯 + 90\n",
+      "name": "화려한 황금향의 축복 - 목걸이",
+      "slot": "목걸이",
+      "ozma": "",
+      "rarity": "레전더리"
+    },
+    {
+      "reinforceNum": "+7",
+      "setName": "",
+      "itemid": "36f65593c1d75178e0c1f7dcbba88187",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "스탯 + 90\n",
+      "name": "빛나는 황금향의 영광 - 팔찌",
+      "slot": "팔찌",
+      "ozma": "",
+      "rarity": "유니크"
+    },
+    {
+      "reinforceNum": "+7",
+      "setName": "",
+      "itemid": "b2898f6d37bd1414074d89732d35e387",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "스탯 + 90\n",
+      "name": "화려한 황금향의 꿈 - 반지",
+      "slot": "반지",
+      "ozma": "",
+      "rarity": "레전더리"
+    },
+    {
+      "reinforceNum": "+8",
+      "setName": "",
+      "itemid": "00e24a9c32487ef3d09aec665aad03cf",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "apius::전장정보(); + 3\n스탯 + 100\n",
+      "name": "고유 - 잠식된 갑판장의 미스트 기어",
+      "slot": "보조장비",
+      "ozma": "",
+      "rarity": "에픽"
+    },
+    {
+      "reinforceNum": "+8",
+      "setName": "",
+      "itemid": "30457efb8b2d19c2ca0b3b071b557af1",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "apius::전장정보(); + 3\n스탯 + 100\n",
+      "name": "찬란한 황금향의 저주 - 마법석",
+      "slot": "마법석",
+      "ozma": "",
+      "rarity": "에픽"
+    },
+    {
+      "reinforceNum": "+8",
+      "setName": "",
+      "itemid": "ee160e4221f89f704bf3b361bc7e536a",
+      "lv105Leveling": "1",
+      "reinforceType": "증폭",
+      "siroco": "",
+      "enchant": "스탯 + 175\n",
+      "name": "화려한 황금향의 이면 - 귀걸이",
+      "slot": "귀걸이",
+      "ozma": "",
+      "rarity": "레전더리"
+    }
+  ],
+  "server": "casillas",
+  "flag": "에픽",
+  "setsGrade": "에픽 Ⅴ",
+  "bufferAva": {
+    "option113": "30Lv + 1",
+    "emblem1130": "30Lv + 1",
+    "emblem1141": 0,
+    "emblem1140": "30Lv + 1",
+    "emblem1132": 0,
+    "emblem1131": 0,
+    "emblem1142": 0
+  },
+  "title": "20% 피증칭호",
+  "gem": "레전더리,레전더리,레전더리,레전더리",
+  "bufferRanking": 191344,
+  "clusterEnd": 0,
+  "switchingLevel": 10,
+  "switchingValue": "70%",
+  "adventureLevel": "43",
+  "serverKR": "카시야스",
+  "cri": "107.5%",
+  "crea": "피증 25% 크리쳐",
+  "buffCal": [
+    {
+      "buffSkillName": "squad::무기강화();",
+      "stat": "140,556",
+      "phys": "26,319",
+      "passName": "강화"
+    },
+    {
+      "buffSkillName": "squad::무기강화();",
+      "stat": "125,496",
+      "phys": "23,499"
+    },
+    {
+      "buffSkillName": "tactics::지역거부();",
+      "stat": "228,899"
+    },
+    {
+      "buffSkillName": "tactics::고고도강하();",
+      "stat": "34,335"
+    },
+    {
+      "buffSkillName": "apius::대응체계();",
+      "stat": "454"
+    },
+    {
+      "buffSkillName": "총 합",
+      "stat": "404,244",
+      "phys": "26,319",
+      "passName": "강화"
+    },
+    {
+      "buffSkillName": "총 합",
+      "stat": "389,184",
+      "phys": "23,499"
+    },
+    {
+      "30LvBuffScore": "1,989,223",
+      "buffScore": "5,246,889"
+    }
+  ],
+  "publicPoint": 215,
+  "dealerRanking": 45801,
+  "flagReinforceNum": 8,
+  "buffTitle": "30Lv + 2",
+  "third": 1.15,
+  "equip": [
+    {
+      "reinforceNum": "+10",
+      "lv105Leveling": "0 / 0",
+      "code": "8_hcan",
+      "lv105Explain": "",
+      "siroco": "",
+      "weaponUpgrade": "0",
+      "refine": "8",
+      "slot": "무기",
+      "ozma": "",
+      "explainDetail": "",
+      "itemUp": 0,
+      "itemid": "9173c5067d0e368b18bf2e87500f9ac0",
+      "reinforceType": "증폭",
+      "enchant": "공격속성 + 화\n 스탯 + 90\n",
+      "name": "우르반의 걸작",
+      "rarity": "태초",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+0",
+      "lv105Leveling": "",
+      "lv105Explain": "",
+      "siroco": "",
+      "slot": "칭호",
+      "ozma": "",
+      "explainDetail": "",
+      "itemUp": 0,
+      "itemid": "9107075ce3274db4ebf2de9db4f68465",
+      "reinforceType": "강화",
+      "enchant": "화속강 + 6\n 스탯 + 25\n",
+      "name": "프로스트의 전설 플래티넘[95Lv]",
+      "rarity": "레어",
+      "itemLevel": "1"
+    },
+    {
+      "reinforceNum": "+10",
+      "sirocoR": "에픽",
+      "lv105Leveling": "",
+      "code": "3_p_coat",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 끝없이 되풀이되는 꿈",
+      "slot": "상의",
+      "ozma": "",
+      "explainDetail": "최종 데미지 9% 증가\n",
+      "itemUp": 0,
+      "itemid": "a1b024bc3c80c0028e8408a5e008f915",
+      "reinforceType": "증폭",
+      "enchant": "apius::전장정보(); + 3\n스탯 + 100\n",
+      "name": "찬란한 황금향의 플레이트 아머",
+      "rarity": "에픽",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+10",
+      "sirocoR": "에픽",
+      "lv105Leveling": "",
+      "code": "2_p_neck",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 돌이킬 수 없는 현실",
+      "slot": "머리어깨",
+      "ozma": "",
+      "explainDetail": "최종 데미지 9% 증가\n",
+      "itemUp": 0,
+      "itemid": "975d2fb3c5dd7e6c2f2fbdae37bdaed5",
+      "reinforceType": "증폭",
+      "enchant": "apius::전장정보(); + 3\n스탯 + 100\n",
+      "name": "화려한 황금향의 플레이트 숄더",
+      "rarity": "레전더리",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+7",
+      "sirocoR": "유니크",
+      "lv105Leveling": "",
+      "code": "3_p_pants",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 잊지 못할 이상",
+      "slot": "하의",
+      "ozma": "",
+      "explainDetail": "최종 데미지 6% 증가\n",
+      "itemUp": 0,
+      "itemid": "fa186dfbbdef647418f4581cedec7ea8",
+      "reinforceType": "증폭",
+      "enchant": "apius::전장정보(); + 3\n스탯 + 100\n",
+      "name": "찬란한 황금향의 플레이트 레깅스",
+      "rarity": "에픽",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+7",
+      "sirocoR": "유니크",
+      "lv105Leveling": "",
+      "code": "2_p_shoes",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 마주할 꿈의 끝",
+      "slot": "신발",
+      "ozma": "",
+      "explainDetail": "최종 데미지 6% 증가\n",
+      "itemUp": 0,
+      "itemid": "3501089b77395bbeeb11c4d96d51df70",
+      "reinforceType": "증폭",
+      "enchant": "apius::전장정보(); + 1\n스탯 + 100\n",
+      "name": "화려한 황금향의 플레이트 부츠",
+      "rarity": "레전더리",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+7",
+      "sirocoR": "에픽",
+      "lv105Leveling": "",
+      "code": "3_p_belt",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 끝을 모를 탐욕",
+      "slot": "벨트",
+      "ozma": "",
+      "explainDetail": "최종 데미지 9% 증가\n",
+      "itemUp": 0,
+      "itemid": "2be538b914d1b161d99bd54ef37a2308",
+      "reinforceType": "증폭",
+      "enchant": "apius::대응체계(); + 2\n스탯 + 100\n 크리 + 7%\n",
+      "name": "찬란한 황금향의 플레이트 코일",
+      "rarity": "에픽",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+10",
+      "sirocoR": "에픽",
+      "lv105Leveling": "",
+      "code": "2_neck",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 끝없이 이어지는 갈망",
+      "slot": "목걸이",
+      "ozma": "",
+      "explainDetail": "최종 데미지 16% 증가\n",
+      "itemUp": 0,
+      "itemid": "a072b7e6b059574e8b6a8a7dadd8d72f",
+      "reinforceType": "증폭",
+      "enchant": "스탯 + 90\n",
+      "name": "화려한 황금향의 축복 - 목걸이",
+      "rarity": "레전더리",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+7",
+      "sirocoR": "유니크",
+      "lv105Leveling": "",
+      "code": "1_brac",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 버릴 수 없는 오만",
+      "slot": "팔찌",
+      "ozma": "",
+      "explainDetail": "최종 데미지 11.5% 증가\n",
+      "itemUp": 0,
+      "itemid": "36f65593c1d75178e0c1f7dcbba88187",
+      "reinforceType": "증폭",
+      "enchant": "스탯 + 90\n",
+      "name": "빛나는 황금향의 영광 - 팔찌",
+      "rarity": "유니크",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+7",
+      "sirocoR": "유니크",
+      "lv105Leveling": "",
+      "code": "2_ring",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 닿지 못하는 바람",
+      "slot": "반지",
+      "ozma": "",
+      "explainDetail": "최종 데미지 14% 증가\n",
+      "itemUp": 0,
+      "itemid": "b2898f6d37bd1414074d89732d35e387",
+      "reinforceType": "증폭",
+      "enchant": "스탯 + 90\n",
+      "name": "화려한 황금향의 꿈 - 반지",
+      "rarity": "레전더리",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+8",
+      "sirocoR": "유니크",
+      "lv105Leveling": "",
+      "code": "39_sup",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 시작한 분노",
+      "slot": "보조장비",
+      "ozma": "",
+      "explainDetail": "최종 데미지 12.5% 증가\n",
+      "itemUp": 0,
+      "itemid": "00e24a9c32487ef3d09aec665aad03cf",
+      "reinforceType": "증폭",
+      "enchant": "apius::전장정보(); + 3\n스탯 + 100\n",
+      "name": "고유 - 잠식된 갑판장의 미스트 기어",
+      "rarity": "에픽",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+8",
+      "sirocoR": "에픽",
+      "lv105Leveling": "",
+      "code": "3_ms",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 바라지 않은 소멸",
+      "slot": "마법석",
+      "ozma": "",
+      "explainDetail": "최종 데미지 14.5% 증가\n",
+      "itemUp": 0,
+      "itemid": "30457efb8b2d19c2ca0b3b071b557af1",
+      "reinforceType": "증폭",
+      "enchant": "apius::전장정보(); + 3\n스탯 + 100\n",
+      "name": "찬란한 황금향의 저주 - 마법석",
+      "rarity": "에픽",
+      "itemLevel": "115"
+    },
+    {
+      "reinforceNum": "+8",
+      "sirocoR": "유니크",
+      "lv105Leveling": "",
+      "code": "2_ear",
+      "lv105Explain": "",
+      "siroco": "황금",
+      "sirocoReal": "황금 : 도달한 목표",
+      "slot": "귀걸이",
+      "ozma": "",
+      "explainDetail": "최종 데미지 12.5% 증가\n",
+      "itemUp": 0,
+      "itemid": "ee160e4221f89f704bf3b361bc7e536a",
+      "reinforceType": "증폭",
+      "enchant": "스탯 + 175\n",
+      "name": "화려한 황금향의 이면 - 귀걸이",
+      "rarity": "레전더리",
+      "itemLevel": "115"
+    }
+  ],
+  "skillForce": "suit::방벽전개();B,apius::지역방어();B,suit::과출력포();B",
+  "afti": [
+    {
+      "name": "비룡의 기운찬 발톱",
+      "id": "1c72c987497d0ba4f294a1561f5d47df",
+      "rarity": "레어"
+    },
+    {
+      "name": "태양을 삼킨 달",
+      "id": "a530005cff817aaf54f8bffffe65ca75",
+      "rarity": "유니크"
+    },
+    {
+      "name": "빛을 머금은 이슬",
+      "id": "34f16cff295079c49024a65a5efc0add",
+      "rarity": "유니크"
+    }
+  ],
+  "setsPoint": 2275
+}

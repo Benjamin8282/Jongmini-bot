@@ -1,0 +1,949 @@
+{
+  "serverId": "casillas",
+  "characterId": "ab590098566252dad7fe024ab17f5fcc",
+  "characterName": "김철완",
+  "level": 115,
+  "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+  "jobName": "격투가(여)",
+  "jobGrowName": "眞 넨마스터",
+  "fame": 83413,
+  "adventureName": "영정은날막지못해",
+  "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+  "guildName": "SBH마스터즈",
+  "equipment": [
+    {
+      "slotId": "WEAPON",
+      "slotName": "무기",
+      "itemId": "8cd53eed89da72eb94486e0676a7194f",
+      "itemName": "리리스, 디 이블",
+      "itemTypeId": "4ffb6f14b86f5c818a925bf58022686e",
+      "itemType": "무기",
+      "itemTypeDetailId": "f2ce85f03dddb5657c4823bc85c86859",
+      "itemTypeDetail": "클로",
+      "itemAvailableLevel": 115,
+      "itemRarity": "태초",
+      "setItemId": null,
+      "setItemName": null,
+      "reinforce": 13,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "모든 속성 강화",
+            "value": 15
+          },
+          {
+            "name": "물리 공격력",
+            "value": 30
+          },
+          {
+            "name": "마법 공격력",
+            "value": 30
+          },
+          {
+            "name": "독립 공격력",
+            "value": 30
+          }
+        ]
+      },
+      "amplificationName": null,
+      "refine": 3,
+      "engrave": {
+        "itemId": "39c3764c511a50e416409f4ca2ba9dc5",
+        "itemName": "디레지에 레이드 : 이명 각인권"
+      },
+      "tune": [
+        {
+          "level": 3,
+          "status": [
+            {
+              "name": "최종 데미지",
+              "value": "430.5%"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slotId": "TITLE",
+      "slotName": "칭호",
+      "itemId": "a33cbd6ee4519308cafb65cd3189b279",
+      "itemName": "프로스트의 전설 플래티넘[80Lv]",
+      "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+      "itemType": "액세서리",
+      "itemTypeDetailId": "691933a06ff114348a7db936fb0aec66",
+      "itemTypeDetail": "칭호",
+      "itemAvailableLevel": 1,
+      "itemRarity": "레어",
+      "setItemId": null,
+      "setItemName": null,
+      "reinforce": 0,
+      "enchant": {
+        "status": [
+          {
+            "name": "명속성강화",
+            "value": 6
+          },
+          {
+            "name": "힘",
+            "value": 25
+          },
+          {
+            "name": "지능",
+            "value": 25
+          },
+          {
+            "name": "체력",
+            "value": 25
+          },
+          {
+            "name": "정신력",
+            "value": 25
+          }
+        ]
+      },
+      "amplificationName": null,
+      "refine": 0
+    },
+    {
+      "slotId": "JACKET",
+      "slotName": "상의",
+      "itemId": "0e944978b8e69cc5ec088995713305ee",
+      "itemName": "잠식 : 칠흑의 정화 상의",
+      "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+      "itemType": "방어구",
+      "itemTypeDetailId": "3da92241d44bdafcf7554057e6479c83",
+      "itemTypeDetail": "상의",
+      "itemAvailableLevel": 115,
+      "itemRarity": "에픽",
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 세트",
+      "reinforce": 10,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "물리 공격력",
+            "value": 110
+          },
+          {
+            "name": "마법 공격력",
+            "value": 110
+          },
+          {
+            "name": "독립 공격력",
+            "value": 110
+          },
+          {
+            "name": "힘",
+            "value": 90
+          },
+          {
+            "name": "지능",
+            "value": 90
+          },
+          {
+            "name": "최종 데미지",
+            "value": "3%"
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 3360,
+            "explain": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+            "explainDetail": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+            "buffExplain": "버프력 3360",
+            "buffExplainDetail": "버프력 3360"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "09f9260d5f1acd3a78eba9d19b58456f",
+        "itemName": "욕망 : 잃어버린 영혼",
+        "itemRarity": "에픽"
+      },
+      "tune": [
+        {
+          "level": 3,
+          "setPoint": 265
+        }
+      ]
+    },
+    {
+      "slotId": "SHOULDER",
+      "slotName": "머리어깨",
+      "itemId": "af69f31a097f36466b335eb2b3951fa6",
+      "itemName": "잠식 : 칠흑의 정화 어깨",
+      "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+      "itemType": "방어구",
+      "itemTypeDetailId": "f2976a25a516451e3e8667bac328b308",
+      "itemTypeDetail": "머리어깨",
+      "itemAvailableLevel": 115,
+      "itemRarity": "에픽",
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 세트",
+      "reinforce": 11,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "힘",
+            "value": 40
+          },
+          {
+            "name": "지능",
+            "value": 40
+          },
+          {
+            "name": "체력",
+            "value": 40
+          },
+          {
+            "name": "정신력",
+            "value": 40
+          },
+          {
+            "name": "물리 공격력",
+            "value": 10
+          },
+          {
+            "name": "마법 공격력",
+            "value": 10
+          },
+          {
+            "name": "독립 공격력",
+            "value": 10
+          },
+          {
+            "name": "물리 크리티컬 히트",
+            "value": "5%"
+          },
+          {
+            "name": "마법 크리티컬 히트",
+            "value": "5%"
+          },
+          {
+            "name": "최종 데미지",
+            "value": "3%"
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 3360,
+            "explain": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+            "explainDetail": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+            "buffExplain": "버프력 3360",
+            "buffExplainDetail": "버프력 3360"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "42c1d050ad396ed6af1fec840207d26d",
+        "itemName": "욕망 : 사라진 존재의 이유",
+        "itemRarity": "에픽"
+      },
+      "tune": [
+        {
+          "level": 3,
+          "setPoint": 265
+        }
+      ]
+    },
+    {
+      "slotId": "PANTS",
+      "slotName": "하의",
+      "itemId": "5af335df168b46a51c05462b246f8484",
+      "itemName": "잠식 : 칠흑의 정화 하의",
+      "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+      "itemType": "방어구",
+      "itemTypeDetailId": "7c4b28699ae7994798289f187d519992",
+      "itemTypeDetail": "하의",
+      "itemAvailableLevel": 115,
+      "itemRarity": "에픽",
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 세트",
+      "reinforce": 10,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "최종 데미지",
+            "value": "2%"
+          },
+          {
+            "name": "물리 공격력",
+            "value": 110
+          },
+          {
+            "name": "마법 공격력",
+            "value": 110
+          },
+          {
+            "name": "독립 공격력",
+            "value": 110
+          },
+          {
+            "name": "힘",
+            "value": 90
+          },
+          {
+            "name": "지능",
+            "value": 90
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 3000,
+            "explain": "최종 데미지 9% 증가",
+            "explainDetail": "최종 데미지 9% 증가",
+            "buffExplain": "버프력 3000",
+            "buffExplainDetail": "버프력 3000"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "7b5a772b6bda6b2745c7980b645327bd",
+        "itemName": "정화 : 상처를 감싸는 포근한 빛",
+        "itemRarity": "에픽",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "setPoint": 65
+      },
+      "tune": [
+        {
+          "level": 3,
+          "setPoint": 265
+        }
+      ]
+    },
+    {
+      "slotId": "SHOES",
+      "slotName": "신발",
+      "itemId": "7761ada30f6888dadb90b5f05c8400d0",
+      "itemName": "잠식 : 칠흑의 정화 신발",
+      "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+      "itemType": "방어구",
+      "itemTypeDetailId": "ef6fcc3b39b2bbcbf09a71da6cbafe06",
+      "itemTypeDetail": "신발",
+      "itemAvailableLevel": 115,
+      "itemRarity": "에픽",
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 세트",
+      "reinforce": 10,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "힘",
+            "value": 50
+          },
+          {
+            "name": "지능",
+            "value": 50
+          },
+          {
+            "name": "체력",
+            "value": 50
+          },
+          {
+            "name": "정신력",
+            "value": 50
+          },
+          {
+            "name": "물리 공격력",
+            "value": 15
+          },
+          {
+            "name": "마법 공격력",
+            "value": 15
+          },
+          {
+            "name": "독립 공격력",
+            "value": 15
+          },
+          {
+            "name": "최종 데미지",
+            "value": "3%"
+          },
+          {
+            "name": "물리 크리티컬 히트",
+            "value": "3%"
+          },
+          {
+            "name": "마법 크리티컬 히트",
+            "value": "3%"
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 3360,
+            "explain": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+            "explainDetail": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+            "buffExplain": "버프력 3360",
+            "buffExplainDetail": "버프력 3360"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "0eb9b549c17b9c1b19967564c089ec43",
+        "itemName": "욕망 : 무정한 여신의 우아함",
+        "itemRarity": "에픽"
+      },
+      "tune": [
+        {
+          "level": 3,
+          "setPoint": 265
+        }
+      ]
+    },
+    {
+      "slotId": "WAIST",
+      "slotName": "벨트",
+      "itemId": "ebcdf9f573b5baee8e43e33b07e6691a",
+      "itemName": "잠식 : 칠흑의 정화 벨트",
+      "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+      "itemType": "방어구",
+      "itemTypeDetailId": "934ed2dea99f55f775df256fc29c5d56",
+      "itemTypeDetail": "벨트",
+      "itemAvailableLevel": 115,
+      "itemRarity": "에픽",
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 세트",
+      "reinforce": 10,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "힘",
+            "value": 50
+          },
+          {
+            "name": "지능",
+            "value": 50
+          },
+          {
+            "name": "체력",
+            "value": 50
+          },
+          {
+            "name": "정신력",
+            "value": 50
+          },
+          {
+            "name": "물리 공격력",
+            "value": 15
+          },
+          {
+            "name": "마법 공격력",
+            "value": 15
+          },
+          {
+            "name": "독립 공격력",
+            "value": 15
+          },
+          {
+            "name": "물리 크리티컬 히트",
+            "value": "3%"
+          },
+          {
+            "name": "마법 크리티컬 히트",
+            "value": "3%"
+          },
+          {
+            "name": "최종 데미지",
+            "value": "3%"
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 3360,
+            "explain": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+            "explainDetail": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+            "buffExplain": "버프력 3360",
+            "buffExplainDetail": "버프력 3360"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "1a13bc488e70a768e677abd6ffdb4eb2",
+        "itemName": "욕망 : 원망조차 사라진 시선",
+        "itemRarity": "에픽"
+      },
+      "tune": [
+        {
+          "level": 3,
+          "setPoint": 265
+        }
+      ]
+    },
+    {
+      "slotId": "AMULET",
+      "slotName": "목걸이",
+      "itemId": "9cb8d68a75b3d97f42ee97411f043f42",
+      "itemName": "흑아 : 혼돈의 정화 목걸이",
+      "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+      "itemType": "액세서리",
+      "itemTypeDetailId": "390e3966118b0c466ce9f8eae45e1629",
+      "itemTypeDetail": "목걸이",
+      "itemAvailableLevel": 115,
+      "itemRarity": "태초",
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 세트",
+      "reinforce": 12,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "모든 속성 강화",
+            "value": 35
+          },
+          {
+            "name": "최종 데미지",
+            "value": "1%"
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 4950,
+            "explain": "최종 데미지 19.5% 증가\n\n받는 피해 7% 감소\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+            "explainDetail": "최종 데미지 19.5% 증가\n\n받는 피해 7% 감소\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+            "buffExplain": "버프력 4950\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)",
+            "buffExplainDetail": "버프력 4950\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "e7416488f29cf764f73dfe53ed1d8abf",
+        "itemName": "테아나 : 끝나지 않는 도전",
+        "itemRarity": "에픽"
+      },
+      "tune": [
+        {
+          "level": 0,
+          "upgrade": false,
+          "setPoint": 215
+        }
+      ]
+    },
+    {
+      "slotId": "WRIST",
+      "slotName": "팔찌",
+      "itemId": "9f404dc67c47917d8e5b062b1a2bd149",
+      "itemName": "흑아 : 혼돈의 정화 팔찌",
+      "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+      "itemType": "액세서리",
+      "itemTypeDetailId": "80bddf423629c28c7b4459c328fdffaf",
+      "itemTypeDetail": "팔찌",
+      "itemAvailableLevel": 115,
+      "itemRarity": "태초",
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 세트",
+      "reinforce": 12,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "모든 속성 강화",
+            "value": 35
+          },
+          {
+            "name": "최종 데미지",
+            "value": "1%"
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 4450,
+            "explain": "최종 데미지 17% 증가\n\n스킬 범위 7% 증가\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+            "explainDetail": "최종 데미지 17% 증가\n\n스킬 범위 7% 증가\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+            "buffExplain": "버프력 4450\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)",
+            "buffExplainDetail": "버프력 4450\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "cde51f4f18b1b8334e66f4a5d6ee9af1",
+        "itemName": "테아나 : 계속되는 탄생",
+        "itemRarity": "에픽"
+      },
+      "tune": [
+        {
+          "level": 0,
+          "upgrade": false,
+          "setPoint": 215
+        }
+      ]
+    },
+    {
+      "slotId": "RING",
+      "slotName": "반지",
+      "itemId": "5363150949435f138011f4e2933c7d1d",
+      "itemName": "흑아 : 혼돈의 정화 반지",
+      "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+      "itemType": "액세서리",
+      "itemTypeDetailId": "b04c7fb9b29b27b91a0a9e5a1822bc8f",
+      "itemTypeDetail": "반지",
+      "itemAvailableLevel": 115,
+      "itemRarity": "태초",
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 세트",
+      "reinforce": 13,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "모든 속성 강화",
+            "value": 35
+          },
+          {
+            "name": "최종 데미지",
+            "value": "2%"
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 4950,
+            "explain": "최종 데미지 19.5% 증가\n\n모든 속도 +7%\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+            "explainDetail": "최종 데미지 19.5% 증가\n\n모든 속도 +7%\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+            "buffExplain": "버프력 4950\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)",
+            "buffExplainDetail": "버프력 4950\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "edd79e8b4cfc90a013be06dc608afa4c",
+        "itemName": "테아나 : 영원한 기억",
+        "itemRarity": "에픽"
+      },
+      "tune": [
+        {
+          "level": 0,
+          "upgrade": false,
+          "setPoint": 215
+        }
+      ]
+    },
+    {
+      "slotId": "SUPPORT",
+      "slotName": "보조장비",
+      "itemId": "6e1fcf6e59ed8d5a95dc152b84fe93ce",
+      "itemName": "만병을 잉태한 역병의 심장",
+      "itemTypeId": "87ff665868ffd50f8aef7948548439bd",
+      "itemType": "추가장비",
+      "itemTypeDetailId": "2fef5d81b7f59f0c75241890a8d941c9",
+      "itemTypeDetail": "보조장비",
+      "itemAvailableLevel": 115,
+      "itemRarity": "태초",
+      "setItemId": null,
+      "setItemName": null,
+      "reinforce": 11,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "물리 크리티컬 히트",
+            "value": "3.0%"
+          },
+          {
+            "name": "마법 크리티컬 히트",
+            "value": "3.0%"
+          },
+          {
+            "name": "모든 속성 강화",
+            "value": 12
+          },
+          {
+            "name": "공격력 증폭",
+            "value": "3%"
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 4150,
+            "explain": "최종 데미지 14.5% 증가",
+            "explainDetail": "최종 데미지 14.5% 증가",
+            "buffExplain": "버프력 4150",
+            "buffExplainDetail": "버프력 4150"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "39745500a4580caeacbd1c9bf96c43dc",
+        "itemName": "정화 : 생명을 베어내는 어둠",
+        "itemRarity": "에픽",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "setPoint": 65
+      },
+      "exaltedInfo": {
+        "damage": "38.4%",
+        "buff": 11220,
+        "explain": "<생명의 불꽃을 꺼뜨리는 자>\n장착 중인 가장 높은 세트 포인트 2100점 이상에서만 능력을 발휘합니다.\n세트 포인트 2550이상 달성 시 더 강한 효과가 발동됩니다."
+      },
+      "potency": {
+        "value": 40,
+        "damage": "4%",
+        "buff": 1520
+      }
+    },
+    {
+      "slotId": "MAGIC_STON",
+      "slotName": "마법석",
+      "itemId": "1ec42a6c4087627c396daa257475ed5c",
+      "itemName": "칠흑의 정화 마법석",
+      "itemTypeId": "87ff665868ffd50f8aef7948548439bd",
+      "itemType": "추가장비",
+      "itemTypeDetailId": "fe5f3db78175f5a3196385c688d29681",
+      "itemTypeDetail": "마법석",
+      "itemAvailableLevel": 115,
+      "itemRarity": "에픽",
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 세트",
+      "reinforce": 11,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "모든 속성 강화",
+            "value": 40
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 4450,
+            "explain": "최종 데미지 17% 증가\n특수 오브젝트 데미지 +1.5%\n80Lv 액티브 스킬 공격력 12% 증가\n80Lv 스킬 범위 12% 증가",
+            "explainDetail": "최종 데미지 17% 증가\n특수 오브젝트 데미지 +1.5%\n80Lv 액티브 스킬 공격력 12% 증가\n80Lv 스킬 범위 12% 증가",
+            "buffExplain": "버프력 4450",
+            "buffExplainDetail": "버프력 4450"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "5609a9e863d543d93a0348e530390c36",
+        "itemName": "설계 : 완성형 어태치 모듈 80",
+        "itemRarity": "에픽"
+      },
+      "tune": [
+        {
+          "level": 2,
+          "setPoint": 235
+        }
+      ]
+    },
+    {
+      "slotId": "EARRING",
+      "slotName": "귀걸이",
+      "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+      "itemName": "칠흑의 정화 귀걸이",
+      "itemTypeId": "87ff665868ffd50f8aef7948548439bd",
+      "itemType": "추가장비",
+      "itemTypeDetailId": "601834074c49bb0e48cb65a75a8667bc",
+      "itemTypeDetail": "귀걸이",
+      "itemAvailableLevel": 115,
+      "itemRarity": "에픽",
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 세트",
+      "reinforce": 11,
+      "itemGradeName": "최상급",
+      "enchant": {
+        "status": [
+          {
+            "name": "모든 속성 강화",
+            "value": 25
+          },
+          {
+            "name": "힘",
+            "value": 100
+          },
+          {
+            "name": "지능",
+            "value": 100
+          },
+          {
+            "name": "체력",
+            "value": 100
+          },
+          {
+            "name": "정신력",
+            "value": 100
+          }
+        ]
+      },
+      "amplificationName": "차원의 지능",
+      "refine": 0,
+      "fusionOption": {
+        "options": [
+          {
+            "buff": 4450,
+            "explain": "최종 데미지 17% 증가\n특수 오브젝트 데미지 +1.5%\n80Lv 액티브 스킬 공격력 12% 증가\n80Lv 스킬 범위 12% 증가",
+            "explainDetail": "최종 데미지 17% 증가\n특수 오브젝트 데미지 +1.5%\n80Lv 액티브 스킬 공격력 12% 증가\n80Lv 스킬 범위 12% 증가",
+            "buffExplain": "버프력 4450",
+            "buffExplainDetail": "버프력 4450"
+          }
+        ]
+      },
+      "upgradeInfo": {
+        "itemId": "d213f84b09368879ee4eb958071386ff",
+        "itemName": "설계 : 완성형 시그널 모듈 80",
+        "itemRarity": "에픽"
+      },
+      "tune": [
+        {
+          "level": 0,
+          "setPoint": 215
+        }
+      ]
+    }
+  ],
+  "setItemInfo": [
+    {
+      "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+      "setItemName": "칠흑의 정화 : 균형 세트",
+      "setItemRarityName": "태초",
+      "active": {
+        "explain": "정화와 타락의 조화를 이뤄 균형 상태가 적용\n[균형]\n- HP/MP 초당 0.5% 회복\n- 10초마다 HP MAX 10% 보호막 생성\n- 슈퍼 아머 부여\n- 점프 중 한 번 더 점프 가능\n\n[칠흑의 정화] [장비 발동 옵션]\n정화와 타락의 힘을 선택하여 사용합니다.\n- 던전 입장 시 정화 상태가 기본 적용\n- 쿨타임 : 300초\n\n[정화]\n- 최종 데미지 17.5% 증가\n- 스킬 쿨타임 30% 감소(각성기 제외)\n\n[타락]\n- 스킬 쿨타임 55% 감소(각성기 제외)\n- 특수 오브젝트 데미지 +17.5%\n\n[태초의 기억] (0)\n세트 포인트 2550 이후 70 마다 아래 효과 적용\n- 최종 데미지 1% 증가 (0%)\n- 버프력 +100 (0)",
+        "explainDetail": "정화와 타락의 조화를 이뤄 균형 상태가 적용\n[균형]\n- HP/MP 초당 0.5% 회복\n- 10초마다 HP MAX 10% 보호막 생성\n- 슈퍼 아머 부여\n- 점프 중 한 번 더 점프 가능\n\n[칠흑의 정화] [장비 발동 옵션]\n정화와 타락의 힘을 선택하여 사용합니다.\n- 던전 입장 시 정화 상태가 기본 적용\n- 쿨타임 : 300초\n\n[정화]\n- 최종 데미지 17.5% 증가\n- 스킬 쿨타임 30% 감소(각성기 제외)\n\n[타락]\n- 스킬 쿨타임 55% 감소(각성기 제외)\n- 특수 오브젝트 데미지 +17.5%\n\n[태초의 기억] (0)\n세트 포인트 2550 이후 70 마다 아래 효과 적용\n- 최종 데미지 1% 증가 (0%)\n- 버프력 +100 (0)",
+        "status": [
+          {
+            "name": "모험가 명성",
+            "value": 23000
+          },
+          {
+            "name": "버프력",
+            "value": 50400
+          },
+          {
+            "name": "최종 데미지",
+            "value": "301.1%"
+          },
+          {
+            "name": "스킬 쿨타임 감소",
+            "value": "-30%"
+          }
+        ],
+        "setPoint": {
+          "current": 2550,
+          "min": 2550,
+          "max": 2550
+        }
+      },
+      "slotInfo": [
+        {
+          "itemNo": "0e944978b8e69cc5ec088995713305ee",
+          "slotId": "JACKET",
+          "slotName": "상의",
+          "itemRarity": "에픽"
+        },
+        {
+          "itemNo": "af69f31a097f36466b335eb2b3951fa6",
+          "slotId": "SHOULDER",
+          "slotName": "머리어깨",
+          "itemRarity": "에픽"
+        },
+        {
+          "itemNo": "5af335df168b46a51c05462b246f8484",
+          "slotId": "PANTS",
+          "slotName": "하의",
+          "itemRarity": "에픽"
+        },
+        {
+          "itemNo": "7761ada30f6888dadb90b5f05c8400d0",
+          "slotId": "SHOES",
+          "slotName": "신발",
+          "itemRarity": "에픽"
+        },
+        {
+          "itemNo": "ebcdf9f573b5baee8e43e33b07e6691a",
+          "slotId": "WAIST",
+          "slotName": "벨트",
+          "itemRarity": "에픽"
+        },
+        {
+          "itemNo": "9cb8d68a75b3d97f42ee97411f043f42",
+          "slotId": "AMULET",
+          "slotName": "목걸이",
+          "itemRarity": "태초"
+        },
+        {
+          "itemNo": "9f404dc67c47917d8e5b062b1a2bd149",
+          "slotId": "WRIST",
+          "slotName": "팔찌",
+          "itemRarity": "태초"
+        },
+        {
+          "itemNo": "5363150949435f138011f4e2933c7d1d",
+          "slotId": "RING",
+          "slotName": "반지",
+          "itemRarity": "태초"
+        },
+        {
+          "itemNo": "1ec42a6c4087627c396daa257475ed5c",
+          "slotId": "MAGIC_STON",
+          "slotName": "마법석",
+          "itemRarity": "에픽"
+        },
+        {
+          "itemNo": "ffcad6ffb4e4629f61b56052f158f805",
+          "slotId": "EARRING",
+          "slotName": "귀걸이",
+          "itemRarity": "에픽"
+        },
+        {
+          "itemNo": "7b5a772b6bda6b2745c7980b645327bd",
+          "slotId": "PANTS",
+          "slotName": "하의",
+          "itemRarity": "에픽",
+          "fusionStone": true
+        },
+        {
+          "itemNo": "39745500a4580caeacbd1c9bf96c43dc",
+          "slotId": "SUPPORT",
+          "slotName": "보조장비",
+          "itemRarity": "에픽",
+          "fusionStone": true
+        }
+      ]
+    }
+  ]
+}

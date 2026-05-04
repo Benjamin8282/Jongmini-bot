@@ -1,0 +1,793 @@
+{
+  "total": 56,
+  "rows": [
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-26 15:40",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-26 15:38",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-23 10:08",
+      "data": {
+        "itemId": "6e1fcf6e59ed8d5a95dc152b84fe93ce",
+        "itemName": "만병을 잉태한 역병의 심장",
+        "itemRarity": "태초",
+        "before": 11,
+        "after": 12,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-23 10:07",
+      "data": {
+        "itemId": "6e1fcf6e59ed8d5a95dc152b84fe93ce",
+        "itemName": "만병을 잉태한 역병의 심장",
+        "itemRarity": "태초",
+        "before": 0,
+        "after": 11,
+        "result": true,
+        "ticket": {
+          "itemId": "dc8ef9da5f55bb031c315cb9c5ceac52",
+          "itemName": "[PC방]100프로 +11 장비 증폭권 (누적 80시간)"
+        },
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-23 10:07",
+      "data": {
+        "itemId": "6e1fcf6e59ed8d5a95dc152b84fe93ce",
+        "itemName": "만병을 잉태한 역병의 심장",
+        "itemRarity": "태초",
+        "before": 11,
+        "after": 12,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-23 10:07",
+      "data": {
+        "itemId": "6e1fcf6e59ed8d5a95dc152b84fe93ce",
+        "itemName": "만병을 잉태한 역병의 심장",
+        "itemRarity": "태초",
+        "before": 10,
+        "after": 11,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-19 13:07",
+      "data": {
+        "itemId": "6e1fcf6e59ed8d5a95dc152b84fe93ce",
+        "itemName": "만병을 잉태한 역병의 심장",
+        "itemRarity": "태초",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-18 16:48",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 11,
+        "after": 12,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-18 16:48",
+      "data": {
+        "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+        "itemName": "칠흑의 정화 귀걸이",
+        "itemRarity": "에픽",
+        "before": 11,
+        "after": 12,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-18 16:45",
+      "data": {
+        "itemId": "4f6151f8ebdf16a9d0a632379ab2a99e",
+        "itemName": "개시를 위한 준비",
+        "itemRarity": "레어",
+        "before": 11,
+        "after": 12,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-18 16:45",
+      "data": {
+        "itemId": "4f6151f8ebdf16a9d0a632379ab2a99e",
+        "itemName": "개시를 위한 준비",
+        "itemRarity": "레어",
+        "before": 10,
+        "after": 11,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-18 16:42",
+      "data": {
+        "itemId": "6e1fcf6e59ed8d5a95dc152b84fe93ce",
+        "itemName": "만병을 잉태한 역병의 심장",
+        "itemRarity": "태초",
+        "before": 11,
+        "after": 12,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-05 23:17",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 501,
+      "name": "봉인된 자물쇠 아이템 획득",
+      "date": "2026-03-05 23:15",
+      "data": {
+        "itemId": "586932373e671966ec097429aa46de00",
+        "itemName": "[3월]스페셜 클론 레어 아바타 풀세트 상자",
+        "booster": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-05 23:11",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-03-05 23:10",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-02-28 14:19",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 12,
+        "result": false,
+        "ticket": {
+          "itemId": "41158c9883550d79181c7057e81957b1",
+          "itemName": "1프로 +12 장비 증폭권"
+        },
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-02-06 01:34",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-02-06 01:22",
+      "data": {
+        "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+        "itemName": "칠흑의 정화 귀걸이",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-02-06 01:20",
+      "data": {
+        "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+        "itemName": "칠흑의 정화 귀걸이",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-02-06 01:05",
+      "data": {
+        "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+        "itemName": "칠흑의 정화 귀걸이",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-02-06 01:01",
+      "data": {
+        "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+        "itemName": "칠흑의 정화 귀걸이",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-25 00:16",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-25 00:16",
+      "data": {
+        "itemId": "c021686f1c75aaa52d9a868d6e4eacc8",
+        "itemName": "칠흑의 정화 보조장비",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-25 00:16",
+      "data": {
+        "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+        "itemName": "칠흑의 정화 귀걸이",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-25 00:15",
+      "data": {
+        "itemId": "1cc124113a070e3eaf7e1ef1803dd695",
+        "itemName": "개시를 전하는 목소리",
+        "itemRarity": "레어",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-25 00:13",
+      "data": {
+        "itemId": "1cc124113a070e3eaf7e1ef1803dd695",
+        "itemName": "개시를 전하는 목소리",
+        "itemRarity": "레어",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-21 20:41",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 11,
+        "after": 12,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-21 20:10",
+      "data": {
+        "itemId": "74121e6767adeff56c70aebc4d33951d",
+        "itemName": "순례자의 나아가는 의지",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-21 20:04",
+      "data": {
+        "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+        "itemName": "칠흑의 정화 귀걸이",
+        "itemRarity": "에픽",
+        "before": 11,
+        "after": 12,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-19 23:46",
+      "data": {
+        "itemId": "9e3c2b2a1abc6d2a5b7800a59eb7c62e",
+        "itemName": "장비 증폭권[골고라이언]",
+        "itemRarity": "유니크",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-19 23:44",
+      "data": {
+        "itemId": "c021686f1c75aaa52d9a868d6e4eacc8",
+        "itemName": "칠흑의 정화 보조장비",
+        "itemRarity": "에픽",
+        "before": 11,
+        "after": 12,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-16 11:49",
+      "data": {
+        "itemId": "9e3c2b2a1abc6d2a5b7800a59eb7c62e",
+        "itemName": "장비 증폭권[골고라이언]",
+        "itemRarity": "유니크",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-12 23:08",
+      "data": {
+        "itemId": "256e2b481f5219ee3cb0f06bd50a8914",
+        "itemName": "총사령관의 독도법 나침반",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-12 23:05",
+      "data": {
+        "itemId": "2cb99a73be07bcb60d475f0d486609cf",
+        "itemName": "총사령관의 제복 하의",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-09 17:44",
+      "data": {
+        "itemId": "d51d0071c181d4fe99b04e19f2fd6a82",
+        "itemName": "칠흑의 정화 상의",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 12,
+        "result": false,
+        "ticket": {
+          "itemId": "41158c9883550d79181c7057e81957b1",
+          "itemName": "1프로 +12 장비 증폭권"
+        },
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-08 13:10",
+      "data": {
+        "itemId": "c021686f1c75aaa52d9a868d6e4eacc8",
+        "itemName": "칠흑의 정화 보조장비",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-08 13:08",
+      "data": {
+        "itemId": "c021686f1c75aaa52d9a868d6e4eacc8",
+        "itemName": "칠흑의 정화 보조장비",
+        "itemRarity": "에픽",
+        "before": 11,
+        "after": 12,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-06 23:38",
+      "data": {
+        "itemId": "d51d0071c181d4fe99b04e19f2fd6a82",
+        "itemName": "칠흑의 정화 상의",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-06 23:37",
+      "data": {
+        "itemId": "29de998d42303d1333e8309af0344aef",
+        "itemName": "칠흑의 정화 어깨",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-06 23:36",
+      "data": {
+        "itemId": "630cee68d05a48d75241a2001fa1e420",
+        "itemName": "미지의 근섬유 상의",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-06 23:34",
+      "data": {
+        "itemId": "50ad1eb38bbd4eba87cdaeba1d9cde6a",
+        "itemName": "총사령관의 제복 상의",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-06 23:33",
+      "data": {
+        "itemId": "256e2b481f5219ee3cb0f06bd50a8914",
+        "itemName": "총사령관의 독도법 나침반",
+        "itemRarity": "에픽",
+        "before": 11,
+        "after": 12,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-06 23:33",
+      "data": {
+        "itemId": "256e2b481f5219ee3cb0f06bd50a8914",
+        "itemName": "총사령관의 독도법 나침반",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-06 23:19",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-06 23:15",
+      "data": {
+        "itemId": "c021686f1c75aaa52d9a868d6e4eacc8",
+        "itemName": "칠흑의 정화 보조장비",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-06 23:05",
+      "data": {
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-06 23:04",
+      "data": {
+        "itemId": "c021686f1c75aaa52d9a868d6e4eacc8",
+        "itemName": "칠흑의 정화 보조장비",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-01 22:02",
+      "data": {
+        "itemId": "c021686f1c75aaa52d9a868d6e4eacc8",
+        "itemName": "칠흑의 정화 보조장비",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-01 08:24",
+      "data": {
+        "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+        "itemName": "칠흑의 정화 귀걸이",
+        "itemRarity": "에픽",
+        "before": 0,
+        "after": 11,
+        "result": true,
+        "ticket": {
+          "itemId": "31533a03720b4dfdfa8e9c9ad8970d07",
+          "itemName": "[PC방]100프로 +11 장비 증폭권 (누적 100시간)"
+        },
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2026-01-01 08:24",
+      "data": {
+        "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+        "itemName": "칠흑의 정화 귀걸이",
+        "itemRarity": "에픽",
+        "before": 10,
+        "after": 11,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 501,
+      "name": "봉인된 자물쇠 아이템 획득",
+      "date": "2026-01-01 02:08",
+      "data": {
+        "itemId": "3784d8cb78519580e3f132a8ae63b3a5",
+        "itemName": "[1월]스페셜 클론 레어 아바타 풀세트 상자",
+        "booster": false
+      }
+    },
+    {
+      "code": 501,
+      "name": "봉인된 자물쇠 아이템 획득",
+      "date": "2026-01-01 01:55",
+      "data": {
+        "itemId": "3784d8cb78519580e3f132a8ae63b3a5",
+        "itemName": "[1월]스페셜 클론 레어 아바타 풀세트 상자",
+        "booster": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2025-12-31 19:26",
+      "data": {
+        "itemId": "c5f00b9187c24835bdee14435ad0e60b",
+        "itemName": "미지의 골격 링",
+        "itemRarity": "에픽",
+        "before": 12,
+        "after": 13,
+        "result": false,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2025-12-31 19:23",
+      "data": {
+        "itemId": "c5f00b9187c24835bdee14435ad0e60b",
+        "itemName": "미지의 골격 링",
+        "itemRarity": "에픽",
+        "before": 12,
+        "after": 13,
+        "result": true,
+        "safe": false
+      }
+    },
+    {
+      "code": 402,
+      "name": "아이템 증폭",
+      "date": "2025-12-31 19:23",
+      "data": {
+        "itemId": "c5f00b9187c24835bdee14435ad0e60b",
+        "itemName": "미지의 골격 링",
+        "itemRarity": "에픽",
+        "before": 11,
+        "after": 12,
+        "result": true,
+        "safe": false
+      }
+    }
+  ]
+}

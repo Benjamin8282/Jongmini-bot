@@ -1,0 +1,5 @@
+{
+  "_error": true,
+  "_status": 404,
+  "_body": "{\"error\":{\"status\":404,\"code\":\"DNF003\",\"message\":\"NOT_FOUND_ITEM\"}}"
+}

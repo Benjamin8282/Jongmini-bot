@@ -1,0 +1,103 @@
+{
+  "goodsNo": 4613214,
+  "title": "여마법사 진각성의서 엘레멘탈마스터 세트[A타입]",
+  "price": 1,
+  "jobs": [
+    {
+      "jobId": "3909d0b188e9c95311399f776e331da5",
+      "jobName": "마법사(여)"
+    }
+  ],
+  "soldDate": "2026-02-15",
+  "hashtag": [],
+  "emblem": {
+    "code": 100,
+    "name": "없음"
+  },
+  "avatarSet": true,
+  "avatarRarity": "상급",
+  "avatarCount": 9,
+  "avatar": [
+    {
+      "slotId": "HEADGEAR",
+      "slotName": "모자 아바타",
+      "itemId": "ff6d64a6a96780237349777f78ea590f",
+      "itemName": "진 엘레멘탈마스터의 모티브 헤어밴드[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "지능 45 증가",
+      "emblems": []
+    },
+    {
+      "slotId": "HAIR",
+      "slotName": "머리 아바타",
+      "itemId": "c75b70227597e918d1d6df2b2a4ed430",
+      "itemName": "진 엘레멘탈마스터의 롱 웨이브헤어[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "지능 45 증가",
+      "emblems": []
+    },
+    {
+      "slotId": "FACE",
+      "slotName": "얼굴 아바타",
+      "itemId": "9f8ee2025e2d472b68312a5ac3806856",
+      "itemName": "진 엘레멘탈마스터의 렌즈와 이어링[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "모든 상태 이상 내성 3.0% 증가",
+      "emblems": []
+    },
+    {
+      "slotId": "JACKET",
+      "slotName": "상의 아바타",
+      "itemId": "7911aeebf09a3aa80feffc7bd5a426c1",
+      "itemName": "진 엘레멘탈마스터의 모티브 코트[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "환수 폭주 스킬Lv +1",
+      "emblems": []
+    },
+    {
+      "slotId": "PANTS",
+      "slotName": "하의 아바타",
+      "itemId": "eada8d25f4acc3417fc3c3a69be8ee2f",
+      "itemName": "진 엘레멘탈마스터의 모티브 스커트[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "HP MAX 280 증가",
+      "emblems": []
+    },
+    {
+      "slotId": "SHOES",
+      "slotName": "신발 아바타",
+      "itemId": "12566d9339cefd1f810ff2d03c4b996e",
+      "itemName": "진 엘레멘탈마스터의 모티브 힐[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "이동 속도 5.0% 증가",
+      "emblems": []
+    },
+    {
+      "slotId": "BREAST",
+      "slotName": "목가슴 아바타",
+      "itemId": "67072faaa3ed0554403b0da983b8541a",
+      "itemName": "진 엘레멘탈마스터의 진리의 망토[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "모든 상태 이상 내성 3.0% 증가",
+      "emblems": []
+    },
+    {
+      "slotId": "WAIST",
+      "slotName": "허리 아바타",
+      "itemId": "94b1e6ce30d77480570304671475bebe",
+      "itemName": "진 엘레멘탈마스터의 프릴 벨트[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "회피율 4.0% 증가",
+      "emblems": []
+    },
+    {
+      "slotId": "SKIN",
+      "slotName": "스킨 아바타",
+      "itemId": "297ee388a109953b3282090de0c05088",
+      "itemName": "진 엘레멘탈마스터의 우윳빛 피부[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "물리 방어력 1000 증가",
+      "emblems": []
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "serverId": "casillas",
+  "characterId": "ab590098566252dad7fe024ab17f5fcc",
+  "characterName": "김철완",
+  "level": 115,
+  "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+  "jobName": "격투가(여)",
+  "jobGrowName": "眞 넨마스터",
+  "fame": 83413,
+  "adventureName": "영정은날막지못해",
+  "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+  "guildName": "SBH마스터즈",
+  "flag": {
+    "itemId": "6b8c084337908366810e47f2913619cf",
+    "itemName": "영광스러운 승리의 휘장",
+    "itemRarity": "에픽",
+    "reinforce": 10,
+    "reinforceStatus": [
+      {
+        "name": "공격력 증가",
+        "value": 389.6
+      },
+      {
+        "name": "버프력",
+        "value": 473
+      },
+      {
+        "name": "모험가 명성",
+        "value": 236
+      }
+    ],
+    "gems": [
+      {
+        "slotNo": 1,
+        "itemId": "9ef04aeb40ec0a392d32a836388d51b7",
+        "itemName": "찬란한 용기의 젬",
+        "itemRarity": "레전더리"
+      },
+      {
+        "slotNo": 2,
+        "itemId": "18e2d70240ff2e9e15808a3e6a40c24c",
+        "itemName": "찬란한 지혜의 젬",
+        "itemRarity": "레전더리"
+      },
+      {
+        "slotNo": 3,
+        "itemId": "44698c70aecee893c723e7cda49ecbfd",
+        "itemName": "찬란한 수호의 젬",
+        "itemRarity": "레전더리"
+      },
+      {
+        "slotNo": 4,
+        "itemId": "6ba7cf90038adc07ffff6204b0d5dbbb",
+        "itemName": "찬란한 가호의 젬",
+        "itemRarity": "레전더리"
+      }
+    ]
+  }
+}

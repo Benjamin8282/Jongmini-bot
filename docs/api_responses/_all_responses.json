@@ -1,0 +1,5297 @@
+{
+  "01_servers": {
+    "rows": [
+      {
+        "serverId": "cain",
+        "serverName": "카인"
+      },
+      {
+        "serverId": "diregie",
+        "serverName": "디레지에"
+      },
+      {
+        "serverId": "siroco",
+        "serverName": "시로코"
+      },
+      {
+        "serverId": "prey",
+        "serverName": "프레이"
+      },
+      {
+        "serverId": "casillas",
+        "serverName": "카시야스"
+      },
+      {
+        "serverId": "hilder",
+        "serverName": "힐더"
+      },
+      {
+        "serverId": "anton",
+        "serverName": "안톤"
+      },
+      {
+        "serverId": "bakal",
+        "serverName": "바칼"
+      }
+    ]
+  },
+  "02_character_search": {
+    "rows": [
+      {
+        "serverId": "casillas",
+        "characterId": "ab590098566252dad7fe024ab17f5fcc",
+        "characterName": "김철완",
+        "level": 115,
+        "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+        "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+        "jobName": "격투가(여)",
+        "jobGrowName": "眞 넨마스터",
+        "fame": 83413
+      }
+    ]
+  },
+  "03_character_info": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈"
+  },
+  "04_timeline": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "timeline": {
+      "date": {
+        "start": "2025-01-01 00:00",
+        "end": "2025-03-09 23:59"
+      },
+      "next": null,
+      "rows": []
+    }
+  },
+  "05_status": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "buff": [
+      {
+        "name": "모험단 버프",
+        "level": 40,
+        "status": [
+          {
+            "name": "힘",
+            "value": 290
+          },
+          {
+            "name": "지능",
+            "value": 290
+          },
+          {
+            "name": "체력",
+            "value": 290
+          },
+          {
+            "name": "정신력",
+            "value": 290
+          }
+        ]
+      },
+      {
+        "name": "무제한 길드능력치",
+        "status": [
+          {
+            "name": "힘",
+            "value": 60
+          },
+          {
+            "name": "지능",
+            "value": 60
+          },
+          {
+            "name": "체력",
+            "value": 60
+          },
+          {
+            "name": "정신력",
+            "value": 60
+          }
+        ]
+      },
+      {
+        "name": "기간제 길드능력치",
+        "status": [
+          {
+            "name": "힘",
+            "value": 40
+          },
+          {
+            "name": "지능",
+            "value": 40
+          },
+          {
+            "name": "체력",
+            "value": 40
+          },
+          {
+            "name": "정신력",
+            "value": 40
+          }
+        ]
+      }
+    ],
+    "status": [
+      {
+        "name": "HP",
+        "value": 159673
+      },
+      {
+        "name": "MP",
+        "value": 134471
+      },
+      {
+        "name": "물리 방어율",
+        "value": 41.8
+      },
+      {
+        "name": "마법 방어율",
+        "value": 48.7
+      },
+      {
+        "name": "힘",
+        "value": 4550
+      },
+      {
+        "name": "지능",
+        "value": 6948
+      },
+      {
+        "name": "체력",
+        "value": 4435
+      },
+      {
+        "name": "정신력",
+        "value": 4504
+      },
+      {
+        "name": "물리 공격",
+        "value": 3428
+      },
+      {
+        "name": "마법 공격",
+        "value": 3428
+      },
+      {
+        "name": "물리 크리티컬",
+        "value": 72.5
+      },
+      {
+        "name": "마법 크리티컬",
+        "value": 111.5
+      },
+      {
+        "name": "독립 공격",
+        "value": 2725
+      },
+      {
+        "name": "공격 속도",
+        "value": 129
+      },
+      {
+        "name": "캐스팅 속도",
+        "value": 195.3
+      },
+      {
+        "name": "이동 속도",
+        "value": 102
+      },
+      {
+        "name": "모험가 명성",
+        "value": 83413
+      },
+      {
+        "name": "적중률",
+        "value": 15.5
+      },
+      {
+        "name": "회피율",
+        "value": 10.5
+      },
+      {
+        "name": "HP 회복량",
+        "value": 1686
+      },
+      {
+        "name": "MP 회복량",
+        "value": 11523
+      },
+      {
+        "name": "경직도",
+        "value": 0
+      },
+      {
+        "name": "히트리커버리",
+        "value": 811
+      },
+      {
+        "name": "화속성 강화",
+        "value": 311
+      },
+      {
+        "name": "화속성 저항",
+        "value": 21
+      },
+      {
+        "name": "수속성 강화",
+        "value": 311
+      },
+      {
+        "name": "수속성 저항",
+        "value": 21
+      },
+      {
+        "name": "명속성 강화",
+        "value": 321
+      },
+      {
+        "name": "명속성 저항",
+        "value": 61
+      },
+      {
+        "name": "암속성 강화",
+        "value": 311
+      },
+      {
+        "name": "암속성 저항",
+        "value": -9
+      },
+      {
+        "name": "물리 방어",
+        "value": 42544
+      },
+      {
+        "name": "마법 방어",
+        "value": 61938
+      },
+      {
+        "name": "공격력 증가",
+        "value": 71566.6
+      },
+      {
+        "name": "버프력",
+        "value": 0
+      },
+      {
+        "name": "공격력 증폭",
+        "value": 73
+      },
+      {
+        "name": "버프력 증폭",
+        "value": 0
+      },
+      {
+        "name": "최종 데미지 증가",
+        "value": 2947566.5
+      },
+      {
+        "name": "쿨타임 감소",
+        "value": 27.8
+      },
+      {
+        "name": "쿨타임 회복속도",
+        "value": 0
+      },
+      {
+        "name": "최종 쿨타임 감소율",
+        "value": 27.8
+      },
+      {
+        "name": "데미지 증가",
+        "value": 0
+      },
+      {
+        "name": "크리티컬 데미지 증가",
+        "value": 0
+      },
+      {
+        "name": "추가 데미지 증가",
+        "value": 0
+      },
+      {
+        "name": "모든 공격력 증가",
+        "value": 0
+      },
+      {
+        "name": "물리 공격력 증가",
+        "value": 0
+      },
+      {
+        "name": "마법 공격력 증가",
+        "value": 0
+      },
+      {
+        "name": "독립 공격력 증가",
+        "value": 0
+      },
+      {
+        "name": "힘 증가",
+        "value": 0
+      },
+      {
+        "name": "지능 증가",
+        "value": 0
+      },
+      {
+        "name": "지속피해",
+        "value": 0
+      },
+      {
+        "name": "물리 피해 감소",
+        "value": 27
+      },
+      {
+        "name": "마법 피해 감소",
+        "value": 27
+      },
+      {
+        "name": "출혈 피해 전환",
+        "value": 0
+      },
+      {
+        "name": "중독 피해 전환",
+        "value": 0
+      },
+      {
+        "name": "화상 피해 전환",
+        "value": 0
+      },
+      {
+        "name": "감전 피해 전환",
+        "value": 0
+      },
+      {
+        "name": "출혈 내성",
+        "value": 30.5
+      },
+      {
+        "name": "중독 내성",
+        "value": 30.5
+      },
+      {
+        "name": "화상 내성",
+        "value": 30.5
+      },
+      {
+        "name": "감전 내성",
+        "value": 30.5
+      },
+      {
+        "name": "빙결 내성",
+        "value": 30.5
+      },
+      {
+        "name": "둔화 내성",
+        "value": 30.5
+      },
+      {
+        "name": "기절 내성",
+        "value": 30.5
+      },
+      {
+        "name": "저주 내성",
+        "value": 30.5
+      },
+      {
+        "name": "암흑 내성",
+        "value": 35.5
+      },
+      {
+        "name": "석화 내성",
+        "value": 30.5
+      },
+      {
+        "name": "수면 내성",
+        "value": 30.5
+      },
+      {
+        "name": "혼란 내성",
+        "value": 30.5
+      },
+      {
+        "name": "구속 내성",
+        "value": 30.5
+      },
+      {
+        "name": "화속성 피해",
+        "value": 144.95
+      },
+      {
+        "name": "수속성 피해",
+        "value": 144.95
+      },
+      {
+        "name": "명속성 피해",
+        "value": 149.45
+      },
+      {
+        "name": "암속성 피해",
+        "value": 144.95
+      },
+      {
+        "name": "출혈 피해",
+        "value": 0
+      },
+      {
+        "name": "중독 피해",
+        "value": 0
+      },
+      {
+        "name": "화상 피해",
+        "value": 0
+      },
+      {
+        "name": "감전 피해",
+        "value": 0
+      },
+      {
+        "name": "특수 오브젝트 데미지",
+        "value": 26
+      }
+    ]
+  },
+  "06_equipment": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "equipment": [
+      {
+        "slotId": "WEAPON",
+        "slotName": "무기",
+        "itemId": "8cd53eed89da72eb94486e0676a7194f",
+        "itemName": "리리스, 디 이블",
+        "itemTypeId": "4ffb6f14b86f5c818a925bf58022686e",
+        "itemType": "무기",
+        "itemTypeDetailId": "f2ce85f03dddb5657c4823bc85c86859",
+        "itemTypeDetail": "클로",
+        "itemAvailableLevel": 115,
+        "itemRarity": "태초",
+        "setItemId": null,
+        "setItemName": null,
+        "reinforce": 13,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "모든 속성 강화",
+              "value": 15
+            },
+            {
+              "name": "물리 공격력",
+              "value": 30
+            },
+            {
+              "name": "마법 공격력",
+              "value": 30
+            },
+            {
+              "name": "독립 공격력",
+              "value": 30
+            }
+          ]
+        },
+        "amplificationName": null,
+        "refine": 3,
+        "engrave": {
+          "itemId": "39c3764c511a50e416409f4ca2ba9dc5",
+          "itemName": "디레지에 레이드 : 이명 각인권"
+        },
+        "tune": [
+          {
+            "level": 3,
+            "status": [
+              {
+                "name": "최종 데미지",
+                "value": "430.5%"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "slotId": "TITLE",
+        "slotName": "칭호",
+        "itemId": "a33cbd6ee4519308cafb65cd3189b279",
+        "itemName": "프로스트의 전설 플래티넘[80Lv]",
+        "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+        "itemType": "액세서리",
+        "itemTypeDetailId": "691933a06ff114348a7db936fb0aec66",
+        "itemTypeDetail": "칭호",
+        "itemAvailableLevel": 1,
+        "itemRarity": "레어",
+        "setItemId": null,
+        "setItemName": null,
+        "reinforce": 0,
+        "enchant": {
+          "status": [
+            {
+              "name": "명속성강화",
+              "value": 6
+            },
+            {
+              "name": "힘",
+              "value": 25
+            },
+            {
+              "name": "지능",
+              "value": 25
+            },
+            {
+              "name": "체력",
+              "value": 25
+            },
+            {
+              "name": "정신력",
+              "value": 25
+            }
+          ]
+        },
+        "amplificationName": null,
+        "refine": 0
+      },
+      {
+        "slotId": "JACKET",
+        "slotName": "상의",
+        "itemId": "0e944978b8e69cc5ec088995713305ee",
+        "itemName": "잠식 : 칠흑의 정화 상의",
+        "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+        "itemType": "방어구",
+        "itemTypeDetailId": "3da92241d44bdafcf7554057e6479c83",
+        "itemTypeDetail": "상의",
+        "itemAvailableLevel": 115,
+        "itemRarity": "에픽",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "reinforce": 10,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "물리 공격력",
+              "value": 110
+            },
+            {
+              "name": "마법 공격력",
+              "value": 110
+            },
+            {
+              "name": "독립 공격력",
+              "value": 110
+            },
+            {
+              "name": "힘",
+              "value": 90
+            },
+            {
+              "name": "지능",
+              "value": 90
+            },
+            {
+              "name": "최종 데미지",
+              "value": "3%"
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 3360,
+              "explain": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+              "explainDetail": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+              "buffExplain": "버프력 3360",
+              "buffExplainDetail": "버프력 3360"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "09f9260d5f1acd3a78eba9d19b58456f",
+          "itemName": "욕망 : 잃어버린 영혼",
+          "itemRarity": "에픽"
+        },
+        "tune": [
+          {
+            "level": 3,
+            "setPoint": 265
+          }
+        ]
+      },
+      {
+        "slotId": "SHOULDER",
+        "slotName": "머리어깨",
+        "itemId": "af69f31a097f36466b335eb2b3951fa6",
+        "itemName": "잠식 : 칠흑의 정화 어깨",
+        "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+        "itemType": "방어구",
+        "itemTypeDetailId": "f2976a25a516451e3e8667bac328b308",
+        "itemTypeDetail": "머리어깨",
+        "itemAvailableLevel": 115,
+        "itemRarity": "에픽",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "reinforce": 11,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "힘",
+              "value": 40
+            },
+            {
+              "name": "지능",
+              "value": 40
+            },
+            {
+              "name": "체력",
+              "value": 40
+            },
+            {
+              "name": "정신력",
+              "value": 40
+            },
+            {
+              "name": "물리 공격력",
+              "value": 10
+            },
+            {
+              "name": "마법 공격력",
+              "value": 10
+            },
+            {
+              "name": "독립 공격력",
+              "value": 10
+            },
+            {
+              "name": "물리 크리티컬 히트",
+              "value": "5%"
+            },
+            {
+              "name": "마법 크리티컬 히트",
+              "value": "5%"
+            },
+            {
+              "name": "최종 데미지",
+              "value": "3%"
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 3360,
+              "explain": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+              "explainDetail": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+              "buffExplain": "버프력 3360",
+              "buffExplainDetail": "버프력 3360"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "42c1d050ad396ed6af1fec840207d26d",
+          "itemName": "욕망 : 사라진 존재의 이유",
+          "itemRarity": "에픽"
+        },
+        "tune": [
+          {
+            "level": 3,
+            "setPoint": 265
+          }
+        ]
+      },
+      {
+        "slotId": "PANTS",
+        "slotName": "하의",
+        "itemId": "5af335df168b46a51c05462b246f8484",
+        "itemName": "잠식 : 칠흑의 정화 하의",
+        "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+        "itemType": "방어구",
+        "itemTypeDetailId": "7c4b28699ae7994798289f187d519992",
+        "itemTypeDetail": "하의",
+        "itemAvailableLevel": 115,
+        "itemRarity": "에픽",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "reinforce": 10,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "최종 데미지",
+              "value": "2%"
+            },
+            {
+              "name": "물리 공격력",
+              "value": 110
+            },
+            {
+              "name": "마법 공격력",
+              "value": 110
+            },
+            {
+              "name": "독립 공격력",
+              "value": 110
+            },
+            {
+              "name": "힘",
+              "value": 90
+            },
+            {
+              "name": "지능",
+              "value": 90
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 3000,
+              "explain": "최종 데미지 9% 증가",
+              "explainDetail": "최종 데미지 9% 증가",
+              "buffExplain": "버프력 3000",
+              "buffExplainDetail": "버프력 3000"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "7b5a772b6bda6b2745c7980b645327bd",
+          "itemName": "정화 : 상처를 감싸는 포근한 빛",
+          "itemRarity": "에픽",
+          "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+          "setItemName": "칠흑의 정화 세트",
+          "setPoint": 65
+        },
+        "tune": [
+          {
+            "level": 3,
+            "setPoint": 265
+          }
+        ]
+      },
+      {
+        "slotId": "SHOES",
+        "slotName": "신발",
+        "itemId": "7761ada30f6888dadb90b5f05c8400d0",
+        "itemName": "잠식 : 칠흑의 정화 신발",
+        "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+        "itemType": "방어구",
+        "itemTypeDetailId": "ef6fcc3b39b2bbcbf09a71da6cbafe06",
+        "itemTypeDetail": "신발",
+        "itemAvailableLevel": 115,
+        "itemRarity": "에픽",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "reinforce": 10,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "힘",
+              "value": 50
+            },
+            {
+              "name": "지능",
+              "value": 50
+            },
+            {
+              "name": "체력",
+              "value": 50
+            },
+            {
+              "name": "정신력",
+              "value": 50
+            },
+            {
+              "name": "물리 공격력",
+              "value": 15
+            },
+            {
+              "name": "마법 공격력",
+              "value": 15
+            },
+            {
+              "name": "독립 공격력",
+              "value": 15
+            },
+            {
+              "name": "최종 데미지",
+              "value": "3%"
+            },
+            {
+              "name": "물리 크리티컬 히트",
+              "value": "3%"
+            },
+            {
+              "name": "마법 크리티컬 히트",
+              "value": "3%"
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 3360,
+              "explain": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+              "explainDetail": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+              "buffExplain": "버프력 3360",
+              "buffExplainDetail": "버프력 3360"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "0eb9b549c17b9c1b19967564c089ec43",
+          "itemName": "욕망 : 무정한 여신의 우아함",
+          "itemRarity": "에픽"
+        },
+        "tune": [
+          {
+            "level": 3,
+            "setPoint": 265
+          }
+        ]
+      },
+      {
+        "slotId": "WAIST",
+        "slotName": "벨트",
+        "itemId": "ebcdf9f573b5baee8e43e33b07e6691a",
+        "itemName": "잠식 : 칠흑의 정화 벨트",
+        "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+        "itemType": "방어구",
+        "itemTypeDetailId": "934ed2dea99f55f775df256fc29c5d56",
+        "itemTypeDetail": "벨트",
+        "itemAvailableLevel": 115,
+        "itemRarity": "에픽",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "reinforce": 10,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "힘",
+              "value": 50
+            },
+            {
+              "name": "지능",
+              "value": 50
+            },
+            {
+              "name": "체력",
+              "value": 50
+            },
+            {
+              "name": "정신력",
+              "value": 50
+            },
+            {
+              "name": "물리 공격력",
+              "value": 15
+            },
+            {
+              "name": "마법 공격력",
+              "value": 15
+            },
+            {
+              "name": "독립 공격력",
+              "value": 15
+            },
+            {
+              "name": "물리 크리티컬 히트",
+              "value": "3%"
+            },
+            {
+              "name": "마법 크리티컬 히트",
+              "value": "3%"
+            },
+            {
+              "name": "최종 데미지",
+              "value": "3%"
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 3360,
+              "explain": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+              "explainDetail": "최종 데미지 11% 증가\n스킬 쿨타임 4% 감소 (각성기 제외)\n특수 오브젝트 데미지 +2%\n모든 속도 +8%",
+              "buffExplain": "버프력 3360",
+              "buffExplainDetail": "버프력 3360"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "1a13bc488e70a768e677abd6ffdb4eb2",
+          "itemName": "욕망 : 원망조차 사라진 시선",
+          "itemRarity": "에픽"
+        },
+        "tune": [
+          {
+            "level": 3,
+            "setPoint": 265
+          }
+        ]
+      },
+      {
+        "slotId": "AMULET",
+        "slotName": "목걸이",
+        "itemId": "9cb8d68a75b3d97f42ee97411f043f42",
+        "itemName": "흑아 : 혼돈의 정화 목걸이",
+        "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+        "itemType": "액세서리",
+        "itemTypeDetailId": "390e3966118b0c466ce9f8eae45e1629",
+        "itemTypeDetail": "목걸이",
+        "itemAvailableLevel": 115,
+        "itemRarity": "태초",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "reinforce": 12,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "모든 속성 강화",
+              "value": 35
+            },
+            {
+              "name": "최종 데미지",
+              "value": "1%"
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 4950,
+              "explain": "최종 데미지 19.5% 증가\n\n받는 피해 7% 감소\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+              "explainDetail": "최종 데미지 19.5% 증가\n\n받는 피해 7% 감소\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+              "buffExplain": "버프력 4950\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)",
+              "buffExplainDetail": "버프력 4950\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "e7416488f29cf764f73dfe53ed1d8abf",
+          "itemName": "테아나 : 끝나지 않는 도전",
+          "itemRarity": "에픽"
+        },
+        "tune": [
+          {
+            "level": 0,
+            "upgrade": false,
+            "setPoint": 215
+          }
+        ]
+      },
+      {
+        "slotId": "WRIST",
+        "slotName": "팔찌",
+        "itemId": "9f404dc67c47917d8e5b062b1a2bd149",
+        "itemName": "흑아 : 혼돈의 정화 팔찌",
+        "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+        "itemType": "액세서리",
+        "itemTypeDetailId": "80bddf423629c28c7b4459c328fdffaf",
+        "itemTypeDetail": "팔찌",
+        "itemAvailableLevel": 115,
+        "itemRarity": "태초",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "reinforce": 12,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "모든 속성 강화",
+              "value": 35
+            },
+            {
+              "name": "최종 데미지",
+              "value": "1%"
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 4450,
+              "explain": "최종 데미지 17% 증가\n\n스킬 범위 7% 증가\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+              "explainDetail": "최종 데미지 17% 증가\n\n스킬 범위 7% 증가\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+              "buffExplain": "버프력 4450\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)",
+              "buffExplainDetail": "버프력 4450\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "cde51f4f18b1b8334e66f4a5d6ee9af1",
+          "itemName": "테아나 : 계속되는 탄생",
+          "itemRarity": "에픽"
+        },
+        "tune": [
+          {
+            "level": 0,
+            "upgrade": false,
+            "setPoint": 215
+          }
+        ]
+      },
+      {
+        "slotId": "RING",
+        "slotName": "반지",
+        "itemId": "5363150949435f138011f4e2933c7d1d",
+        "itemName": "흑아 : 혼돈의 정화 반지",
+        "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+        "itemType": "액세서리",
+        "itemTypeDetailId": "b04c7fb9b29b27b91a0a9e5a1822bc8f",
+        "itemTypeDetail": "반지",
+        "itemAvailableLevel": 115,
+        "itemRarity": "태초",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "reinforce": 13,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "모든 속성 강화",
+              "value": 35
+            },
+            {
+              "name": "최종 데미지",
+              "value": "2%"
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 4950,
+              "explain": "최종 데미지 19.5% 증가\n\n모든 속도 +7%\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+              "explainDetail": "최종 데미지 19.5% 증가\n\n모든 속도 +7%\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 최종 데미지 1% 증가 (최대 2중첩)",
+              "buffExplain": "버프력 4950\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)",
+              "buffExplainDetail": "버프력 4950\n\n융합된 장비의 강화/증폭 수치가 10에서 1 증가할 때마다 버프력 150 증가 (최대 2중첩)"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "edd79e8b4cfc90a013be06dc608afa4c",
+          "itemName": "테아나 : 영원한 기억",
+          "itemRarity": "에픽"
+        },
+        "tune": [
+          {
+            "level": 0,
+            "upgrade": false,
+            "setPoint": 215
+          }
+        ]
+      },
+      {
+        "slotId": "SUPPORT",
+        "slotName": "보조장비",
+        "itemId": "6e1fcf6e59ed8d5a95dc152b84fe93ce",
+        "itemName": "만병을 잉태한 역병의 심장",
+        "itemTypeId": "87ff665868ffd50f8aef7948548439bd",
+        "itemType": "추가장비",
+        "itemTypeDetailId": "2fef5d81b7f59f0c75241890a8d941c9",
+        "itemTypeDetail": "보조장비",
+        "itemAvailableLevel": 115,
+        "itemRarity": "태초",
+        "setItemId": null,
+        "setItemName": null,
+        "reinforce": 11,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "물리 크리티컬 히트",
+              "value": "3.0%"
+            },
+            {
+              "name": "마법 크리티컬 히트",
+              "value": "3.0%"
+            },
+            {
+              "name": "모든 속성 강화",
+              "value": 12
+            },
+            {
+              "name": "공격력 증폭",
+              "value": "3%"
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 4150,
+              "explain": "최종 데미지 14.5% 증가",
+              "explainDetail": "최종 데미지 14.5% 증가",
+              "buffExplain": "버프력 4150",
+              "buffExplainDetail": "버프력 4150"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "39745500a4580caeacbd1c9bf96c43dc",
+          "itemName": "정화 : 생명을 베어내는 어둠",
+          "itemRarity": "에픽",
+          "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+          "setItemName": "칠흑의 정화 세트",
+          "setPoint": 65
+        },
+        "exaltedInfo": {
+          "damage": "38.4%",
+          "buff": 11220,
+          "explain": "<생명의 불꽃을 꺼뜨리는 자>\n장착 중인 가장 높은 세트 포인트 2100점 이상에서만 능력을 발휘합니다.\n세트 포인트 2550이상 달성 시 더 강한 효과가 발동됩니다."
+        },
+        "potency": {
+          "value": 40,
+          "damage": "4%",
+          "buff": 1520
+        }
+      },
+      {
+        "slotId": "MAGIC_STON",
+        "slotName": "마법석",
+        "itemId": "1ec42a6c4087627c396daa257475ed5c",
+        "itemName": "칠흑의 정화 마법석",
+        "itemTypeId": "87ff665868ffd50f8aef7948548439bd",
+        "itemType": "추가장비",
+        "itemTypeDetailId": "fe5f3db78175f5a3196385c688d29681",
+        "itemTypeDetail": "마법석",
+        "itemAvailableLevel": 115,
+        "itemRarity": "에픽",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "reinforce": 11,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "모든 속성 강화",
+              "value": 40
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 4450,
+              "explain": "최종 데미지 17% 증가\n특수 오브젝트 데미지 +1.5%\n80Lv 액티브 스킬 공격력 12% 증가\n80Lv 스킬 범위 12% 증가",
+              "explainDetail": "최종 데미지 17% 증가\n특수 오브젝트 데미지 +1.5%\n80Lv 액티브 스킬 공격력 12% 증가\n80Lv 스킬 범위 12% 증가",
+              "buffExplain": "버프력 4450",
+              "buffExplainDetail": "버프력 4450"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "5609a9e863d543d93a0348e530390c36",
+          "itemName": "설계 : 완성형 어태치 모듈 80",
+          "itemRarity": "에픽"
+        },
+        "tune": [
+          {
+            "level": 2,
+            "setPoint": 235
+          }
+        ]
+      },
+      {
+        "slotId": "EARRING",
+        "slotName": "귀걸이",
+        "itemId": "ffcad6ffb4e4629f61b56052f158f805",
+        "itemName": "칠흑의 정화 귀걸이",
+        "itemTypeId": "87ff665868ffd50f8aef7948548439bd",
+        "itemType": "추가장비",
+        "itemTypeDetailId": "601834074c49bb0e48cb65a75a8667bc",
+        "itemTypeDetail": "귀걸이",
+        "itemAvailableLevel": 115,
+        "itemRarity": "에픽",
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 세트",
+        "reinforce": 11,
+        "itemGradeName": "최상급",
+        "enchant": {
+          "status": [
+            {
+              "name": "모든 속성 강화",
+              "value": 25
+            },
+            {
+              "name": "힘",
+              "value": 100
+            },
+            {
+              "name": "지능",
+              "value": 100
+            },
+            {
+              "name": "체력",
+              "value": 100
+            },
+            {
+              "name": "정신력",
+              "value": 100
+            }
+          ]
+        },
+        "amplificationName": "차원의 지능",
+        "refine": 0,
+        "fusionOption": {
+          "options": [
+            {
+              "buff": 4450,
+              "explain": "최종 데미지 17% 증가\n특수 오브젝트 데미지 +1.5%\n80Lv 액티브 스킬 공격력 12% 증가\n80Lv 스킬 범위 12% 증가",
+              "explainDetail": "최종 데미지 17% 증가\n특수 오브젝트 데미지 +1.5%\n80Lv 액티브 스킬 공격력 12% 증가\n80Lv 스킬 범위 12% 증가",
+              "buffExplain": "버프력 4450",
+              "buffExplainDetail": "버프력 4450"
+            }
+          ]
+        },
+        "upgradeInfo": {
+          "itemId": "d213f84b09368879ee4eb958071386ff",
+          "itemName": "설계 : 완성형 시그널 모듈 80",
+          "itemRarity": "에픽"
+        },
+        "tune": [
+          {
+            "level": 0,
+            "setPoint": 215
+          }
+        ]
+      }
+    ],
+    "setItemInfo": [
+      {
+        "setItemId": "11f7d203a05ea6f13300c0facb39f11e",
+        "setItemName": "칠흑의 정화 : 균형 세트",
+        "setItemRarityName": "태초",
+        "active": {
+          "explain": "정화와 타락의 조화를 이뤄 균형 상태가 적용\n[균형]\n- HP/MP 초당 0.5% 회복\n- 10초마다 HP MAX 10% 보호막 생성\n- 슈퍼 아머 부여\n- 점프 중 한 번 더 점프 가능\n\n[칠흑의 정화] [장비 발동 옵션]\n정화와 타락의 힘을 선택하여 사용합니다.\n- 던전 입장 시 정화 상태가 기본 적용\n- 쿨타임 : 300초\n\n[정화]\n- 최종 데미지 17.5% 증가\n- 스킬 쿨타임 30% 감소(각성기 제외)\n\n[타락]\n- 스킬 쿨타임 55% 감소(각성기 제외)\n- 특수 오브젝트 데미지 +17.5%\n\n[태초의 기억] (0)\n세트 포인트 2550 이후 70 마다 아래 효과 적용\n- 최종 데미지 1% 증가 (0%)\n- 버프력 +100 (0)",
+          "explainDetail": "정화와 타락의 조화를 이뤄 균형 상태가 적용\n[균형]\n- HP/MP 초당 0.5% 회복\n- 10초마다 HP MAX 10% 보호막 생성\n- 슈퍼 아머 부여\n- 점프 중 한 번 더 점프 가능\n\n[칠흑의 정화] [장비 발동 옵션]\n정화와 타락의 힘을 선택하여 사용합니다.\n- 던전 입장 시 정화 상태가 기본 적용\n- 쿨타임 : 300초\n\n[정화]\n- 최종 데미지 17.5% 증가\n- 스킬 쿨타임 30% 감소(각성기 제외)\n\n[타락]\n- 스킬 쿨타임 55% 감소(각성기 제외)\n- 특수 오브젝트 데미지 +17.5%\n\n[태초의 기억] (0)\n세트 포인트 2550 이후 70 마다 아래 효과 적용\n- 최종 데미지 1% 증가 (0%)\n- 버프력 +100 (0)",
+          "status": [
+            {
+              "name": "모험가 명성",
+              "value": 23000
+            },
+            {
+              "name": "버프력",
+              "value": 50400
+            },
+            {
+              "name": "최종 데미지",
+              "value": "301.1%"
+            },
+            {
+              "name": "스킬 쿨타임 감소",
+              "value": "-30%"
+            }
+          ],
+          "setPoint": {
+            "current": 2550,
+            "min": 2550,
+            "max": 2550
+          }
+        },
+        "slotInfo": [
+          {
+            "itemNo": "0e944978b8e69cc5ec088995713305ee",
+            "slotId": "JACKET",
+            "slotName": "상의",
+            "itemRarity": "에픽"
+          },
+          {
+            "itemNo": "af69f31a097f36466b335eb2b3951fa6",
+            "slotId": "SHOULDER",
+            "slotName": "머리어깨",
+            "itemRarity": "에픽"
+          },
+          {
+            "itemNo": "5af335df168b46a51c05462b246f8484",
+            "slotId": "PANTS",
+            "slotName": "하의",
+            "itemRarity": "에픽"
+          },
+          {
+            "itemNo": "7761ada30f6888dadb90b5f05c8400d0",
+            "slotId": "SHOES",
+            "slotName": "신발",
+            "itemRarity": "에픽"
+          },
+          {
+            "itemNo": "ebcdf9f573b5baee8e43e33b07e6691a",
+            "slotId": "WAIST",
+            "slotName": "벨트",
+            "itemRarity": "에픽"
+          },
+          {
+            "itemNo": "9cb8d68a75b3d97f42ee97411f043f42",
+            "slotId": "AMULET",
+            "slotName": "목걸이",
+            "itemRarity": "태초"
+          },
+          {
+            "itemNo": "9f404dc67c47917d8e5b062b1a2bd149",
+            "slotId": "WRIST",
+            "slotName": "팔찌",
+            "itemRarity": "태초"
+          },
+          {
+            "itemNo": "5363150949435f138011f4e2933c7d1d",
+            "slotId": "RING",
+            "slotName": "반지",
+            "itemRarity": "태초"
+          },
+          {
+            "itemNo": "1ec42a6c4087627c396daa257475ed5c",
+            "slotId": "MAGIC_STON",
+            "slotName": "마법석",
+            "itemRarity": "에픽"
+          },
+          {
+            "itemNo": "ffcad6ffb4e4629f61b56052f158f805",
+            "slotId": "EARRING",
+            "slotName": "귀걸이",
+            "itemRarity": "에픽"
+          },
+          {
+            "itemNo": "7b5a772b6bda6b2745c7980b645327bd",
+            "slotId": "PANTS",
+            "slotName": "하의",
+            "itemRarity": "에픽",
+            "fusionStone": true
+          },
+          {
+            "itemNo": "39745500a4580caeacbd1c9bf96c43dc",
+            "slotId": "SUPPORT",
+            "slotName": "보조장비",
+            "itemRarity": "에픽",
+            "fusionStone": true
+          }
+        ]
+      }
+    ]
+  },
+  "07_avatar": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "avatar": [
+      {
+        "slotId": "HEADGEAR",
+        "slotName": "모자 아바타",
+        "itemId": "b8c1f046fe4fe0677f19195385d19b04",
+        "itemName": "레어 모자 클론 아바타",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": "767383dd562987f3a72ceff1f3a2312a",
+          "itemName": "네오 다이나케이프"
+        },
+        "optionAbility": "지능 55 증가",
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "붉은빛",
+            "itemId": "4b068f14e58d828d938b9bc269963690",
+            "itemName": "찬란한 붉은빛 엠블렘[지능]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "붉은빛",
+            "itemId": "4b068f14e58d828d938b9bc269963690",
+            "itemName": "찬란한 붉은빛 엠블렘[지능]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "HAIR",
+        "slotName": "머리 아바타",
+        "itemId": "b01acffc6c45a4dda027af4a8fe57c6b",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": "eaf30a032a911e88133f190244fd331b",
+          "itemName": "레이스 롱웨이브 머리"
+        },
+        "optionAbility": "지능 55 증가",
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "붉은빛",
+            "itemId": "4b068f14e58d828d938b9bc269963690",
+            "itemName": "찬란한 붉은빛 엠블렘[지능]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "붉은빛",
+            "itemId": "4b068f14e58d828d938b9bc269963690",
+            "itemName": "찬란한 붉은빛 엠블렘[지능]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "FACE",
+        "slotName": "얼굴 아바타",
+        "itemId": "889ac57b1a6d7df3d20576c3061952f5",
+        "itemName": "레어 얼굴 클론 아바타",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": "7a55b9024f29bc80cc70b122ce36310a",
+          "itemName": "진 넨마스터의 연꽃 귀걸이[A타입]"
+        },
+        "optionAbility": "공격 속도 6.0% 증가",
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "노란빛",
+            "itemId": "37a762fbb9cd62a744221855f26943c5",
+            "itemName": "찬란한 노란빛 엠블렘[캐스트속도]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "노란빛",
+            "itemId": "37a762fbb9cd62a744221855f26943c5",
+            "itemName": "찬란한 노란빛 엠블렘[캐스트속도]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "JACKET",
+        "slotName": "상의 아바타",
+        "itemId": "e192e3abc2d12e149eaa895ec067a564",
+        "itemName": "레어 상의 클론 아바타",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": "b7d3109c43cf43e1c0d9700b35afd3be",
+          "itemName": "2025 아라드 패스 차원 여행자의 루즈핏 테크웨어"
+        },
+        "optionAbility": "낙화태염성 스킬Lv +1",
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "플래티넘",
+            "itemId": "253b94d31a21b5c54b1f65105b9ae7ac",
+            "itemName": "플래티넘 엠블렘[나선의 넨]",
+            "itemRarity": "레전더리"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "녹색빛",
+            "itemId": "b187832f68ac1271d2da6bc3814a053a",
+            "itemName": "찬란한 듀얼 엠블렘[지능 + 마법크리티컬]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 3,
+            "slotColor": "녹색빛",
+            "itemId": "b187832f68ac1271d2da6bc3814a053a",
+            "itemName": "찬란한 듀얼 엠블렘[지능 + 마법크리티컬]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "PANTS",
+        "slotName": "하의 아바타",
+        "itemId": "f162488d18bcab5392362736dc3e81b0",
+        "itemName": "레어 하의 클론 아바타",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": "981321e65fbeaa900df9565c9bd01f0e",
+          "itemName": "워터밤 페스타 라인 수영복 하의[D타입]"
+        },
+        "optionAbility": "HP MAX 400 증가",
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "플래티넘",
+            "itemId": "253b94d31a21b5c54b1f65105b9ae7ac",
+            "itemName": "플래티넘 엠블렘[나선의 넨]",
+            "itemRarity": "레전더리"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "녹색빛",
+            "itemId": "b187832f68ac1271d2da6bc3814a053a",
+            "itemName": "찬란한 듀얼 엠블렘[지능 + 마법크리티컬]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 3,
+            "slotColor": "녹색빛",
+            "itemId": "b187832f68ac1271d2da6bc3814a053a",
+            "itemName": "찬란한 듀얼 엠블렘[지능 + 마법크리티컬]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "SHOES",
+        "slotName": "신발 아바타",
+        "itemId": "61e182ef3280e27966ea7034d73c5cac",
+        "itemName": "레어 신발 클론 아바타",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": "346ad856f20e4a8fbc76d6e55b00d42f",
+          "itemName": "레이스 스트랩 구두"
+        },
+        "optionAbility": "이동 속도 6.0% 증가",
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "푸른빛",
+            "itemId": "1eaab4daa744642139bd754217e67742",
+            "itemName": "찬란한 푸른빛 엠블렘[이동속도]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "푸른빛",
+            "itemId": "1eaab4daa744642139bd754217e67742",
+            "itemName": "찬란한 푸른빛 엠블렘[이동속도]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "BREAST",
+        "slotName": "목가슴 아바타",
+        "itemId": "2c04a6fff433f3a05ada028731697438",
+        "itemName": "레어 목가슴 클론 아바타",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": "15bf2d27f382622bb3abdfd62b101436",
+          "itemName": "악연의 사슬을 끊어낸 자의 망토"
+        },
+        "optionAbility": "공격 속도 6.0% 증가",
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "노란빛",
+            "itemId": "37a762fbb9cd62a744221855f26943c5",
+            "itemName": "찬란한 노란빛 엠블렘[캐스트속도]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "노란빛",
+            "itemId": "37a762fbb9cd62a744221855f26943c5",
+            "itemName": "찬란한 노란빛 엠블렘[캐스트속도]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "WAIST",
+        "slotName": "허리 아바타",
+        "itemId": "218663ddb903b094da488d02729a2ca5",
+        "itemName": "레어 허리 클론 아바타",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": null,
+          "itemName": null
+        },
+        "optionAbility": "회피율 5.5% 증가",
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "푸른빛",
+            "itemId": "1eaab4daa744642139bd754217e67742",
+            "itemName": "찬란한 푸른빛 엠블렘[이동속도]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "푸른빛",
+            "itemId": "1eaab4daa744642139bd754217e67742",
+            "itemName": "찬란한 푸른빛 엠블렘[이동속도]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "SKIN",
+        "slotName": "스킨 아바타",
+        "itemId": "d1338ed89ad1e9f29595e1ddcc08ffdf",
+        "itemName": "진 넨마스터의 상앗빛 피부[A타입]",
+        "itemRarity": "커먼",
+        "clone": {
+          "itemId": null,
+          "itemName": null
+        },
+        "optionAbility": "물리 방어력 1000 증가",
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "다색",
+            "itemId": "118c822d7d2fcfb197b51647c9600d7d",
+            "itemName": "찬란한 붉은빛 엠블렘[지능]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "다색",
+            "itemId": "118c822d7d2fcfb197b51647c9600d7d",
+            "itemName": "찬란한 붉은빛 엠블렘[지능]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "AURORA",
+        "slotName": "오라 아바타",
+        "itemId": "0d1e1441853c05a321a6bdad9db50e3a",
+        "itemName": "스노우메이지 캐슬",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": null,
+          "itemName": null
+        },
+        "optionAbility": null,
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "다색",
+            "itemId": "9f85fca91c011732b068bdc5c61e3414",
+            "itemName": "찬란한 붉은빛 엠블렘[지능]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "다색",
+            "itemId": "9f85fca91c011732b068bdc5c61e3414",
+            "itemName": "찬란한 붉은빛 엠블렘[지능]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "WEAPON",
+        "slotName": "무기 아바타",
+        "itemId": "4200bd30c32c9a2ce2a28938a732e4f4",
+        "itemName": "레어 무기 클론 아바타[80Lv]",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": "86828066d240139bc5de0d9c92a62ac1",
+          "itemName": "행운의 붉은 말 포니포니"
+        },
+        "optionAbility": "지능 55 증가",
+        "emblems": [
+          {
+            "slotNo": 1,
+            "slotColor": "다색",
+            "itemId": "6d4b767a2ea2d3fef32c37cbf9555c20",
+            "itemName": "찬란한 붉은빛 엠블렘[지능]",
+            "itemRarity": "유니크"
+          },
+          {
+            "slotNo": 2,
+            "slotColor": "다색",
+            "itemId": "6d4b767a2ea2d3fef32c37cbf9555c20",
+            "itemName": "찬란한 붉은빛 엠블렘[지능]",
+            "itemRarity": "유니크"
+          }
+        ]
+      },
+      {
+        "slotId": "AURA_SKIN",
+        "slotName": "오라 스킨 아바타",
+        "itemId": "b3c885bf1bbfd7ac22fef96ee9d83ca3",
+        "itemName": "증오로 뭉쳐진 독기",
+        "itemRarity": "레어",
+        "clone": {
+          "itemId": null,
+          "itemName": null
+        },
+        "optionAbility": null,
+        "emblems": null
+      }
+    ]
+  },
+  "08_creature": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "creature": {
+      "itemId": "53ace2da0517e136790361719db7edf9",
+      "itemName": "운명을 담는 재단사 플래티넘[80Lv]",
+      "itemRarity": "레어",
+      "clone": {
+        "itemId": null,
+        "itemName": null
+      },
+      "artifact": [
+        {
+          "slotColor": "RED",
+          "itemId": "4b7acf6d4db44654be24f043fe01ea61",
+          "itemName": "눈부신 황혼의 공명",
+          "itemAvailableLevel": 0,
+          "itemRarity": "유니크"
+        },
+        {
+          "slotColor": "BLUE",
+          "itemId": "09ac85e704f47563e80b3d791cc9c4d7",
+          "itemName": "눈부신 영원의 달빛",
+          "itemAvailableLevel": 0,
+          "itemRarity": "유니크"
+        },
+        {
+          "slotColor": "GREEN",
+          "itemId": "34f16cff295079c49024a65a5efc0add",
+          "itemName": "[이벤트]빛을 머금은 이슬",
+          "itemAvailableLevel": 0,
+          "itemRarity": "유니크"
+        }
+      ]
+    }
+  },
+  "09_flag": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "flag": {
+      "itemId": "6b8c084337908366810e47f2913619cf",
+      "itemName": "영광스러운 승리의 휘장",
+      "itemRarity": "에픽",
+      "reinforce": 10,
+      "reinforceStatus": [
+        {
+          "name": "공격력 증가",
+          "value": 389.6
+        },
+        {
+          "name": "버프력",
+          "value": 473
+        },
+        {
+          "name": "모험가 명성",
+          "value": 236
+        }
+      ],
+      "gems": [
+        {
+          "slotNo": 1,
+          "itemId": "9ef04aeb40ec0a392d32a836388d51b7",
+          "itemName": "찬란한 용기의 젬",
+          "itemRarity": "레전더리"
+        },
+        {
+          "slotNo": 2,
+          "itemId": "18e2d70240ff2e9e15808a3e6a40c24c",
+          "itemName": "찬란한 지혜의 젬",
+          "itemRarity": "레전더리"
+        },
+        {
+          "slotNo": 3,
+          "itemId": "44698c70aecee893c723e7cda49ecbfd",
+          "itemName": "찬란한 수호의 젬",
+          "itemRarity": "레전더리"
+        },
+        {
+          "slotNo": 4,
+          "itemId": "6ba7cf90038adc07ffff6204b0d5dbbb",
+          "itemName": "찬란한 가호의 젬",
+          "itemRarity": "레전더리"
+        }
+      ]
+    }
+  },
+  "10_mist_assimilation": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "mistAssimilation": {
+      "level": 30,
+      "expRate": "100%",
+      "status": [
+        {
+          "name": "최종 데미지",
+          "value": "30%"
+        },
+        {
+          "name": "버프력",
+          "value": 4400
+        },
+        {
+          "name": "힘",
+          "value": 250
+        },
+        {
+          "name": "지능",
+          "value": 250
+        },
+        {
+          "name": "체력",
+          "value": 250
+        },
+        {
+          "name": "정신력",
+          "value": 250
+        },
+        {
+          "name": "모험가 명성",
+          "value": 3000
+        }
+      ]
+    }
+  },
+  "11_skill_style": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "skill": {
+      "hash": "eJytx6FOAgEABuDvB3FwUzmC446gbhoUNwuzu6mbm8FOdFSuGITIm1glaLAbTb4NL+D0Gfzat9lK2k8W98T21dvL981X68hSx8JunvVU9lMbZqg0M0rjMI/iTm3qOA8KpbP0nVtJThXGklsTJ2LuMgcKO5J3sRYD0RI9SVeRT/Gh60LSEZ1aKvpS0ki7oaaSvVpXpW9qbmRh5VWpMTOm5dfaANeWf/sfmx9R0xg1",
+      "style": {
+        "active": [
+          {
+            "skillId": "7822d6d52e10964a6755f142c666b494",
+            "name": "백스텝",
+            "level": 1,
+            "requiredLevel": 1
+          },
+          {
+            "skillId": "ce26c6b69d02a440a81b552bec94f03b",
+            "name": "퀵 스탠딩",
+            "level": 1,
+            "requiredLevel": 1
+          },
+          {
+            "skillId": "eb71e1d82d92c7e1d40500a0dcd77aa6",
+            "name": "무즈 어퍼",
+            "level": 1,
+            "requiredLevel": 1
+          },
+          {
+            "skillId": "fc7a3f4c2852c832a2f20af63d5d212f",
+            "name": "해머 킥",
+            "level": 1,
+            "requiredLevel": 1
+          },
+          {
+            "skillId": "f2fb27162beb0b87a7cb9af7900e95f2",
+            "name": "분신",
+            "level": 10,
+            "requiredLevel": 5
+          },
+          {
+            "skillId": "cfacda0647b9a0f595df2c2aad30c18d",
+            "name": "수플렉스",
+            "level": 1,
+            "requiredLevel": 5
+          },
+          {
+            "skillId": "1fea5a626f15230237946a11a9d11582",
+            "name": "도약",
+            "level": 1,
+            "requiredLevel": 10
+          },
+          {
+            "skillId": "9dda3f4a849dba1a288dd65e116860f2",
+            "name": "크라우치",
+            "level": 1,
+            "requiredLevel": 10
+          },
+          {
+            "skillId": "78bd107acd474518b606be1e4fd38239",
+            "name": "공중 밟기",
+            "level": 1,
+            "requiredLevel": 10
+          },
+          {
+            "skillId": "3fb8395ae3b81bd608e0c4223a8eb534",
+            "name": "기옥탄",
+            "level": 53,
+            "requiredLevel": 15
+          },
+          {
+            "skillId": "a6c8f69107f8c4f5d1a0c7a57d000290",
+            "name": "카이",
+            "level": 10,
+            "requiredLevel": 15
+          },
+          {
+            "skillId": "01c3a2fb793d293a25ed8dc7a0d70c1a",
+            "name": "넨탄",
+            "level": 1,
+            "requiredLevel": 15
+          },
+          {
+            "skillId": "04883563896fe1adac7505c6146b5f59",
+            "name": "태양의 숨결",
+            "level": 1,
+            "requiredLevel": 20
+          },
+          {
+            "skillId": "dc1ffbe7bfcc6dc2be737951960da9ad",
+            "name": "넨 가드",
+            "level": 1,
+            "requiredLevel": 25
+          },
+          {
+            "skillId": "2e2b7efe778656690f9c8cb6e47c3932",
+            "name": "비룡나선파",
+            "level": 1,
+            "requiredLevel": 30
+          },
+          {
+            "skillId": "0ed3148658fe37b3336ccb718dc0fdb0",
+            "name": "나선의 넨",
+            "level": 10,
+            "requiredLevel": 30
+          },
+          {
+            "skillId": "9cb6f9ed646fa87f9b7680a42ce83d1a",
+            "name": "사자후",
+            "level": 43,
+            "requiredLevel": 35
+          },
+          {
+            "skillId": "4224f9b0b8c7c903e9a1e0f9d9f6d04d",
+            "name": "기공장",
+            "level": 41,
+            "requiredLevel": 40
+          },
+          {
+            "skillId": "1b1cfab062e0768bcc889e33e1f30dbf",
+            "name": "뇌명 : 사나운 빛의 넨수",
+            "level": 10,
+            "requiredLevel": 40
+          },
+          {
+            "skillId": "dbf8b30c7057032af0d68fcfa289fdae",
+            "name": "광룡승천파",
+            "level": 35,
+            "requiredLevel": 45
+          },
+          {
+            "skillId": "51a08fd0c90f0a5276cd552047fac93d",
+            "name": "넨화",
+            "level": 14,
+            "requiredLevel": 50
+          },
+          {
+            "skillId": "5806440d21e7546d50007a5ba11f8024",
+            "name": "광룡십삼장",
+            "level": 31,
+            "requiredLevel": 60
+          },
+          {
+            "skillId": "7cf17936a039b418660424125dc968d7",
+            "name": "태사자후",
+            "level": 26,
+            "requiredLevel": 70
+          },
+          {
+            "skillId": "a5fa08f5d509e6ff2ebc68856a470b5a",
+            "name": "섬광환격",
+            "level": 23,
+            "requiredLevel": 75
+          },
+          {
+            "skillId": "506e7ed77d517419a6e1c437a2cedb17",
+            "name": "흡기공탄",
+            "level": 21,
+            "requiredLevel": 80
+          },
+          {
+            "skillId": "5dc7008b12a459325b548b0715c6b73c",
+            "name": "광휘의 넨",
+            "level": 7,
+            "requiredLevel": 85
+          },
+          {
+            "skillId": "85f7c810ad503790e8626439fe936d56",
+            "name": "천뢰분신보",
+            "level": 13,
+            "requiredLevel": 95
+          },
+          {
+            "skillId": "002cbdd9bfd0f0b970451ae8d48d029e",
+            "name": "염인환류파 - 천지개벽",
+            "level": 5,
+            "requiredLevel": 100
+          }
+        ],
+        "passive": [
+          {
+            "skillId": "5a56514f35cf0270ae8d6c65f8fefd78",
+            "name": "기본기 숙련",
+            "level": 115,
+            "requiredLevel": 1
+          },
+          {
+            "skillId": "892ef624d8bf3d7fc045f84825fd6104",
+            "name": "방어구 마스터리",
+            "level": 1,
+            "requiredLevel": 1
+          },
+          {
+            "skillId": "27bade584bb42fef68148d3a0b72bace",
+            "name": "넨으로 느낀다",
+            "level": 1
+          },
+          {
+            "skillId": "da6e37c1e3f0e8867f70007d89c239ff",
+            "name": "빛의 친화",
+            "level": 1,
+            "requiredLevel": 1
+          },
+          {
+            "skillId": "2b340542e776818b78f3212af184bd6b",
+            "name": "백스텝 강화",
+            "level": 1,
+            "requiredLevel": 10
+          },
+          {
+            "skillId": "f0cc2c950f3bdf4103c75fa496bcac34",
+            "name": "환영폭쇄",
+            "level": 51,
+            "requiredLevel": 20
+          },
+          {
+            "skillId": "669f1428193f61f9d92c743b72438c4d",
+            "name": "흩날리는 천염화",
+            "level": 25,
+            "requiredLevel": 48
+          },
+          {
+            "skillId": "2c9d9a36c8401bddff6cdb80fab8dc24",
+            "name": "궁극의 넨 가드",
+            "level": 1,
+            "requiredLevel": 60
+          },
+          {
+            "skillId": "547ab2b2bd860d3e37355a9cfbc1077c",
+            "name": "낙화태염성",
+            "level": 16,
+            "requiredLevel": 75
+          },
+          {
+            "skillId": "5cac3411ccef1af333953e0ded5e942d",
+            "name": "의지를 담은 넨",
+            "level": 9,
+            "requiredLevel": 95
+          }
+        ],
+        "evolution": [
+          {
+            "skillId": "9cb6f9ed646fa87f9b7680a42ce83d1a",
+            "type": 2
+          },
+          {
+            "skillId": "4224f9b0b8c7c903e9a1e0f9d9f6d04d",
+            "type": 1
+          },
+          {
+            "skillId": "5806440d21e7546d50007a5ba11f8024",
+            "type": 2
+          },
+          {
+            "skillId": "a5fa08f5d509e6ff2ebc68856a470b5a",
+            "type": 2
+          },
+          {
+            "skillId": "506e7ed77d517419a6e1c437a2cedb17",
+            "type": 1
+          }
+        ],
+        "enhancement": [
+          {
+            "skillId": "5806440d21e7546d50007a5ba11f8024",
+            "type": 1
+          },
+          {
+            "skillId": "a5fa08f5d509e6ff2ebc68856a470b5a",
+            "type": 1
+          },
+          {
+            "skillId": "506e7ed77d517419a6e1c437a2cedb17",
+            "type": 2
+          }
+        ]
+      }
+    }
+  },
+  "12_buff_equip_equipment": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "skill": {
+      "buff": {
+        "skillInfo": {
+          "skillId": "a6c8f69107f8c4f5d1a0c7a57d000290",
+          "name": "카이",
+          "option": {
+            "level": 20,
+            "desc": "시전 범위 : {value1}px\n지속 시간 : {value2}초\n기본/스킬 공격력 증가율 : {value3}%\n속성 공격력 증가율 : {value4}%",
+            "values": [
+              "450",
+              "-",
+              "61",
+              "21"
+            ]
+          }
+        },
+        "equipment": [
+          {
+            "slotId": "WEAPON",
+            "slotName": "무기",
+            "itemId": "aa2709958735a8f907c23770a3407904",
+            "itemName": "짙은 심연의 편린 너클 : 카이",
+            "itemTypeId": "4ffb6f14b86f5c818a925bf58022686e",
+            "itemType": "무기",
+            "itemTypeDetailId": "48a93de498d0e613a21e7eeacec2d906",
+            "itemTypeDetail": "너클",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "TITLE",
+            "slotName": "칭호",
+            "itemId": "1b6e0285c6c4d0de74784a184b059e81",
+            "itemName": "모험가의 의지[불]",
+            "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+            "itemType": "액세서리",
+            "itemTypeDetailId": "691933a06ff114348a7db936fb0aec66",
+            "itemTypeDetail": "칭호",
+            "itemAvailableLevel": 1,
+            "itemRarity": "레어",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0,
+            "enchant": {
+              "reinforceSkill": [
+                {
+                  "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+                  "jobName": "격투가(여)",
+                  "skills": [
+                    {
+                      "skillId": "a6c8f69107f8c4f5d1a0c7a57d000290",
+                      "name": "카이",
+                      "value": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "slotId": "JACKET",
+            "slotName": "상의",
+            "itemId": "761dbbf17509e798320f4f5aadbf33f3",
+            "itemName": "짙은 심연의 편린 상의 : 카이",
+            "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+            "itemType": "방어구",
+            "itemTypeDetailId": "3da92241d44bdafcf7554057e6479c83",
+            "itemTypeDetail": "상의",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "SHOULDER",
+            "slotName": "머리어깨",
+            "itemId": "a372b94f960962477fb5eac5037cbe46",
+            "itemName": "짙은 심연의 편린 어깨 : 카이",
+            "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+            "itemType": "방어구",
+            "itemTypeDetailId": "f2976a25a516451e3e8667bac328b308",
+            "itemTypeDetail": "머리어깨",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "PANTS",
+            "slotName": "하의",
+            "itemId": "0a8d0099aa5841790338e521cd33cccb",
+            "itemName": "짙은 심연의 편린 하의 : 카이",
+            "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+            "itemType": "방어구",
+            "itemTypeDetailId": "7c4b28699ae7994798289f187d519992",
+            "itemTypeDetail": "하의",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "SHOES",
+            "slotName": "신발",
+            "itemId": "2dc13e057b3d3f8d0a4eaeac99ac48bd",
+            "itemName": "짙은 심연의 편린 신발 : 카이",
+            "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+            "itemType": "방어구",
+            "itemTypeDetailId": "ef6fcc3b39b2bbcbf09a71da6cbafe06",
+            "itemTypeDetail": "신발",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "WAIST",
+            "slotName": "벨트",
+            "itemId": "3528e39ac25aab6b798c96a0380259c6",
+            "itemName": "짙은 심연의 편린 벨트 : 카이",
+            "itemTypeId": "b09752bfff1935188ea2735cd925a872",
+            "itemType": "방어구",
+            "itemTypeDetailId": "934ed2dea99f55f775df256fc29c5d56",
+            "itemTypeDetail": "벨트",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "AMULET",
+            "slotName": "목걸이",
+            "itemId": "a46afabc9f62fa44e2791174bc253031",
+            "itemName": "짙은 심연의 편린 목걸이 : 카이",
+            "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+            "itemType": "액세서리",
+            "itemTypeDetailId": "390e3966118b0c466ce9f8eae45e1629",
+            "itemTypeDetail": "목걸이",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "WRIST",
+            "slotName": "팔찌",
+            "itemId": "a573228429f481b2c5810b86d307007b",
+            "itemName": "짙은 심연의 편린 팔찌 : 카이",
+            "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+            "itemType": "액세서리",
+            "itemTypeDetailId": "80bddf423629c28c7b4459c328fdffaf",
+            "itemTypeDetail": "팔찌",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "RING",
+            "slotName": "반지",
+            "itemId": "f7bf08bc1241ee4e7595a935adef2377",
+            "itemName": "짙은 심연의 편린 반지 : 카이",
+            "itemTypeId": "e490f8cce6bacd43bef1e2f5e0c4943d",
+            "itemType": "액세서리",
+            "itemTypeDetailId": "b04c7fb9b29b27b91a0a9e5a1822bc8f",
+            "itemTypeDetail": "반지",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "SUPPORT",
+            "slotName": "보조장비",
+            "itemId": "2b85cf7abfc932c037030a643df6ac79",
+            "itemName": "짙은 뒤틀린 심연의 완장 : 카이",
+            "itemTypeId": "87ff665868ffd50f8aef7948548439bd",
+            "itemType": "추가장비",
+            "itemTypeDetailId": "2fef5d81b7f59f0c75241890a8d941c9",
+            "itemTypeDetail": "보조장비",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "MAGIC_STON",
+            "slotName": "마법석",
+            "itemId": "2a235fb0689f16ba807644e160236a1d",
+            "itemName": "짙은 뒤틀린 심연의 마법석 : 카이",
+            "itemTypeId": "87ff665868ffd50f8aef7948548439bd",
+            "itemType": "추가장비",
+            "itemTypeDetailId": "fe5f3db78175f5a3196385c688d29681",
+            "itemTypeDetail": "마법석",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          },
+          {
+            "slotId": "EARRING",
+            "slotName": "귀걸이",
+            "itemId": "fd9285f295dfa4fd4eb55795ff56dcad",
+            "itemName": "짙은 뒤틀린 심연의 귀걸이 : 카이",
+            "itemTypeId": "87ff665868ffd50f8aef7948548439bd",
+            "itemType": "추가장비",
+            "itemTypeDetailId": "601834074c49bb0e48cb65a75a8667bc",
+            "itemTypeDetail": "귀걸이",
+            "itemAvailableLevel": 100,
+            "itemRarity": "유니크",
+            "setItemId": null,
+            "setItemName": null,
+            "reinforce": 0,
+            "amplificationName": null,
+            "refine": 0
+          }
+        ]
+      }
+    }
+  },
+  "13_buff_equip_avatar": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "skill": {
+      "buff": {
+        "skillInfo": {
+          "skillId": "a6c8f69107f8c4f5d1a0c7a57d000290",
+          "name": "카이",
+          "option": {
+            "level": 20,
+            "desc": "시전 범위 : {value1}px\n지속 시간 : {value2}초\n기본/스킬 공격력 증가율 : {value3}%\n속성 공격력 증가율 : {value4}%",
+            "values": [
+              "450",
+              "-",
+              "61",
+              "21"
+            ]
+          }
+        },
+        "avatar": [
+          {
+            "slotId": "JACKET",
+            "slotName": "상의 아바타",
+            "itemId": "ffbee392c71b95276141a99baf0f0820",
+            "itemName": "레어 상의 클론 아바타",
+            "itemRarity": "레어",
+            "clone": {
+              "itemId": null,
+              "itemName": null
+            },
+            "optionAbility": "카이 스킬Lv +1",
+            "emblems": [
+              {
+                "slotNo": 1,
+                "slotColor": "플래티넘",
+                "itemId": "f9dbc5688cd3dbb57493cdaebbad5e44",
+                "itemName": "플래티넘 엠블렘[카이]",
+                "itemRarity": "레전더리"
+              },
+              {
+                "slotNo": 2,
+                "slotColor": "녹색빛"
+              },
+              {
+                "slotNo": 3,
+                "slotColor": "녹색빛"
+              }
+            ]
+          },
+          {
+            "slotId": "PANTS",
+            "slotName": "하의 아바타",
+            "itemId": "3a690cadd438d10c2dd4f4cd5a9a6118",
+            "itemName": "레어 하의 클론 아바타",
+            "itemRarity": "레어",
+            "clone": {
+              "itemId": null,
+              "itemName": null
+            },
+            "optionAbility": "HP MAX 400 증가",
+            "emblems": [
+              {
+                "slotNo": 1,
+                "slotColor": "플래티넘",
+                "itemId": "f9dbc5688cd3dbb57493cdaebbad5e44",
+                "itemName": "플래티넘 엠블렘[카이]",
+                "itemRarity": "레전더리"
+              },
+              {
+                "slotNo": 2,
+                "slotColor": "녹색빛"
+              },
+              {
+                "slotNo": 3,
+                "slotColor": "녹색빛"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "14_buff_equip_creature": {
+    "serverId": "casillas",
+    "characterId": "ab590098566252dad7fe024ab17f5fcc",
+    "characterName": "김철완",
+    "level": 115,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+    "jobName": "격투가(여)",
+    "jobGrowName": "眞 넨마스터",
+    "fame": 83413,
+    "adventureName": "영정은날막지못해",
+    "guildId": "ea891c34385b7b26712f4d5ca8927d87",
+    "guildName": "SBH마스터즈",
+    "skill": {
+      "buff": {
+        "skillInfo": {
+          "skillId": "a6c8f69107f8c4f5d1a0c7a57d000290",
+          "name": "카이",
+          "option": {
+            "level": 20,
+            "desc": "시전 범위 : {value1}px\n지속 시간 : {value2}초\n기본/스킬 공격력 증가율 : {value3}%\n속성 공격력 증가율 : {value4}%",
+            "values": [
+              "450",
+              "-",
+              "61",
+              "21"
+            ]
+          }
+        },
+        "creature": [
+          {
+            "itemId": "ffcf6eecd01396c302b532fefa453fae",
+            "itemName": "Miss.바니바니",
+            "itemRarity": "레어",
+            "enchant": null
+          }
+        ]
+      }
+    }
+  },
+  "15_fame_search": {
+    "fame": {
+      "min": 87753,
+      "max": 89753
+    },
+    "rows": [
+      {
+        "serverId": "casillas",
+        "characterId": "a50be5199828c496192bf02cf1c9f4e7",
+        "characterName": "야다몽",
+        "level": 115,
+        "jobId": "ddc49e9ad1ff72a00b53c6cff5b1e920",
+        "jobName": "도적",
+        "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+        "jobGrowName": "眞 로그",
+        "fame": 89753
+      },
+      {
+        "serverId": "casillas",
+        "characterId": "521cdd7ece638ff8a538a8e2ec5769ee",
+        "characterName": "Shine",
+        "level": 115,
+        "jobId": "afdf3b989339de478e85b614d274d1ef",
+        "jobName": "거너(남)",
+        "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+        "jobGrowName": "眞 런처",
+        "fame": 89418
+      },
+      {
+        "serverId": "casillas",
+        "characterId": "957f6c17f50e25e201121f3bb42f317e",
+        "characterName": "연동",
+        "level": 115,
+        "jobId": "41f1cdc2ff58bb5fdc287be0db2a8df3",
+        "jobName": "귀검사(남)",
+        "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+        "jobGrowName": "眞 버서커",
+        "fame": 88604
+      },
+      {
+        "serverId": "casillas",
+        "characterId": "ea8f7a1ffa20eb522b215959d66a5c83",
+        "characterName": "수I",
+        "level": 115,
+        "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+        "jobName": "격투가(여)",
+        "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+        "jobGrowName": "眞 넨마스터",
+        "fame": 88351
+      },
+      {
+        "serverId": "casillas",
+        "characterId": "a99e49c16d29ca157e6cf3546b3a31d0",
+        "characterName": "이클립스",
+        "level": 115,
+        "jobId": "3909d0b188e9c95311399f776e331da5",
+        "jobName": "마법사(여)",
+        "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+        "jobGrowName": "眞 소환사",
+        "fame": 88288
+      }
+    ]
+  },
+  "24_item_search": {
+    "rows": [
+      {
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "itemAvailableLevel": 1,
+        "fame": 0
+      }
+    ]
+  },
+  "25_item_detail": {
+    "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+    "itemName": "형상화된 요기의 단서",
+    "itemRarity": "유니크",
+    "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+    "itemType": "스태커블",
+    "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+    "itemTypeDetail": "재료",
+    "itemAvailableLevel": 1,
+    "itemExplain": "요기를 추적하는 과정에서 떨어져 나온 유기체. 숙주에게 되돌아가려는듯 계속해서 움직이고 있다.\n\n<주요 사용처>\n- 요괴 섬멸 던전 입장\n\n<주요 획득처>\n- 배니부 상점 구매\n- 디그밍의 수수한/빛나는/화려한 답례품 오픈",
+    "itemExplainDetail": "요기를 추적하는 과정에서 떨어져 나온 유기체. 숙주에게 되돌아가려는듯 계속해서 움직이고 있다.\n\n<주요 사용처>\n- 요괴 섬멸 던전 입장\n\n<주요 획득처>\n- 배니부 상점 구매\n- 디그밍의 수수한/빛나는/화려한 답례품 오픈",
+    "itemFlavorText": "",
+    "fame": 0,
+    "setItemId": null,
+    "setItemName": null,
+    "obtainInfo": {
+      "dungeon": null,
+      "shop": [
+        {
+          "rows": [
+            {
+              "name": "가브리엘의 비밀상점"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "26_item_shop": {
+    "_error": true,
+    "_status": 404,
+    "_body": "{\"error\":{\"status\":404,\"code\":\"DNF003\",\"message\":\"NOT_FOUND_ITEM\"}}"
+  },
+  "28_item_hashtag": {
+    "rows": [
+      "불가침 무기 업그레이드",
+      "고정 옵션",
+      "백해 장비",
+      "제작",
+      "기계혁명",
+      "이스핀즈",
+      "차원회랑",
+      "어둑섬",
+      "기억 장비",
+      "기록/흔적 장비",
+      "아스라한",
+      "결전 장비",
+      "버프 강화",
+      "잠식 장비"
+    ]
+  },
+  "32_jobs": {
+    "rows": [
+      {
+        "jobId": "41f1cdc2ff58bb5fdc287be0db2a8df3",
+        "jobName": "귀검사(남)",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "웨펀마스터",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "검성",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "검신",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 웨펀마스터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "소울브링어",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "소울테이커",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "다크로드",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 소울브링어"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "버서커",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "헬벤터",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "블러드 이블",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 버서커"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "아수라",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "대암흑천",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "인다라천",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 아수라"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a59ba19824dc3292b6075e29b3862ad3",
+            "jobGrowName": "검귀",
+            "next": {
+              "jobGrowId": "a427ec3e94087c64cb4144379c3a0d59",
+              "jobGrowName": "야차",
+              "next": {
+                "jobGrowId": "3ff5b661925ac59d1ca290b05ca914cc",
+                "jobGrowName": "악귀나찰",
+                "next": {
+                  "jobGrowId": "92da05ec93fb43406e193ffb9a2a629b",
+                  "jobGrowName": "眞 검귀"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+        "jobName": "격투가(여)",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "넨마스터",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "백화요란",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "염제 폐월수화",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 넨마스터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "스트라이커",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "챔피언",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "카이저",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 스트라이커"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "스트리트파이터",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "독왕",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "용독문주",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 스트리트파이터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "그래플러",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "토네이도",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "얼티밋 디바",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 그래플러"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "afdf3b989339de478e85b614d274d1ef",
+        "jobName": "거너(남)",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "레인저",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "데스페라도",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "레이븐",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 레인저"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "런처",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "블래스터",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "디스트로이어",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 런처"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "메카닉",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "마이스터",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "프라임",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 메카닉"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "스핏파이어",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "제네럴",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "커맨더",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 스핏파이어"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a59ba19824dc3292b6075e29b3862ad3",
+            "jobGrowName": "어썰트",
+            "next": {
+              "jobGrowId": "a427ec3e94087c64cb4144379c3a0d59",
+              "jobGrowName": "인트루더",
+              "next": {
+                "jobGrowId": "3ff5b661925ac59d1ca290b05ca914cc",
+                "jobGrowName": "엑스마키나",
+                "next": {
+                  "jobGrowId": "92da05ec93fb43406e193ffb9a2a629b",
+                  "jobGrowName": "眞 어썰트"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "3909d0b188e9c95311399f776e331da5",
+        "jobName": "마법사(여)",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "엘레멘탈마스터",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "아크메이지",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "오버마인드",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 엘레멘탈마스터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "소환사",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "문 엠프레스",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "이클립스",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 소환사"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "배틀메이지",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "벨라트릭스",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "아슈타르테",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 배틀메이지"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "마도학자",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "트릭스터",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "지니위즈",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 마도학자"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a59ba19824dc3292b6075e29b3862ad3",
+            "jobGrowName": "인챈트리스",
+            "next": {
+              "jobGrowId": "a427ec3e94087c64cb4144379c3a0d59",
+              "jobGrowName": "블랙 메이든",
+              "next": {
+                "jobGrowId": "3ff5b661925ac59d1ca290b05ca914cc",
+                "jobGrowName": "헤카테",
+                "next": {
+                  "jobGrowId": "92da05ec93fb43406e193ffb9a2a629b",
+                  "jobGrowName": "眞 인챈트리스"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "f6a4ad30555b99b499c07835f87ce522",
+        "jobName": "프리스트(남)",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "크루세이더",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "홀리오더",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "세인트",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 크루세이더"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "인파이터",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "갓핸드",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "저스티스",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 인파이터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "퇴마사",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "용투사",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "태을선인",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 퇴마사"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "어벤저",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "둠스가디언",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "이모탈",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 어벤저"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "944b9aab492c15a8474f96947ceeb9e4",
+        "jobName": "거너(여)",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "레인저",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "블러디아",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "크림슨로제",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 레인저"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "런처",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "헤비배럴",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "스톰트루퍼",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 런처"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "메카닉",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "메탈하트",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "옵티머스",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 메카닉"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "스핏파이어",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "발키리",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "프레이야",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 스핏파이어"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a59ba19824dc3292b6075e29b3862ad3",
+            "jobGrowName": "패러메딕",
+            "next": {
+              "jobGrowId": "a427ec3e94087c64cb4144379c3a0d59",
+              "jobGrowName": "스키퍼",
+              "next": {
+                "jobGrowId": "3ff5b661925ac59d1ca290b05ca914cc",
+                "jobGrowName": "코로니스",
+                "next": {
+                  "jobGrowId": "92da05ec93fb43406e193ffb9a2a629b",
+                  "jobGrowName": "眞 패러메딕"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "ddc49e9ad1ff72a00b53c6cff5b1e920",
+        "jobName": "도적",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "로그",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "실버문",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "알키오네",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 로그"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "사령술사",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "데스브링어",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "타나토스",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 사령술사"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "쿠노이치",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "이즈나비",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "시라누이",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 쿠노이치"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "섀도우댄서",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "나이트메어",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "그림리퍼",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 섀도우댄서"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "ca0f0e0e9e1d55b5f9955b03d9dd213c",
+        "jobName": "격투가(남)",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "넨마스터",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "광호제",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "염황 광풍제월",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 넨마스터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "스트라이커",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "무극",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "패황",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 스트라이커"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "스트리트파이터",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "천수나한",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "명왕",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 스트리트파이터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "그래플러",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "자이언트",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "그랜드 마스터",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 그래플러"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "a5ccbaf5538981c6ef99b236c0a60b73",
+        "jobName": "마법사(남)",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "엘레멘탈 바머",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "워록",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "오블리비언",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 엘레멘탈 바머"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "빙결사",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "프로즌하트",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "이터널",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 빙결사"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "블러드 메이지",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "뱀파이어",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "뱀파이어 로드",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 블러드 메이지"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "스위프트 마스터",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "스톰브링어",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "아이올로스",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 스위프트 마스터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a59ba19824dc3292b6075e29b3862ad3",
+            "jobGrowName": "디멘션워커",
+            "next": {
+              "jobGrowId": "a427ec3e94087c64cb4144379c3a0d59",
+              "jobGrowName": "이레귤러",
+              "next": {
+                "jobGrowId": "3ff5b661925ac59d1ca290b05ca914cc",
+                "jobGrowName": "어센션",
+                "next": {
+                  "jobGrowId": "92da05ec93fb43406e193ffb9a2a629b",
+                  "jobGrowName": "眞 디멘션워커"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "17e417b31686389eebff6d754c3401ea",
+        "jobName": "다크나이트",
+        "rows": [
+          {
+            "jobGrowId": "4fdee159d5aa8874a1459861ced676ec",
+            "jobGrowName": "자각1",
+            "next": {
+              "jobGrowId": "da6a126f45370e1a4cbbe8823c6c35be",
+              "jobGrowName": "자각2",
+              "next": {
+                "jobGrowId": "0a49d9c8b5e1358efff324e5cb11d41e",
+                "jobGrowName": "眞 다크나이트"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "b522a95d819a5559b775deb9a490e49a",
+        "jobName": "크리에이터",
+        "rows": [
+          {
+            "jobGrowId": "4fdee159d5aa8874a1459861ced676ec",
+            "jobGrowName": "자각1",
+            "next": {
+              "jobGrowId": "da6a126f45370e1a4cbbe8823c6c35be",
+              "jobGrowName": "자각2",
+              "next": {
+                "jobGrowId": "0a49d9c8b5e1358efff324e5cb11d41e",
+                "jobGrowName": "眞 크리에이터"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "1645c45aabb008c98406b3a16447040d",
+        "jobName": "귀검사(여)",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "소드마스터",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "노블레스",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "마제스티",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 소드마스터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "다크템플러",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "암제",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "네메시스",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 다크템플러"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "데몬슬레이어",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "검마",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "디어사이드",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 데몬슬레이어"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "베가본드",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "검호",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "검제",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 베가본드"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a59ba19824dc3292b6075e29b3862ad3",
+            "jobGrowName": "블레이드",
+            "next": {
+              "jobGrowId": "a427ec3e94087c64cb4144379c3a0d59",
+              "jobGrowName": "리벨리온",
+              "next": {
+                "jobGrowId": "3ff5b661925ac59d1ca290b05ca914cc",
+                "jobGrowName": "벤데타",
+                "next": {
+                  "jobGrowId": "92da05ec93fb43406e193ffb9a2a629b",
+                  "jobGrowName": "眞 블레이드"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "0ee8fa5dc525c1a1f23fc6911e921e4a",
+        "jobName": "나이트",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "엘븐나이트",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "피스메이커",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "가이아",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 엘븐나이트"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "카오스",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "마왕",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "마신",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 카오스"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "팔라딘",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "센티넬",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "세이비어",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 팔라딘"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "드래곤나이트",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "타이런트",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "드레드노트",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 드래곤나이트"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "3deb7be5f01953ac8b1ecaa1e25e0420",
+        "jobName": "마창사",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "뱅가드",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "레버넌트",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "워로드",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 뱅가드"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "듀얼리스트",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "하이랜더",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "듀란달",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 듀얼리스트"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "드래고니안 랜서",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "레비아탄",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "제노사이더",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 드래고니안 랜서"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "다크 랜서",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "램페이저",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "에레보스",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 다크 랜서"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "0c1b401bb09241570d364420b3ba3fd7",
+        "jobName": "프리스트(여)",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "크루세이더",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "에반젤리스트",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "세라핌",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 크루세이더"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "이단심판관",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "헬카이트",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "인페르노",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 이단심판관"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "무녀",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "신녀",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "천선낭랑",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 무녀"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "미스트리스",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "신세이어",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "리디머",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 미스트리스"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "986c2b3d72ee0e4a0b7fcfbe786d4e02",
+        "jobName": "총검사",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "히트맨",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "빅보스",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "갓파더",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 히트맨"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "요원",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "인포서",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "레퀴엠",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 요원"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "트러블 슈터",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "와일드 카드",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "언터처블",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 트러블 슈터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "스페셜리스트",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "코어 마스터",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "패스파인더",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 스페셜리스트"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "jobId": "b9cb48777665de22c006fabaf9a560b3",
+        "jobName": "아처",
+        "rows": [
+          {
+            "jobGrowId": "df3870efe8e8754011cd12fa03cd275f",
+            "jobGrowName": "뮤즈",
+            "next": {
+              "jobGrowId": "4ec01f4ae3728c080f28a72213b6df10",
+              "jobGrowName": "헤드라이너",
+              "next": {
+                "jobGrowId": "80ec67d0356defa46a989914caca5820",
+                "jobGrowName": "트렌드세터",
+                "next": {
+                  "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+                  "jobGrowName": "眞 뮤즈"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "1ea78ae210f681a799feb4403a5c1e85",
+            "jobGrowName": "트래블러",
+            "next": {
+              "jobGrowId": "981d675414f83b926db5f54e5347eec0",
+              "jobGrowName": "드리머",
+              "next": {
+                "jobGrowId": "8022a99e29b5e4845985fe1d79a233f3",
+                "jobGrowName": "셀레스티얼",
+                "next": {
+                  "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+                  "jobGrowName": "眞 트래블러"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a9a4ef4552d46e39cf6c874a51126410",
+            "jobGrowName": "헌터",
+            "next": {
+              "jobGrowId": "460822c3780a9bc3fbe9485cc89c44a4",
+              "jobGrowName": "호크 아이",
+              "next": {
+                "jobGrowId": "15ce2751ab9c8302f39636cdb7c3dcfa",
+                "jobGrowName": "메이븐",
+                "next": {
+                  "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+                  "jobGrowName": "眞 헌터"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "4a1459a4fa3c7f59b6da2e43382ed0b9",
+            "jobGrowName": "비질란테",
+            "next": {
+              "jobGrowId": "faf8fc6f0cd4c0f84f0035e23bd4fa19",
+              "jobGrowName": "새비지",
+              "next": {
+                "jobGrowId": "64bbd751c0fcae0e74758b871a2296c1",
+                "jobGrowName": "프레데터",
+                "next": {
+                  "jobGrowId": "c9b492038ee3ca8d27d7004cf58d59f3",
+                  "jobGrowName": "眞 비질란테"
+                }
+              }
+            }
+          },
+          {
+            "jobGrowId": "a59ba19824dc3292b6075e29b3862ad3",
+            "jobGrowName": "키메라",
+            "next": {
+              "jobGrowId": "a427ec3e94087c64cb4144379c3a0d59",
+              "jobGrowName": "키클롭스",
+              "next": {
+                "jobGrowId": "3ff5b661925ac59d1ca290b05ca914cc",
+                "jobGrowName": "하이드라",
+                "next": {
+                  "jobGrowId": "92da05ec93fb43406e193ffb9a2a629b",
+                  "jobGrowName": "眞 키메라"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "24b_avatar_item_search": {
+    "rows": [
+      {
+        "itemId": "f11f806769afaae8b05be488e20b6109",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+        "itemType": "아바타",
+        "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+        "itemTypeDetail": "머리",
+        "itemAvailableLevel": 1,
+        "fame": 88,
+        "jobs": [
+          {
+            "jobId": "41f1cdc2ff58bb5fdc287be0db2a8df3",
+            "jobName": "귀검사(남)"
+          },
+          {
+            "jobId": "17e417b31686389eebff6d754c3401ea",
+            "jobName": "다크나이트"
+          }
+        ]
+      },
+      {
+        "itemId": "0756f89fac0518d4390f3e371adf7479",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+        "itemType": "아바타",
+        "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+        "itemTypeDetail": "머리",
+        "itemAvailableLevel": 1,
+        "fame": 88,
+        "jobs": [
+          {
+            "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+            "jobName": "격투가(여)"
+          }
+        ]
+      },
+      {
+        "itemId": "28b2121af31d0badfe2727b18f6a1a42",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+        "itemType": "아바타",
+        "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+        "itemTypeDetail": "머리",
+        "itemAvailableLevel": 1,
+        "fame": 88,
+        "jobs": [
+          {
+            "jobId": "afdf3b989339de478e85b614d274d1ef",
+            "jobName": "거너(남)"
+          }
+        ]
+      },
+      {
+        "itemId": "ce23825527b4f7347306f3dea609b93b",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+        "itemType": "아바타",
+        "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+        "itemTypeDetail": "머리",
+        "itemAvailableLevel": 1,
+        "fame": 88,
+        "jobs": [
+          {
+            "jobId": "3909d0b188e9c95311399f776e331da5",
+            "jobName": "마법사(여)"
+          },
+          {
+            "jobId": "b522a95d819a5559b775deb9a490e49a",
+            "jobName": "크리에이터"
+          }
+        ]
+      },
+      {
+        "itemId": "bdfc86f4578d75421499b562c6fc1b84",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+        "itemType": "아바타",
+        "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+        "itemTypeDetail": "머리",
+        "itemAvailableLevel": 1,
+        "fame": 88,
+        "jobs": [
+          {
+            "jobId": "f6a4ad30555b99b499c07835f87ce522",
+            "jobName": "프리스트(남)"
+          }
+        ]
+      },
+      {
+        "itemId": "3b4a3b16a1d565d3d962a1a0df19c9f2",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+        "itemType": "아바타",
+        "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+        "itemTypeDetail": "머리",
+        "itemAvailableLevel": 1,
+        "fame": 88,
+        "jobs": [
+          {
+            "jobId": "944b9aab492c15a8474f96947ceeb9e4",
+            "jobName": "거너(여)"
+          }
+        ]
+      },
+      {
+        "itemId": "77aad2f36f6c344457df822719052b9b",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+        "itemType": "아바타",
+        "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+        "itemTypeDetail": "머리",
+        "itemAvailableLevel": 1,
+        "fame": 88,
+        "jobs": [
+          {
+            "jobId": "ddc49e9ad1ff72a00b53c6cff5b1e920",
+            "jobName": "도적"
+          }
+        ]
+      },
+      {
+        "itemId": "b293e475afe58fef47f6ff75aebf970b",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+        "itemType": "아바타",
+        "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+        "itemTypeDetail": "머리",
+        "itemAvailableLevel": 1,
+        "fame": 88,
+        "jobs": [
+          {
+            "jobId": "ca0f0e0e9e1d55b5f9955b03d9dd213c",
+            "jobName": "격투가(남)"
+          }
+        ]
+      },
+      {
+        "itemId": "9e501e48de955fcfea8a6baa1691bf59",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+        "itemType": "아바타",
+        "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+        "itemTypeDetail": "머리",
+        "itemAvailableLevel": 1,
+        "fame": 88,
+        "jobs": [
+          {
+            "jobId": "a5ccbaf5538981c6ef99b236c0a60b73",
+            "jobName": "마법사(남)"
+          }
+        ]
+      },
+      {
+        "itemId": "958e5f4d7605765a465a9b882e7250f5",
+        "itemName": "레어 머리 클론 아바타",
+        "itemRarity": "레어",
+        "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+        "itemType": "아바타",
+        "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+        "itemTypeDetail": "머리",
+        "itemAvailableLevel": 1,
+        "fame": 88,
+        "jobs": [
+          {
+            "jobId": "ca0f0e0e9e1d55b5f9955b03d9dd213c",
+            "jobName": "격투가(남)"
+          }
+        ]
+      }
+    ]
+  },
+  "16_auction_search": {
+    "rows": [
+      {
+        "auctionNo": 1484323262,
+        "regDate": "2026-03-08 11:21:41",
+        "expireDate": "2026-03-09 11:21:41",
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemAvailableLevel": 1,
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "refine": 0,
+        "reinforce": 0,
+        "amplificationName": null,
+        "fame": 0,
+        "exchange": {
+          "count": 1,
+          "bindName": "계정귀속"
+        },
+        "count": 6,
+        "regCount": 6,
+        "price": -1,
+        "currentPrice": 1980504,
+        "unitPrice": 330084,
+        "averagePrice": 322048
+      },
+      {
+        "auctionNo": 1484323465,
+        "regDate": "2026-03-08 11:23:12",
+        "expireDate": "2026-03-09 11:23:12",
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemAvailableLevel": 1,
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "refine": 0,
+        "reinforce": 0,
+        "amplificationName": null,
+        "fame": 0,
+        "exchange": {
+          "count": 1,
+          "bindName": "계정귀속"
+        },
+        "count": 1,
+        "regCount": 1,
+        "price": -1,
+        "currentPrice": 330084,
+        "unitPrice": 330084,
+        "averagePrice": 322048
+      },
+      {
+        "auctionNo": 1484323499,
+        "regDate": "2026-03-08 11:23:33",
+        "expireDate": "2026-03-09 11:23:33",
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemAvailableLevel": 1,
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "refine": 0,
+        "reinforce": 0,
+        "amplificationName": null,
+        "fame": 0,
+        "exchange": {
+          "count": 1,
+          "bindName": "계정귀속"
+        },
+        "count": 96,
+        "regCount": 96,
+        "price": -1,
+        "currentPrice": 31688064,
+        "unitPrice": 330084,
+        "averagePrice": 322048
+      },
+      {
+        "auctionNo": 1484323606,
+        "regDate": "2026-03-08 11:24:23",
+        "expireDate": "2026-03-09 11:24:23",
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemAvailableLevel": 1,
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "refine": 0,
+        "reinforce": 0,
+        "amplificationName": null,
+        "fame": 0,
+        "exchange": {
+          "count": 1,
+          "bindName": "계정귀속"
+        },
+        "count": 22,
+        "regCount": 22,
+        "price": -1,
+        "currentPrice": 7261848,
+        "unitPrice": 330084,
+        "averagePrice": 322048
+      },
+      {
+        "auctionNo": 1484323904,
+        "regDate": "2026-03-08 11:26:46",
+        "expireDate": "2026-03-09 11:26:46",
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemAvailableLevel": 1,
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "refine": 0,
+        "reinforce": 0,
+        "amplificationName": null,
+        "fame": 0,
+        "exchange": {
+          "count": 1,
+          "bindName": "계정귀속"
+        },
+        "count": 19,
+        "regCount": 19,
+        "price": -1,
+        "currentPrice": 6271520,
+        "unitPrice": 330080,
+        "averagePrice": 322048
+      }
+    ]
+  },
+  "18_auction_sold_search": {
+    "rows": [
+      {
+        "soldDate": "2026-03-09 11:18:40",
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemAvailableLevel": 1,
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "refine": 0,
+        "reinforce": 0,
+        "amplificationName": null,
+        "fame": 0,
+        "count": 4,
+        "price": 1280000,
+        "unitPrice": 320000
+      },
+      {
+        "soldDate": "2026-03-09 11:18:38",
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemAvailableLevel": 1,
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "refine": 0,
+        "reinforce": 0,
+        "amplificationName": null,
+        "fame": 0,
+        "count": 18,
+        "price": 5795766,
+        "unitPrice": 321987
+      },
+      {
+        "soldDate": "2026-03-09 11:18:25",
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemAvailableLevel": 1,
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "refine": 0,
+        "reinforce": 0,
+        "amplificationName": null,
+        "fame": 0,
+        "count": 42,
+        "price": 13526016,
+        "unitPrice": 322048
+      },
+      {
+        "soldDate": "2026-03-09 11:18:04",
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemAvailableLevel": 1,
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "refine": 0,
+        "reinforce": 0,
+        "amplificationName": null,
+        "fame": 0,
+        "count": 8,
+        "price": 2576384,
+        "unitPrice": 322048
+      },
+      {
+        "soldDate": "2026-03-09 11:18:01",
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemAvailableLevel": 1,
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "refine": 0,
+        "reinforce": 0,
+        "amplificationName": null,
+        "fame": 0,
+        "count": 17,
+        "price": 5474816,
+        "unitPrice": 322048
+      }
+    ]
+  },
+  "17_auction_detail": {
+    "auctionNo": 1484323262,
+    "regDate": "2026-03-08 11:21:41",
+    "expireDate": "2026-03-09 11:21:41",
+    "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+    "itemName": "형상화된 요기의 단서",
+    "itemAvailableLevel": 1,
+    "itemRarity": "유니크",
+    "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+    "itemType": "스태커블",
+    "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+    "itemTypeDetail": "재료",
+    "refine": 0,
+    "reinforce": 0,
+    "amplificationName": null,
+    "fame": 0,
+    "exchange": {
+      "count": 1,
+      "bindName": "계정귀속"
+    },
+    "count": 6,
+    "regCount": 6,
+    "price": -1,
+    "currentPrice": 1980504,
+    "unitPrice": 330084,
+    "averagePrice": 322048
+  },
+  "19_avatar_market_sale": {
+    "_error": true,
+    "_status": 400,
+    "_body": "{\"error\":{\"status\":400,\"code\":\"DNF009\",\"message\":\"SEARCH_TITLE_OVER\"}}"
+  },
+  "21_avatar_market_sold": {
+    "_error": true,
+    "_status": 400,
+    "_body": "{\"error\":{\"status\":400,\"code\":\"DNF009\",\"message\":\"SEARCH_TITLE_OVER\"}}"
+  },
+  "23_avatar_market_hashtag": {
+    "rows": [
+      "SF",
+      "강인한",
+      "개그",
+      "공포",
+      "공허한",
+      "귀여움",
+      "깔끔한",
+      "냉정한",
+      "동물",
+      "드라마",
+      "만화",
+      "몬스터",
+      "발랄한",
+      "배고픔",
+      "분노한",
+      "사랑스러운",
+      "서양",
+      "세련된",
+      "섹시",
+      "시크한",
+      "아시아",
+      "악당",
+      "악마",
+      "영웅",
+      "영화",
+      "온라인게임",
+      "우아함",
+      "우울한",
+      "자신감",
+      "자연",
+      "전사",
+      "전설",
+      "제복",
+      "중세",
+      "천사",
+      "청순",
+      "충격적인",
+      "특이한",
+      "판타지",
+      "평범한",
+      "흔한",
+      "희귀한"
+    ]
+  },
+  "27_multi_items": {
+    "rows": [
+      {
+        "itemId": "f9941d3fa0b8253bb0b2567a29b1299f",
+        "itemName": "형상화된 요기의 단서",
+        "itemRarity": "유니크",
+        "itemTypeId": "8bcda5578720a4dc56b1736ccbe06c0f",
+        "itemType": "스태커블",
+        "itemTypeDetailId": "8ed8b6c0d70f2661f86bab11630d69f9",
+        "itemTypeDetail": "재료",
+        "itemAvailableLevel": 1,
+        "itemExplain": "요기를 추적하는 과정에서 떨어져 나온 유기체. 숙주에게 되돌아가려는듯 계속해서 움직이고 있다.\n\n<주요 사용처>\n- 요괴 섬멸 던전 입장\n\n<주요 획득처>\n- 배니부 상점 구매\n- 디그밍의 수수한/빛나는/화려한 답례품 오픈",
+        "itemExplainDetail": "요기를 추적하는 과정에서 떨어져 나온 유기체. 숙주에게 되돌아가려는듯 계속해서 움직이고 있다.\n\n<주요 사용처>\n- 요괴 섬멸 던전 입장\n\n<주요 획득처>\n- 배니부 상점 구매\n- 디그밍의 수수한/빛나는/화려한 답례품 오픈",
+        "itemFlavorText": "",
+        "fame": 0,
+        "setItemId": null,
+        "setItemName": null,
+        "obtainInfo": {
+          "dungeon": null,
+          "shop": [
+            {
+              "rows": [
+                {
+                  "name": "가브리엘의 비밀상점"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "29_setitem_search": {
+    "rows": []
+  },
+  "33_skills": {
+    "skills": [
+      {
+        "skillId": "eb71e1d82d92c7e1d40500a0dcd77aa6",
+        "name": "무즈 어퍼",
+        "requiredLevel": 1,
+        "type": "active"
+      },
+      {
+        "skillId": "da6e37c1e3f0e8867f70007d89c239ff",
+        "name": "빛의 친화",
+        "requiredLevel": 1,
+        "type": "passive"
+      },
+      {
+        "skillId": "27bade584bb42fef68148d3a0b72bace",
+        "name": "넨으로 느낀다",
+        "requiredLevel": 1,
+        "type": "passive"
+      },
+      {
+        "skillId": "fc7a3f4c2852c832a2f20af63d5d212f",
+        "name": "해머 킥",
+        "requiredLevel": 1,
+        "type": "active"
+      },
+      {
+        "skillId": "7822d6d52e10964a6755f142c666b494",
+        "name": "백스텝",
+        "requiredLevel": 1,
+        "type": "active"
+      },
+      {
+        "skillId": "5a56514f35cf0270ae8d6c65f8fefd78",
+        "name": "기본기 숙련",
+        "requiredLevel": 1,
+        "type": "passive"
+      },
+      {
+        "skillId": "ce26c6b69d02a440a81b552bec94f03b",
+        "name": "퀵 스탠딩",
+        "requiredLevel": 1,
+        "type": "active"
+      },
+      {
+        "skillId": "892ef624d8bf3d7fc045f84825fd6104",
+        "name": "방어구 마스터리",
+        "requiredLevel": 1,
+        "type": "passive"
+      },
+      {
+        "skillId": "4655101518604f874721b3cc249aae10",
+        "name": "로킥",
+        "requiredLevel": 5,
+        "type": "active"
+      },
+      {
+        "skillId": "f2fb27162beb0b87a7cb9af7900e95f2",
+        "name": "분신",
+        "requiredLevel": 5,
+        "type": "active"
+      },
+      {
+        "skillId": "cfacda0647b9a0f595df2c2aad30c18d",
+        "name": "수플렉스",
+        "requiredLevel": 5,
+        "type": "active"
+      },
+      {
+        "skillId": "9dda3f4a849dba1a288dd65e116860f2",
+        "name": "크라우치",
+        "requiredLevel": 10,
+        "type": "active"
+      },
+      {
+        "skillId": "c9664191611af31142e052dfaef84530",
+        "name": "철금강",
+        "requiredLevel": 10,
+        "type": "passive"
+      },
+      {
+        "skillId": "8f73f243041c2d27739fe7696f02bf9b",
+        "name": "헬터 스켈터",
+        "requiredLevel": 10,
+        "type": "active"
+      },
+      {
+        "skillId": "78bd107acd474518b606be1e4fd38239",
+        "name": "공중 밟기",
+        "requiredLevel": 10,
+        "type": "active"
+      },
+      {
+        "skillId": "dcb31a63ef58954f44ff2070c42a9a98",
+        "name": "호신연격",
+        "requiredLevel": 10,
+        "type": "active"
+      },
+      {
+        "skillId": "4f2e001e9a19eb7bae50ad1840dfb329",
+        "name": "금강쇄",
+        "requiredLevel": 10,
+        "type": "active"
+      },
+      {
+        "skillId": "2b340542e776818b78f3212af184bd6b",
+        "name": "백스텝 강화",
+        "requiredLevel": 10,
+        "type": "passive"
+      },
+      {
+        "skillId": "1fea5a626f15230237946a11a9d11582",
+        "name": "도약",
+        "requiredLevel": 10,
+        "type": "active"
+      },
+      {
+        "skillId": "45442bbbe33540b4deeec29437dae70c",
+        "name": "수플렉스 썬더",
+        "requiredLevel": 15,
+        "type": "passive"
+      },
+      {
+        "skillId": "01c3a2fb793d293a25ed8dc7a0d70c1a",
+        "name": "넨탄",
+        "requiredLevel": 15,
+        "type": "active"
+      },
+      {
+        "skillId": "a6c8f69107f8c4f5d1a0c7a57d000290",
+        "name": "카이",
+        "requiredLevel": 15,
+        "type": "active"
+      },
+      {
+        "skillId": "3fb8395ae3b81bd608e0c4223a8eb534",
+        "name": "기옥탄",
+        "requiredLevel": 15,
+        "type": "active"
+      },
+      {
+        "skillId": "04883563896fe1adac7505c6146b5f59",
+        "name": "태양의 숨결",
+        "requiredLevel": 20,
+        "type": "active"
+      },
+      {
+        "skillId": "f0cc2c950f3bdf4103c75fa496bcac34",
+        "name": "환영폭쇄",
+        "requiredLevel": 20,
+        "type": "passive"
+      },
+      {
+        "skillId": "c7bf7ccab413009640e65ca6f2f0263a",
+        "name": "축염포",
+        "requiredLevel": 20,
+        "type": "passive"
+      },
+      {
+        "skillId": "8572675ec6a1f50b6eff6a867376c2de",
+        "name": "호포",
+        "requiredLevel": 20,
+        "type": "passive"
+      },
+      {
+        "skillId": "fc1262c19f3d0477ee8eda47b8db8696",
+        "name": "크리티컬 히트",
+        "requiredLevel": 20,
+        "type": "passive"
+      },
+      {
+        "skillId": "dc1ffbe7bfcc6dc2be737951960da9ad",
+        "name": "넨 가드",
+        "requiredLevel": 25,
+        "type": "active"
+      },
+      {
+        "skillId": "4c5271b0ecce120d7fc113f377fae76f",
+        "name": "뇌전격",
+        "requiredLevel": 25,
+        "type": "active"
+      },
+      {
+        "skillId": "0ed3148658fe37b3336ccb718dc0fdb0",
+        "name": "나선의 넨",
+        "requiredLevel": 30,
+        "type": "active"
+      },
+      {
+        "skillId": "202edb928046f4fa6dedf6337377efd5",
+        "name": "질풍각",
+        "requiredLevel": 30,
+        "type": "active"
+      },
+      {
+        "skillId": "2e2b7efe778656690f9c8cb6e47c3932",
+        "name": "비룡나선파",
+        "requiredLevel": 30,
+        "type": "active"
+      },
+      {
+        "skillId": "9cb6f9ed646fa87f9b7680a42ce83d1a",
+        "name": "사자후",
+        "requiredLevel": 35,
+        "type": "active"
+      },
+      {
+        "skillId": "4224f9b0b8c7c903e9a1e0f9d9f6d04d",
+        "name": "기공장",
+        "requiredLevel": 40,
+        "type": "active"
+      },
+      {
+        "skillId": "1b1cfab062e0768bcc889e33e1f30dbf",
+        "name": "뇌명 : 사나운 빛의 넨수",
+        "requiredLevel": 40,
+        "type": "active"
+      },
+      {
+        "skillId": "dbf8b30c7057032af0d68fcfa289fdae",
+        "name": "광룡승천파",
+        "requiredLevel": 45,
+        "type": "active"
+      },
+      {
+        "skillId": "669f1428193f61f9d92c743b72438c4d",
+        "name": "흩날리는 천염화",
+        "requiredLevel": 48,
+        "type": "passive"
+      },
+      {
+        "skillId": "51a08fd0c90f0a5276cd552047fac93d",
+        "name": "넨화",
+        "requiredLevel": 50,
+        "type": "active"
+      },
+      {
+        "skillId": "2c9d9a36c8401bddff6cdb80fab8dc24",
+        "name": "궁극의 넨 가드",
+        "requiredLevel": 60,
+        "type": "passive"
+      },
+      {
+        "skillId": "5806440d21e7546d50007a5ba11f8024",
+        "name": "광룡십삼장",
+        "requiredLevel": 60,
+        "type": "active"
+      },
+      {
+        "skillId": "7cf17936a039b418660424125dc968d7",
+        "name": "태사자후",
+        "requiredLevel": 70,
+        "type": "active"
+      },
+      {
+        "skillId": "547ab2b2bd860d3e37355a9cfbc1077c",
+        "name": "낙화태염성",
+        "requiredLevel": 75,
+        "type": "passive"
+      },
+      {
+        "skillId": "a5fa08f5d509e6ff2ebc68856a470b5a",
+        "name": "섬광환격",
+        "requiredLevel": 75,
+        "type": "active"
+      },
+      {
+        "skillId": "506e7ed77d517419a6e1c437a2cedb17",
+        "name": "흡기공탄",
+        "requiredLevel": 80,
+        "type": "active"
+      },
+      {
+        "skillId": "5dc7008b12a459325b548b0715c6b73c",
+        "name": "광휘의 넨",
+        "requiredLevel": 85,
+        "type": "active"
+      },
+      {
+        "skillId": "5cac3411ccef1af333953e0ded5e942d",
+        "name": "의지를 담은 넨",
+        "requiredLevel": 95,
+        "type": "passive"
+      },
+      {
+        "skillId": "85f7c810ad503790e8626439fe936d56",
+        "name": "천뢰분신보",
+        "requiredLevel": 95,
+        "type": "active"
+      },
+      {
+        "skillId": "0c262dac3ec41ff79e359ada9c7a7faf",
+        "name": "찰나의 깨달음",
+        "requiredLevel": 95,
+        "type": "passive"
+      },
+      {
+        "skillId": "95103ae7c54eaedea3bbcf726520db6c",
+        "name": "내딛는 한걸음",
+        "requiredLevel": 95,
+        "type": "passive"
+      },
+      {
+        "skillId": "002cbdd9bfd0f0b970451ae8d48d029e",
+        "name": "염인환류파 - 천지개벽",
+        "requiredLevel": 100,
+        "type": "active"
+      },
+      {
+        "skillId": "c4a5b868f1e8e60cd1867a2cfab4a242",
+        "name": "각성의 실마리",
+        "requiredLevel": 100,
+        "type": "passive"
+      }
+    ]
+  },
+  "34_skill_detail": {
+    "name": "무즈 어퍼",
+    "type": "active",
+    "desc": "적을 높이 띄우는 어퍼컷. 발동 순간 슈퍼아머 판정이 있다.\n그래플러로 전직 시 독립 공격력으로 변경된다.",
+    "descDetail": "적을 높이 띄우는 어퍼컷. 발동 순간 슈퍼아머 판정이 있다.\n그래플러로 전직 시 독립 공격력으로 변경된다.",
+    "consumeItem": null,
+    "descSpecial": [
+      "[그래플러 전직 시]\n- 독립 공격력으로 적용"
+    ],
+    "maxLevel": 20,
+    "requiredLevel": 1,
+    "requiredLevelRange": 3,
+    "preRequiredSkill": null,
+    "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+    "jobName": "격투가(여)",
+    "jobGrowLevel": [],
+    "levelInfo": {
+      "optionDesc": "띄우기 공격력 : {value1}%\n띄우는 힘 비율 : {value2}%\n발동 속도 증가 : {value3}%",
+      "rows": [
+        {
+          "level": 1,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 191,
+            "value2": 131.4,
+            "value3": 10
+          }
+        },
+        {
+          "level": 2,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 221,
+            "value2": 132.8,
+            "value3": 11
+          }
+        },
+        {
+          "level": 3,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 252,
+            "value2": 134,
+            "value3": 12
+          }
+        },
+        {
+          "level": 4,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 282,
+            "value2": 135.4,
+            "value3": 13
+          }
+        },
+        {
+          "level": 5,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 313,
+            "value2": 136.5,
+            "value3": 14
+          }
+        },
+        {
+          "level": 6,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 343,
+            "value2": 138,
+            "value3": 15
+          }
+        },
+        {
+          "level": 7,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 374,
+            "value2": 139.1,
+            "value3": 16
+          }
+        },
+        {
+          "level": 8,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 404,
+            "value2": 140.5,
+            "value3": 17
+          }
+        },
+        {
+          "level": 9,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 435,
+            "value2": 141.7,
+            "value3": 18
+          }
+        },
+        {
+          "level": 10,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 465,
+            "value2": 143.1,
+            "value3": 19
+          }
+        },
+        {
+          "level": 11,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 495,
+            "value2": 147.7,
+            "value3": 20
+          }
+        },
+        {
+          "level": 12,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 526,
+            "value2": 152.2,
+            "value3": 21
+          }
+        },
+        {
+          "level": 13,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 556,
+            "value2": 157.1,
+            "value3": 22
+          }
+        },
+        {
+          "level": 14,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 587,
+            "value2": 162,
+            "value3": 23
+          }
+        },
+        {
+          "level": 15,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 617,
+            "value2": 166.5,
+            "value3": 24
+          }
+        },
+        {
+          "level": 16,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 648,
+            "value2": 171.4,
+            "value3": 26
+          }
+        },
+        {
+          "level": 17,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 678,
+            "value2": 176.2,
+            "value3": 27
+          }
+        },
+        {
+          "level": 18,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 709,
+            "value2": 180.8,
+            "value3": 28
+          }
+        },
+        {
+          "level": 19,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 739,
+            "value2": 185.7,
+            "value3": 29
+          }
+        },
+        {
+          "level": 20,
+          "consumeMp": null,
+          "coolTime": 2,
+          "castingTime": null,
+          "optionValue": {
+            "value1": 770,
+            "value2": 190.5,
+            "value3": 30
+          }
+        }
+      ]
+    }
+  },
+  "35_multi_skills": {
+    "rows": [
+      {
+        "name": "무즈 어퍼",
+        "type": "active",
+        "desc": "적을 높이 띄우는 어퍼컷. 발동 순간 슈퍼아머 판정이 있다.\n그래플러로 전직 시 독립 공격력으로 변경된다.",
+        "descDetail": "적을 높이 띄우는 어퍼컷. 발동 순간 슈퍼아머 판정이 있다.\n그래플러로 전직 시 독립 공격력으로 변경된다.",
+        "consumeItem": null,
+        "descSpecial": [
+          "[그래플러 전직 시]\n- 독립 공격력으로 적용"
+        ],
+        "maxLevel": 20,
+        "requiredLevel": 1,
+        "requiredLevelRange": 3,
+        "preRequiredSkill": null,
+        "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+        "jobName": "격투가(여)",
+        "jobGrowLevel": [],
+        "levelInfo": {
+          "optionDesc": "띄우기 공격력 : {value1}%\n띄우는 힘 비율 : {value2}%\n발동 속도 증가 : {value3}%",
+          "rows": [
+            {
+              "level": 1,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 191,
+                "value2": 131.4,
+                "value3": 10
+              }
+            },
+            {
+              "level": 2,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 221,
+                "value2": 132.8,
+                "value3": 11
+              }
+            },
+            {
+              "level": 3,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 252,
+                "value2": 134,
+                "value3": 12
+              }
+            },
+            {
+              "level": 4,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 282,
+                "value2": 135.4,
+                "value3": 13
+              }
+            },
+            {
+              "level": 5,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 313,
+                "value2": 136.5,
+                "value3": 14
+              }
+            },
+            {
+              "level": 6,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 343,
+                "value2": 138,
+                "value3": 15
+              }
+            },
+            {
+              "level": 7,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 374,
+                "value2": 139.1,
+                "value3": 16
+              }
+            },
+            {
+              "level": 8,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 404,
+                "value2": 140.5,
+                "value3": 17
+              }
+            },
+            {
+              "level": 9,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 435,
+                "value2": 141.7,
+                "value3": 18
+              }
+            },
+            {
+              "level": 10,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 465,
+                "value2": 143.1,
+                "value3": 19
+              }
+            },
+            {
+              "level": 11,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 495,
+                "value2": 147.7,
+                "value3": 20
+              }
+            },
+            {
+              "level": 12,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 526,
+                "value2": 152.2,
+                "value3": 21
+              }
+            },
+            {
+              "level": 13,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 556,
+                "value2": 157.1,
+                "value3": 22
+              }
+            },
+            {
+              "level": 14,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 587,
+                "value2": 162,
+                "value3": 23
+              }
+            },
+            {
+              "level": 15,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 617,
+                "value2": 166.5,
+                "value3": 24
+              }
+            },
+            {
+              "level": 16,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 648,
+                "value2": 171.4,
+                "value3": 26
+              }
+            },
+            {
+              "level": 17,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 678,
+                "value2": 176.2,
+                "value3": 27
+              }
+            },
+            {
+              "level": 18,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 709,
+                "value2": 180.8,
+                "value3": 28
+              }
+            },
+            {
+              "level": 19,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 739,
+                "value2": 185.7,
+                "value3": 29
+              }
+            },
+            {
+              "level": 20,
+              "consumeMp": null,
+              "coolTime": 2,
+              "castingTime": null,
+              "optionValue": {
+                "value1": 770,
+                "value2": 190.5,
+                "value3": 30
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

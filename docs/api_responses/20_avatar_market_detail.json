@@ -1,0 +1,40 @@
+{
+  "goodsNo": 4623365,
+  "title": "나이트 상급2부위",
+  "price": 1630000,
+  "jobs": [
+    {
+      "jobId": "0ee8fa5dc525c1a1f23fc6911e921e4a",
+      "jobName": "나이트"
+    }
+  ],
+  "soldDate": null,
+  "hashtag": [],
+  "emblem": {
+    "code": 100,
+    "name": "없음"
+  },
+  "avatarSet": false,
+  "avatarRarity": "상급",
+  "avatarCount": 2,
+  "avatar": [
+    {
+      "slotId": "PANTS",
+      "slotName": "하의 아바타",
+      "itemId": "662b551b8344caf54efc67b495f7c011",
+      "itemName": "운명의 아르카나 조화의 사제 하의[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "HP MAX 280 증가",
+      "emblems": []
+    },
+    {
+      "slotId": "SHOES",
+      "slotName": "신발 아바타",
+      "itemId": "ce01e32246e5d3c8d0e3c6fffef237fd",
+      "itemName": "운명의 아르카나 조화의 사제 슈즈[A타입]",
+      "itemRarity": "커먼",
+      "optionAbility": "힘 45 증가",
+      "emblems": []
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "fame": {
+    "min": 87753,
+    "max": 89753
+  },
+  "rows": [
+    {
+      "serverId": "casillas",
+      "characterId": "a50be5199828c496192bf02cf1c9f4e7",
+      "characterName": "야다몽",
+      "level": 115,
+      "jobId": "ddc49e9ad1ff72a00b53c6cff5b1e920",
+      "jobName": "도적",
+      "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+      "jobGrowName": "眞 로그",
+      "fame": 89753
+    },
+    {
+      "serverId": "casillas",
+      "characterId": "521cdd7ece638ff8a538a8e2ec5769ee",
+      "characterName": "Shine",
+      "level": 115,
+      "jobId": "afdf3b989339de478e85b614d274d1ef",
+      "jobName": "거너(남)",
+      "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+      "jobGrowName": "眞 런처",
+      "fame": 89418
+    },
+    {
+      "serverId": "casillas",
+      "characterId": "957f6c17f50e25e201121f3bb42f317e",
+      "characterName": "연동",
+      "level": 115,
+      "jobId": "41f1cdc2ff58bb5fdc287be0db2a8df3",
+      "jobName": "귀검사(남)",
+      "jobGrowId": "6d459bc74ba73ee4fe5cdc4655400193",
+      "jobGrowName": "眞 버서커",
+      "fame": 88604
+    },
+    {
+      "serverId": "casillas",
+      "characterId": "ea8f7a1ffa20eb522b215959d66a5c83",
+      "characterName": "수I",
+      "level": 115,
+      "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+      "jobName": "격투가(여)",
+      "jobGrowId": "37495b941da3b1661bc900e68ef3b2c6",
+      "jobGrowName": "眞 넨마스터",
+      "fame": 88351
+    },
+    {
+      "serverId": "casillas",
+      "characterId": "a99e49c16d29ca157e6cf3546b3a31d0",
+      "characterName": "이클립스",
+      "level": 115,
+      "jobId": "3909d0b188e9c95311399f776e331da5",
+      "jobName": "마법사(여)",
+      "jobGrowId": "618326026de1a1f1cfba5dbd0b8396e7",
+      "jobGrowName": "眞 소환사",
+      "fame": 88288
+    }
+  ]
+}

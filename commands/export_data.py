@@ -1,50 +1,31 @@
 import asyncio
-import base64
 import io
-import os
-import stat
-import tempfile
+import zipfile
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 import discord
-import paramiko
 from discord import app_commands
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side, numbers
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
-from core._sftp_auth import get_passphrase
 from core.db import get_all_watch_items, get_conn
 from core.logger import logger
 
 KST = timezone(timedelta(hours=9))
 
-SFTP_HOST = os.getenv("SFTP_HOST", "")
-SFTP_PORT = int(os.getenv("SFTP_PORT", "22"))
-SFTP_USER = os.getenv("SFTP_USER", "")
-SFTP_KEY_DATA = os.getenv("SFTP_KEY_DATA", "")
-SFTP_EXPORT_PATH = os.getenv("SFTP_EXPORT_PATH", "/home/jongwoo/ml-data")
+# 디스코드 일반 서버(부스트 1) 첨부 한도 25 MiB. 안전 마진 두고 24 MiB로 청크 크기 설정
+CHUNK_SIZE = 24 * 1024 * 1024
+MAX_FILES_PER_MESSAGE = 10
 
-# 환경변수의 키 데이터(base64)를 디코딩하여 임시 파일로 저장
-_key_file_path = None
-if SFTP_KEY_DATA:
-    _tmp = tempfile.NamedTemporaryFile(mode="wb", suffix=".key", delete=False)
-    _tmp.write(base64.b64decode(SFTP_KEY_DATA.strip()))
-    _tmp.close()
-    os.chmod(_tmp.name, stat.S_IRUSR)
-    _key_file_path = _tmp.name
-
-DATA_COLUMNS = ["sold_date", "unit_price", "price", "count"]
 DATA_HEADERS = ["거래일시", "단가", "총액", "수량"]
 
 HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
 HEADER_FILL = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
 HEADER_ALIGN = Alignment(horizontal="center", vertical="center")
 LINK_FONT = Font(color="0563C1", underline="single", size=11)
-THIN_BORDER = Border(
-    bottom=Side(style="thin", color="D9D9D9"),
-)
+THIN_BORDER = Border(bottom=Side(style="thin", color="D9D9D9"))
 NUM_FMT = '#,##0'
 
 
@@ -102,7 +83,7 @@ def _auto_width(ws, col_count: int, data_row_count: int):
     """컬럼 너비 자동 조정."""
     for col in range(1, col_count + 1):
         max_len = len(str(ws.cell(row=1, column=col).value or ""))
-        for row in range(2, min(data_row_count + 2, 102)):  # 최대 100행 샘플
+        for row in range(2, min(data_row_count + 2, 102)):
             val = ws.cell(row=row, column=col).value
             if val is not None:
                 max_len = max(max_len, len(str(val)))
@@ -122,7 +103,6 @@ def _write_data_sheet(ws, rows: list[dict]):
             row["count"],
         ])
 
-    # 숫자 컬럼 포맷
     for r in range(2, len(rows) + 2):
         for c in [2, 3, 4]:
             ws.cell(row=r, column=c).number_format = NUM_FMT
@@ -134,7 +114,6 @@ def _write_data_sheet(ws, rows: list[dict]):
 
 def _write_summary_sheet(ws, item_stats: list[dict], export_time: str, days: int | None):
     """요약 시트 작성 (통계 + 아이템별 시트 하이퍼링크)."""
-    # 제목
     ws.append(["경매장 시세 데이터 내보내기"])
     ws.cell(row=1, column=1).font = Font(bold=True, size=16)
     ws.merge_cells("A1:E1")
@@ -155,7 +134,6 @@ def _write_summary_sheet(ws, item_stats: list[dict], export_time: str, days: int
     ws.append(["아이템 종류", len(item_stats)])
     ws.cell(row=6, column=1).font = Font(bold=True)
 
-    # 아이템 목록 테이블
     ws.append([])
     ws.append(["아이템", "거래 건수", "평균 단가", "최저 단가", "최고 단가"])
     _style_header(ws, 5)
@@ -165,7 +143,6 @@ def _write_summary_sheet(ws, item_stats: list[dict], export_time: str, days: int
         row_num = header_row + 1 + i
         sheet_name = s["sheet_name"]
 
-        # 아이템 이름 + 시트 하이퍼링크
         cell = ws.cell(row=row_num, column=1, value=s["name"])
         cell.hyperlink = f"#'{sheet_name}'!A1"
         cell.font = LINK_FONT
@@ -181,7 +158,6 @@ def _write_summary_sheet(ws, item_stats: list[dict], export_time: str, days: int
 
 def _build_xlsx(rows: list[dict], export_time: str, days: int | None) -> bytes:
     """아이템별 시트 + 요약 시트가 포함된 Excel 파일 생성."""
-    # 아이템별 그룹핑
     grouped = defaultdict(list)
     for row in rows:
         name = row.get("item_name") or row.get("item_id", "unknown")
@@ -189,12 +165,9 @@ def _build_xlsx(rows: list[dict], export_time: str, days: int | None) -> bytes:
         grouped[name].append(row)
 
     wb = Workbook()
-
-    # 요약 시트 (첫 번째)
     ws_summary = wb.active
     ws_summary.title = "요약"
 
-    # 아이템별 시트 생성 + 통계 수집
     item_stats = []
     for name, item_rows in sorted(grouped.items()):
         sheet_name = _safe_sheet_name(name)
@@ -211,40 +184,24 @@ def _build_xlsx(rows: list[dict], export_time: str, days: int | None) -> bytes:
             "max_price": max(prices) if prices else 0,
         })
 
-    # 요약 시트 작성
     _write_summary_sheet(ws_summary, item_stats, export_time, days)
 
-    # 바이트로 변환
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()
 
 
-def _get_sftp_client():
-    """SFTP 클라이언트 연결."""
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    pkey = paramiko.Ed25519Key.from_private_key_file(_key_file_path, password=get_passphrase())
-    client.connect(SFTP_HOST, port=SFTP_PORT, username=SFTP_USER, pkey=pkey)
-    return client
+def _zip_xlsx(xlsx_bytes: bytes, inner_filename: str) -> bytes:
+    """xlsx 파일을 zip으로 압축."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
+        zf.writestr(inner_filename, xlsx_bytes)
+    return buf.getvalue()
 
 
-def _upload_file(file_bytes: bytes, filename: str):
-    """파일을 SFTP로 업로드."""
-    client = _get_sftp_client()
-    try:
-        sftp = client.open_sftp()
-        try:
-            try:
-                sftp.stat(SFTP_EXPORT_PATH)
-            except FileNotFoundError:
-                sftp.mkdir(SFTP_EXPORT_PATH)
-            with sftp.open(f"{SFTP_EXPORT_PATH}/{filename}", "wb") as f:
-                f.write(file_bytes)
-        finally:
-            sftp.close()
-    finally:
-        client.close()
+def _split_into_chunks(data: bytes, chunk_size: int) -> list[bytes]:
+    """바이트를 chunk_size 크기로 분할."""
+    return [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]
 
 
 def _format_size(size_bytes: int) -> str:
@@ -256,7 +213,10 @@ def _format_size(size_bytes: int) -> str:
     return f"{size_bytes / (1024 * 1024):.1f} MB"
 
 
-@app_commands.command(name="데이터내보내기", description="경매장 시세 데이터를 빌드서버로 내보냅니다")
+@app_commands.command(
+    name="데이터내보내기",
+    description="경매장 시세 데이터를 분할 압축해 디스코드에 업로드합니다"
+)
 @app_commands.describe(
     days="최근 N일 데이터만 (미입력 시 전체)",
     item="특정 아이템만 (미입력 시 전체)"
@@ -264,17 +224,9 @@ def _format_size(size_bytes: int) -> str:
 async def export_data(interaction: discord.Interaction,
                       days: int | None = None,
                       item: str | None = None):
-    if not all([SFTP_HOST, SFTP_USER, _key_file_path]):
-        await interaction.response.send_message(
-            "SFTP 접속 정보가 설정되지 않았습니다. 환경변수를 확인해주세요.",
-            ephemeral=True
-        )
-        return
-
     await interaction.response.defer(thinking=True)
 
     try:
-        # 아이템 이름 → ID 변환
         item_id = None
         item_display = "전체"
         if item:
@@ -292,7 +244,6 @@ async def export_data(interaction: discord.Interaction,
             item_id = matched[0]["item_id"]
             item_display = matched[0]["item_name"]
 
-        # 데이터 조회
         rows, total = await _fetch_export_data(item_id, days)
 
         if not rows:
@@ -303,14 +254,14 @@ async def export_data(interaction: discord.Interaction,
         timestamp = now.strftime("%Y%m%d_%H%M%S")
         export_time = now.strftime("%Y-%m-%d %H:%M:%S KST")
 
-        # Excel 생성
+        xlsx_filename = f"auction_data_{timestamp}.xlsx"
+        zip_filename = f"auction_data_{timestamp}.zip"
+
         xlsx_bytes = await asyncio.to_thread(_build_xlsx, rows, export_time, days)
-        filename = f"auction_data_{timestamp}.xlsx"
+        zip_bytes = await asyncio.to_thread(_zip_xlsx, xlsx_bytes, xlsx_filename)
+        chunks = _split_into_chunks(zip_bytes, CHUNK_SIZE)
 
-        # SFTP 업로드
-        await asyncio.to_thread(_upload_file, xlsx_bytes, filename)
-
-        size = _format_size(len(xlsx_bytes))
+        size = _format_size(len(zip_bytes))
         period = f"최근 {days}일" if days else "전체 기간"
         item_count = len(set(
             (r.get("item_name") or r.get("item_id")) for r in rows
@@ -318,26 +269,49 @@ async def export_data(interaction: discord.Interaction,
 
         embed = discord.Embed(
             title="데이터 내보내기 완료",
+            description=(
+                f"총 **{len(chunks)}개 파트**로 분할되었습니다. "
+                f"모든 파트를 받은 뒤 아래 명령으로 합쳐주세요.\n\n"
+                f"**Windows (cmd)**\n"
+                f"```\ncopy /b {zip_filename}.* {zip_filename}\n```\n"
+                f"**Linux / macOS**\n"
+                f"```\ncat {zip_filename}.* > {zip_filename}\n```\n"
+                f"합친 후 zip을 풀면 `{xlsx_filename}` 가 나옵니다."
+            ),
             color=discord.Color.green()
         )
         embed.add_field(name="아이템", value=item_display, inline=True)
         embed.add_field(name="기간", value=period, inline=True)
         embed.add_field(name="거래 건수", value=f"{total:,}건", inline=True)
-        embed.add_field(
-            name="파일",
-            value=f"`{SFTP_EXPORT_PATH}/{filename}`",
-            inline=False
-        )
-        embed.add_field(name="크기", value=size, inline=True)
+        embed.add_field(name="zip 크기", value=size, inline=True)
         embed.add_field(name="시트", value=f"요약 + {item_count}개 아이템", inline=True)
+        embed.add_field(name="분할 파트", value=f"{len(chunks)}개", inline=True)
         embed.set_footer(text=export_time)
 
         await interaction.followup.send(embed=embed)
-        logger.info(f"데이터 내보내기 완료: {filename} ({total}건, {size})")
 
-    except paramiko.AuthenticationException:
-        await interaction.followup.send("SFTP 인증 실패. 접속 정보를 확인해주세요.", ephemeral=True)
-        logger.error("데이터 내보내기 실패: SFTP 인증 실패")
+        total_batches = (len(chunks) + MAX_FILES_PER_MESSAGE - 1) // MAX_FILES_PER_MESSAGE
+        for batch_idx in range(total_batches):
+            start = batch_idx * MAX_FILES_PER_MESSAGE
+            batch = chunks[start:start + MAX_FILES_PER_MESSAGE]
+            files = [
+                discord.File(
+                    io.BytesIO(chunk),
+                    filename=f"{zip_filename}.{start + i + 1:03d}"
+                )
+                for i, chunk in enumerate(batch)
+            ]
+            content = (
+                f"파트 {start + 1}~{start + len(batch)} / {len(chunks)} "
+                f"(메시지 {batch_idx + 1}/{total_batches})"
+            )
+            await interaction.followup.send(content=content, files=files)
+
+        logger.info(
+            f"데이터 내보내기 완료: {zip_filename} "
+            f"({total}건, {size}, {len(chunks)}개 파트)"
+        )
+
     except Exception as e:
         await interaction.followup.send(
             "내보내기 중 오류가 발생했습니다. 로그를 확인해주세요.", ephemeral=True

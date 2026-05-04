@@ -1,0 +1,182 @@
+{
+  "rows": [
+    {
+      "itemId": "f11f806769afaae8b05be488e20b6109",
+      "itemName": "레어 머리 클론 아바타",
+      "itemRarity": "레어",
+      "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+      "itemType": "아바타",
+      "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+      "itemTypeDetail": "머리",
+      "itemAvailableLevel": 1,
+      "fame": 88,
+      "jobs": [
+        {
+          "jobId": "41f1cdc2ff58bb5fdc287be0db2a8df3",
+          "jobName": "귀검사(남)"
+        },
+        {
+          "jobId": "17e417b31686389eebff6d754c3401ea",
+          "jobName": "다크나이트"
+        }
+      ]
+    },
+    {
+      "itemId": "0756f89fac0518d4390f3e371adf7479",
+      "itemName": "레어 머리 클론 아바타",
+      "itemRarity": "레어",
+      "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+      "itemType": "아바타",
+      "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+      "itemTypeDetail": "머리",
+      "itemAvailableLevel": 1,
+      "fame": 88,
+      "jobs": [
+        {
+          "jobId": "a7a059ebe9e6054c0644b40ef316d6e9",
+          "jobName": "격투가(여)"
+        }
+      ]
+    },
+    {
+      "itemId": "28b2121af31d0badfe2727b18f6a1a42",
+      "itemName": "레어 머리 클론 아바타",
+      "itemRarity": "레어",
+      "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+      "itemType": "아바타",
+      "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+      "itemTypeDetail": "머리",
+      "itemAvailableLevel": 1,
+      "fame": 88,
+      "jobs": [
+        {
+          "jobId": "afdf3b989339de478e85b614d274d1ef",
+          "jobName": "거너(남)"
+        }
+      ]
+    },
+    {
+      "itemId": "ce23825527b4f7347306f3dea609b93b",
+      "itemName": "레어 머리 클론 아바타",
+      "itemRarity": "레어",
+      "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+      "itemType": "아바타",
+      "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+      "itemTypeDetail": "머리",
+      "itemAvailableLevel": 1,
+      "fame": 88,
+      "jobs": [
+        {
+          "jobId": "3909d0b188e9c95311399f776e331da5",
+          "jobName": "마법사(여)"
+        },
+        {
+          "jobId": "b522a95d819a5559b775deb9a490e49a",
+          "jobName": "크리에이터"
+        }
+      ]
+    },
+    {
+      "itemId": "bdfc86f4578d75421499b562c6fc1b84",
+      "itemName": "레어 머리 클론 아바타",
+      "itemRarity": "레어",
+      "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+      "itemType": "아바타",
+      "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+      "itemTypeDetail": "머리",
+      "itemAvailableLevel": 1,
+      "fame": 88,
+      "jobs": [
+        {
+          "jobId": "f6a4ad30555b99b499c07835f87ce522",
+          "jobName": "프리스트(남)"
+        }
+      ]
+    },
+    {
+      "itemId": "3b4a3b16a1d565d3d962a1a0df19c9f2",
+      "itemName": "레어 머리 클론 아바타",
+      "itemRarity": "레어",
+      "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+      "itemType": "아바타",
+      "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+      "itemTypeDetail": "머리",
+      "itemAvailableLevel": 1,
+      "fame": 88,
+      "jobs": [
+        {
+          "jobId": "944b9aab492c15a8474f96947ceeb9e4",
+          "jobName": "거너(여)"
+        }
+      ]
+    },
+    {
+      "itemId": "77aad2f36f6c344457df822719052b9b",
+      "itemName": "레어 머리 클론 아바타",
+      "itemRarity": "레어",
+      "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+      "itemType": "아바타",
+      "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+      "itemTypeDetail": "머리",
+      "itemAvailableLevel": 1,
+      "fame": 88,
+      "jobs": [
+        {
+          "jobId": "ddc49e9ad1ff72a00b53c6cff5b1e920",
+          "jobName": "도적"
+        }
+      ]
+    },
+    {
+      "itemId": "b293e475afe58fef47f6ff75aebf970b",
+      "itemName": "레어 머리 클론 아바타",
+      "itemRarity": "레어",
+      "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+      "itemType": "아바타",
+      "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+      "itemTypeDetail": "머리",
+      "itemAvailableLevel": 1,
+      "fame": 88,
+      "jobs": [
+        {
+          "jobId": "ca0f0e0e9e1d55b5f9955b03d9dd213c",
+          "jobName": "격투가(남)"
+        }
+      ]
+    },
+    {
+      "itemId": "9e501e48de955fcfea8a6baa1691bf59",
+      "itemName": "레어 머리 클론 아바타",
+      "itemRarity": "레어",
+      "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+      "itemType": "아바타",
+      "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+      "itemTypeDetail": "머리",
+      "itemAvailableLevel": 1,
+      "fame": 88,
+      "jobs": [
+        {
+          "jobId": "a5ccbaf5538981c6ef99b236c0a60b73",
+          "jobName": "마법사(남)"
+        }
+      ]
+    },
+    {
+      "itemId": "958e5f4d7605765a465a9b882e7250f5",
+      "itemName": "레어 머리 클론 아바타",
+      "itemRarity": "레어",
+      "itemTypeId": "5f41b95e310c27783378edde2d24c3dd",
+      "itemType": "아바타",
+      "itemTypeDetailId": "53a7580c73d4a699010616a7716b9781",
+      "itemTypeDetail": "머리",
+      "itemAvailableLevel": 1,
+      "fame": 88,
+      "jobs": [
+        {
+          "jobId": "ca0f0e0e9e1d55b5f9955b03d9dd213c",
+          "jobName": "격투가(남)"
+        }
+      ]
+    }
+  ]
+}

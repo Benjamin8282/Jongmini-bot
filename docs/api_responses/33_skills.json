@@ -1,0 +1,316 @@
+{
+  "skills": [
+    {
+      "skillId": "eb71e1d82d92c7e1d40500a0dcd77aa6",
+      "name": "무즈 어퍼",
+      "requiredLevel": 1,
+      "type": "active"
+    },
+    {
+      "skillId": "da6e37c1e3f0e8867f70007d89c239ff",
+      "name": "빛의 친화",
+      "requiredLevel": 1,
+      "type": "passive"
+    },
+    {
+      "skillId": "27bade584bb42fef68148d3a0b72bace",
+      "name": "넨으로 느낀다",
+      "requiredLevel": 1,
+      "type": "passive"
+    },
+    {
+      "skillId": "fc7a3f4c2852c832a2f20af63d5d212f",
+      "name": "해머 킥",
+      "requiredLevel": 1,
+      "type": "active"
+    },
+    {
+      "skillId": "7822d6d52e10964a6755f142c666b494",
+      "name": "백스텝",
+      "requiredLevel": 1,
+      "type": "active"
+    },
+    {
+      "skillId": "5a56514f35cf0270ae8d6c65f8fefd78",
+      "name": "기본기 숙련",
+      "requiredLevel": 1,
+      "type": "passive"
+    },
+    {
+      "skillId": "ce26c6b69d02a440a81b552bec94f03b",
+      "name": "퀵 스탠딩",
+      "requiredLevel": 1,
+      "type": "active"
+    },
+    {
+      "skillId": "892ef624d8bf3d7fc045f84825fd6104",
+      "name": "방어구 마스터리",
+      "requiredLevel": 1,
+      "type": "passive"
+    },
+    {
+      "skillId": "4655101518604f874721b3cc249aae10",
+      "name": "로킥",
+      "requiredLevel": 5,
+      "type": "active"
+    },
+    {
+      "skillId": "f2fb27162beb0b87a7cb9af7900e95f2",
+      "name": "분신",
+      "requiredLevel": 5,
+      "type": "active"
+    },
+    {
+      "skillId": "cfacda0647b9a0f595df2c2aad30c18d",
+      "name": "수플렉스",
+      "requiredLevel": 5,
+      "type": "active"
+    },
+    {
+      "skillId": "9dda3f4a849dba1a288dd65e116860f2",
+      "name": "크라우치",
+      "requiredLevel": 10,
+      "type": "active"
+    },
+    {
+      "skillId": "c9664191611af31142e052dfaef84530",
+      "name": "철금강",
+      "requiredLevel": 10,
+      "type": "passive"
+    },
+    {
+      "skillId": "8f73f243041c2d27739fe7696f02bf9b",
+      "name": "헬터 스켈터",
+      "requiredLevel": 10,
+      "type": "active"
+    },
+    {
+      "skillId": "78bd107acd474518b606be1e4fd38239",
+      "name": "공중 밟기",
+      "requiredLevel": 10,
+      "type": "active"
+    },
+    {
+      "skillId": "dcb31a63ef58954f44ff2070c42a9a98",
+      "name": "호신연격",
+      "requiredLevel": 10,
+      "type": "active"
+    },
+    {
+      "skillId": "4f2e001e9a19eb7bae50ad1840dfb329",
+      "name": "금강쇄",
+      "requiredLevel": 10,
+      "type": "active"
+    },
+    {
+      "skillId": "2b340542e776818b78f3212af184bd6b",
+      "name": "백스텝 강화",
+      "requiredLevel": 10,
+      "type": "passive"
+    },
+    {
+      "skillId": "1fea5a626f15230237946a11a9d11582",
+      "name": "도약",
+      "requiredLevel": 10,
+      "type": "active"
+    },
+    {
+      "skillId": "45442bbbe33540b4deeec29437dae70c",
+      "name": "수플렉스 썬더",
+      "requiredLevel": 15,
+      "type": "passive"
+    },
+    {
+      "skillId": "01c3a2fb793d293a25ed8dc7a0d70c1a",
+      "name": "넨탄",
+      "requiredLevel": 15,
+      "type": "active"
+    },
+    {
+      "skillId": "a6c8f69107f8c4f5d1a0c7a57d000290",
+      "name": "카이",
+      "requiredLevel": 15,
+      "type": "active"
+    },
+    {
+      "skillId": "3fb8395ae3b81bd608e0c4223a8eb534",
+      "name": "기옥탄",
+      "requiredLevel": 15,
+      "type": "active"
+    },
+    {
+      "skillId": "04883563896fe1adac7505c6146b5f59",
+      "name": "태양의 숨결",
+      "requiredLevel": 20,
+      "type": "active"
+    },
+    {
+      "skillId": "f0cc2c950f3bdf4103c75fa496bcac34",
+      "name": "환영폭쇄",
+      "requiredLevel": 20,
+      "type": "passive"
+    },
+    {
+      "skillId": "c7bf7ccab413009640e65ca6f2f0263a",
+      "name": "축염포",
+      "requiredLevel": 20,
+      "type": "passive"
+    },
+    {
+      "skillId": "8572675ec6a1f50b6eff6a867376c2de",
+      "name": "호포",
+      "requiredLevel": 20,
+      "type": "passive"
+    },
+    {
+      "skillId": "fc1262c19f3d0477ee8eda47b8db8696",
+      "name": "크리티컬 히트",
+      "requiredLevel": 20,
+      "type": "passive"
+    },
+    {
+      "skillId": "dc1ffbe7bfcc6dc2be737951960da9ad",
+      "name": "넨 가드",
+      "requiredLevel": 25,
+      "type": "active"
+    },
+    {
+      "skillId": "4c5271b0ecce120d7fc113f377fae76f",
+      "name": "뇌전격",
+      "requiredLevel": 25,
+      "type": "active"
+    },
+    {
+      "skillId": "0ed3148658fe37b3336ccb718dc0fdb0",
+      "name": "나선의 넨",
+      "requiredLevel": 30,
+      "type": "active"
+    },
+    {
+      "skillId": "202edb928046f4fa6dedf6337377efd5",
+      "name": "질풍각",
+      "requiredLevel": 30,
+      "type": "active"
+    },
+    {
+      "skillId": "2e2b7efe778656690f9c8cb6e47c3932",
+      "name": "비룡나선파",
+      "requiredLevel": 30,
+      "type": "active"
+    },
+    {
+      "skillId": "9cb6f9ed646fa87f9b7680a42ce83d1a",
+      "name": "사자후",
+      "requiredLevel": 35,
+      "type": "active"
+    },
+    {
+      "skillId": "4224f9b0b8c7c903e9a1e0f9d9f6d04d",
+      "name": "기공장",
+      "requiredLevel": 40,
+      "type": "active"
+    },
+    {
+      "skillId": "1b1cfab062e0768bcc889e33e1f30dbf",
+      "name": "뇌명 : 사나운 빛의 넨수",
+      "requiredLevel": 40,
+      "type": "active"
+    },
+    {
+      "skillId": "dbf8b30c7057032af0d68fcfa289fdae",
+      "name": "광룡승천파",
+      "requiredLevel": 45,
+      "type": "active"
+    },
+    {
+      "skillId": "669f1428193f61f9d92c743b72438c4d",
+      "name": "흩날리는 천염화",
+      "requiredLevel": 48,
+      "type": "passive"
+    },
+    {
+      "skillId": "51a08fd0c90f0a5276cd552047fac93d",
+      "name": "넨화",
+      "requiredLevel": 50,
+      "type": "active"
+    },
+    {
+      "skillId": "2c9d9a36c8401bddff6cdb80fab8dc24",
+      "name": "궁극의 넨 가드",
+      "requiredLevel": 60,
+      "type": "passive"
+    },
+    {
+      "skillId": "5806440d21e7546d50007a5ba11f8024",
+      "name": "광룡십삼장",
+      "requiredLevel": 60,
+      "type": "active"
+    },
+    {
+      "skillId": "7cf17936a039b418660424125dc968d7",
+      "name": "태사자후",
+      "requiredLevel": 70,
+      "type": "active"
+    },
+    {
+      "skillId": "547ab2b2bd860d3e37355a9cfbc1077c",
+      "name": "낙화태염성",
+      "requiredLevel": 75,
+      "type": "passive"
+    },
+    {
+      "skillId": "a5fa08f5d509e6ff2ebc68856a470b5a",
+      "name": "섬광환격",
+      "requiredLevel": 75,
+      "type": "active"
+    },
+    {
+      "skillId": "506e7ed77d517419a6e1c437a2cedb17",
+      "name": "흡기공탄",
+      "requiredLevel": 80,
+      "type": "active"
+    },
+    {
+      "skillId": "5dc7008b12a459325b548b0715c6b73c",
+      "name": "광휘의 넨",
+      "requiredLevel": 85,
+      "type": "active"
+    },
+    {
+      "skillId": "5cac3411ccef1af333953e0ded5e942d",
+      "name": "의지를 담은 넨",
+      "requiredLevel": 95,
+      "type": "passive"
+    },
+    {
+      "skillId": "85f7c810ad503790e8626439fe936d56",
+      "name": "천뢰분신보",
+      "requiredLevel": 95,
+      "type": "active"
+    },
+    {
+      "skillId": "0c262dac3ec41ff79e359ada9c7a7faf",
+      "name": "찰나의 깨달음",
+      "requiredLevel": 95,
+      "type": "passive"
+    },
+    {
+      "skillId": "95103ae7c54eaedea3bbcf726520db6c",
+      "name": "내딛는 한걸음",
+      "requiredLevel": 95,
+      "type": "passive"
+    },
+    {
+      "skillId": "002cbdd9bfd0f0b970451ae8d48d029e",
+      "name": "염인환류파 - 천지개벽",
+      "requiredLevel": 100,
+      "type": "active"
+    },
+    {
+      "skillId": "c4a5b868f1e8e60cd1867a2cfab4a242",
+      "name": "각성의 실마리",
+      "requiredLevel": 100,
+      "type": "passive"
+    }
+  ]
+}
