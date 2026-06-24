@@ -5,3 +5,13 @@ __pycache__/
 logs/
 data/
 *.pyc
+
+# 자캐 AI 커미션 PoC 생성물 (Phase 0 — 커밋 제외)
+poc_output/
+
+# 자캐 AI 커미션 PoC 스크립트 (Phase 0 검증용 — 봇 본체 아님, 로컬 보존)
+dnf_commission_poc.py
+poc_*.py
+
+# 기타
+bash.exe.stackdump
