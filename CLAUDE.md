@@ -39,6 +39,7 @@ pip install -r requirements.txt
   - `models.py` - 서버 매핑, 희귀도 가중치 등 상수
   - `time_utils.py` - KST 기준 기간 계산 유틸리티
   - `logger.py` - 로깅 설정 (1MB 로테이션, 14일 보존)
+  - `bedrock.py` - AWS Bedrock 자캐 AI 커미션 (Claude Sonnet 4 묘사 + Stable Image Ultra 생성, boto3 싱글톤 + asyncio.to_thread + Semaphore)
 - **`tasks/`**: 백그라운드 태스크 (asyncio.create_task로 실행)
   - `notify_items.py` - 20초 간격 타임라인 모니터링 및 득템 알림 → **아이템 채널**
   - `daily/weekly/monthly_aggregation.py` - 정기 통계 집계 (KST 06:00 기준) → **아이템 채널**
@@ -77,6 +78,7 @@ pip install -r requirements.txt
 | 활동지수 | `/활동지수` | 활동지수 차트 조회 | `activity_basket.py` |
 | 활동지수 | `/던스피` | DUNSPY 종합지수 차트 | `dunspy.py` |
 | 설정 | `/출력채널` | 아이템/경제 알림 출력 채널 분리 설정 | `set_output_channel.py` |
+| AI | `/자캐커미션` | 등록 캐릭터를 AI 일러스트로 재해석 (장면연출/화풍변환) | `character_commission.py` |
 
 ### 알림 채널 구조
 
@@ -84,6 +86,14 @@ pip install -r requirements.txt
 - **아이템 채널** (`item_channel_id`): 득템 알림, 일간/주간/월간 랭킹
 - **경제 채널** (`economy_channel_id`): 시세 급등/급락 알림, 모닝 브리핑
 - 타입별 채널 미설정 시 기존 `channel_id`로 폴백 (하위 호환)
+
+### 자캐 AI 커미션 (`/자캐커미션`)
+
+AWS Bedrock 기반 캐릭터 일러스트화 (`core/bedrock.py`). `BEDROCK_COMMISSION_ENABLED=true` 일 때만 커맨드 등록.
+- **장면연출**: Claude Sonnet 4 묘사 + 사용자 장면 → Stable Image Ultra text2image. 자세/배경 자유, 화풍 반실사(painterly) 고정.
+- **화풍변환**: 원본 렌더를 알파 바운딩박스로 타이트 크롭 → Ultra img2img. 자세 원본 고정, 화풍 선택(반실사 s0.5 / 애니 s0.5 / 수채화 s0.6+묘사 앵커).
+- 제한: 본인 등록 캐릭터만, 일 3장, 쿨다운 60초. 결과 embed에 AI 생성·출처(© NEOPLE) 고지.
+- **Bedrock 한계(2모드 분리 이유)**: text2image는 화풍을 못 바꿈(painterly 고정), img2img는 자세를 못 바꿈(원본 고정). style_preset은 Ultra/Core 전부 미지원. 동시 충족 불가라 모드를 나눔.
 
 ### 핵심 패턴
 
@@ -133,12 +143,14 @@ pip install -r requirements.txt
 | `auction_price_history` | 경매장 거래 가격 이력 |
 | `user_alert_settings` | 사용자별 DM 시세 알림 설정 |
 | `activity_basket` | 활동지수 바스켓 아이템 |
+| `commission_daily_usage` | 자캐 커미션 사용자별 일일 사용량/쿨다운 |
 
 ## Environment Variables (.env)
 
 - `DISCORD_TOKEN` - 디스코드 봇 토큰
 - `NEOPLE_API_KEY` - DNF 오픈 API 키
 - `GUILD_ID` - 디스코드 길드 ID
+- `BEDROCK_COMMISSION_ENABLED` - 자캐 AI 커미션 활성 토글 (`true`일 때만 `/자캐커미션` 등록, 기본 비활성). AWS 자격증명(`~/.aws/credentials` 또는 표준 체인) + `bedrock:InvokeModel` 권한 필요. 모델/리전은 `BEDROCK_DESCRIBE_MODEL_ID`/`BEDROCK_IMAGE_MODEL_ID` 등으로 override 가능
 
 ## Git Workflow & 배포
 

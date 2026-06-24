@@ -261,6 +261,16 @@ async def init_db():
             )
         except Exception:
             pass
+        # 자캐 AI 커미션 일일 사용량 추적 테이블 (일 N장 제한 + 쿨다운)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS commission_daily_usage (
+                user_id INTEGER NOT NULL,
+                date TEXT NOT NULL,
+                count INTEGER DEFAULT 0,
+                last_used TEXT,
+                PRIMARY KEY (user_id, date)
+            )
+        """)
         await conn.commit()
         logger.info("DB 초기화 완료")
     except Exception as e:
@@ -1253,3 +1263,46 @@ async def upsert_mist_assimilation(
         await conn.commit()
     except Exception as e:
         logger.error(f"안개서약 저장 실패: {e}")
+
+
+# ----- 자캐 AI 커미션 사용량 -----
+
+async def get_commission_usage(user_id: int, date: str) -> dict:
+    """사용자의 당일 커미션 사용량 조회. {'count': int, 'last_used': str|None} 반환."""
+    try:
+        conn = await get_conn()
+        cursor = await conn.execute(
+            "SELECT count, last_used FROM commission_daily_usage WHERE user_id = ? AND date = ?",
+            (user_id, date)
+        )
+        row = await cursor.fetchone()
+        if row:
+            return {"count": row["count"], "last_used": row["last_used"]}
+        return {"count": 0, "last_used": None}
+    except Exception as e:
+        logger.error(f"커미션 사용량 조회 실패: {e}")
+        return {"count": 0, "last_used": None}
+
+
+async def reserve_commission_usage(user_id: int, date: str, now_iso: str, limit: int) -> bool:
+    """일일 한도 미만일 때만 원자적으로 +1 선점. 성공 시 True, 한도 초과 시 False.
+
+    체크-기록을 단일 SQL(INSERT ... ON CONFLICT ... WHERE count < limit RETURNING)로
+    처리해 동시 요청의 한도 우회(TOCTOU race)를 방지한다. 생성 시작 전에 호출한다.
+    """
+    try:
+        conn = await get_conn()
+        cursor = await conn.execute("""
+            INSERT INTO commission_daily_usage (user_id, date, count, last_used)
+            VALUES (?, ?, 1, ?)
+            ON CONFLICT(user_id, date) DO UPDATE
+                SET count = count + 1, last_used = excluded.last_used
+                WHERE count < ?
+            RETURNING count
+        """, (user_id, date, now_iso, limit))
+        row = await cursor.fetchone()
+        await conn.commit()
+        return row is not None  # 신규 INSERT 또는 한도 미만 UPDATE 성공 시에만 row 반환
+    except Exception as e:
+        logger.error(f"커미션 사용량 선점 실패: {e}")
+        return False
