@@ -89,7 +89,8 @@ async def _run_generation(send, character: dict, mode: str, style_key: str,
         color=discord.Color.purple(),
     )
     embed.set_image(url="attachment://commission.png")
-    embed.set_footer(text="AI 생성 · 비공식 팬 콘텐츠 · 원본 캐릭터 © NEOPLE")
+    embed.set_footer(
+        text="AI 생성 · 비공식 팬 콘텐츠 · 원본 © NEOPLE · 결과가 아쉬우면 다시 시도(매번 다른 그림)")
     await send(embed=embed, file=file)
     logger.info(f"커미션 전송 완료: 사용자={user_id}, 캐릭터={char_name}, 모드={mode}")
 
