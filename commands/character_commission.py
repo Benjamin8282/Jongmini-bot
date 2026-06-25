@@ -1,11 +1,10 @@
-"""/자캐커미션 — 등록한 DNF 캐릭터를 AWS Bedrock 으로 AI 일러스트화.
+"""/자캐커미션(화풍변환) · /자캐장면커미션(장면연출) — DNF 캐릭터 AI 일러스트화.
 
-2가지 모드:
-  · 장면연출(scene): 사용자가 입력한 장면/배경으로 자유 연출(화풍 반실사 고정).
-  · 화풍변환(style): 원본 자세를 유지한 채 화풍만 변환(애니/수채화/반실사).
+  · /자캐커미션      = 화풍변환(style): 원본 자세 유지, 화풍 선택(애니/수채화/반실사).
+  · /자캐장면커미션  = 장면연출(scene): 사용자가 입력한 장면/배경으로 자유 연출(반실사).
 
+모드별로 필요한 입력만 노출하려고 커맨드를 분리(discord 는 옵션 동적 숨김 불가).
 제한: 본인 등록 캐릭터만, 일 3장, 쿨다운 60초. 결과에 AI 생성·출처 고지.
-사용량은 생성 시작 전 원자적 선점(reserve)으로 한도 우회를 방지한다.
 """
 from io import BytesIO
 from datetime import datetime
@@ -30,10 +29,6 @@ SCENE_MAX_LEN = 300
 
 KEY_TO_KR = {"painterly": "반실사", "anime": "애니", "watercolor": "수채화"}
 
-MODE_CHOICES = [
-    app_commands.Choice(name="장면연출 (자세·배경 자유, 반실사)", value="scene"),
-    app_commands.Choice(name="화풍변환 (원본 자세 유지, 화풍 선택)", value="style"),
-]
 STYLE_CHOICES = [
     app_commands.Choice(name="반실사", value="painterly"),
     app_commands.Choice(name="애니", value="anime"),
@@ -45,7 +40,7 @@ async def _run_generation(send, character: dict, mode: str, style_key: str,
                           scene: str | None, user_id: int):
     """이미지 fetch → 한도 원자 선점 → 모드별 생성 → 결과 embed 전송.
 
-    send: 결과를 보낼 콜러블(interaction.followup.send).
+    send: 결과를 보낼 콜러블(interaction.followup.send). mode: "scene" | "style".
     """
     char_name = character["character_name"]
 
@@ -161,61 +156,31 @@ async def _character_autocomplete(interaction: Interaction,
     ]
 
 
-@app_commands.command(name="자캐커미션", description="등록한 DNF 캐릭터를 AI 일러스트로 재해석합니다")
-@app_commands.describe(
-    mode="모드 선택 (장면연출 / 화풍변환)",
-    style="화풍변환 모드의 화풍 (기본: 반실사)",
-    scene="장면연출 모드의 장면 묘사 (영문 권장, 예: sitting on a throne)",
-    character="대상 캐릭터 이름 (자동완성 — 미지정 시 등록 캐릭터에서 선택)",
-)
-@app_commands.choices(mode=MODE_CHOICES, style=STYLE_CHOICES)
-@app_commands.autocomplete(character=_character_autocomplete)
-async def character_commission(
-    interaction: Interaction,
-    mode: app_commands.Choice[str],
-    style: app_commands.Choice[str] = None,
-    scene: str = None,
-    character: str = None,
-):
-    user_id = interaction.user.id
-    logger.info(f"/자캐커미션 호출: 사용자={user_id}, 모드={mode.value}")
-    # noinspection PyUnresolvedReferences
-    await interaction.response.defer(thinking=True)
-
-    mode_val = mode.value
-    style_key = style.value if style else "painterly"
-
-    # 모드별 필수 입력/길이 검증
-    if mode_val == "scene":
-        if not scene:
-            await interaction.followup.send(
-                "장면연출 모드는 `scene`을 입력해야 해요. 예: `sitting on a throne in a grand castle`",
-                ephemeral=True)
-            return
-        if len(scene) > SCENE_MAX_LEN:
-            await interaction.followup.send(
-                f"`scene`이 너무 길어요. {SCENE_MAX_LEN}자 이내로 입력해 주세요.", ephemeral=True)
-            return
-
-    # 사용량/쿨다운 빠른 체크 (UX용 조기 거부 — 최종 게이트는 _run_generation 의 reserve)
+async def _check_cooldown_and_limit(interaction: Interaction, user_id: int) -> bool:
+    """사용량/쿨다운 빠른 체크(UX용 조기 거부). 막히면 메시지 보내고 True, 통과면 False."""
     now = datetime.now(KST)
     today = now.strftime("%Y-%m-%d")
     usage = await get_commission_usage(user_id, today)
     if usage["count"] >= DAILY_LIMIT:
         await interaction.followup.send(
             f"오늘은 이미 {DAILY_LIMIT}장을 모두 사용했어요. 내일 다시 시도해 주세요.", ephemeral=True)
-        return
+        return True
     if usage["last_used"]:
         try:
             elapsed = (now - datetime.fromisoformat(usage["last_used"])).total_seconds()
             if elapsed < COOLDOWN_SEC:
                 await interaction.followup.send(
                     f"잠시만요! {int(COOLDOWN_SEC - elapsed)}초 후에 다시 시도해 주세요.", ephemeral=True)
-                return
+                return True
         except (ValueError, TypeError):
             pass
+    return False
 
-    # 대상 캐릭터 결정
+
+async def _resolve_and_generate(interaction: Interaction, mode_val: str,
+                                style_key: str, scene: str | None, character: str | None):
+    """대상 캐릭터 결정 → 생성 또는 선택 UI 폴백. 두 커맨드 공유."""
+    user_id = interaction.user.id
     characters = await get_characters_by_user(user_id)
     if not characters:
         await interaction.followup.send("먼저 `/등록`으로 캐릭터를 등록해 주세요.", ephemeral=True)
@@ -241,3 +206,50 @@ async def character_commission(
             msg = f"'{character}'을(를) 정확히 찾지 못했어요. 아래 목록에서 선택해 주세요."
         view = CommissionCharacterSelect(characters, user_id, mode_val, style_key, scene)
         view.message = await interaction.followup.send(msg, view=view, ephemeral=True)
+
+
+@app_commands.command(name="자캐커미션", description="등록한 DNF 캐릭터를 AI로 화풍 변환합니다 (원본 자세 유지)")
+@app_commands.describe(
+    style="화풍 선택 (기본: 반실사)",
+    character="대상 캐릭터 이름 (자동완성 — 미지정 시 등록 캐릭터에서 선택)",
+)
+@app_commands.choices(style=STYLE_CHOICES)
+@app_commands.autocomplete(character=_character_autocomplete)
+async def character_commission(
+    interaction: Interaction,
+    style: app_commands.Choice[str] = None,
+    character: str = None,
+):
+    user_id = interaction.user.id
+    logger.info(f"/자캐커미션(화풍변환) 호출: 사용자={user_id}")
+    # noinspection PyUnresolvedReferences
+    await interaction.response.defer(thinking=True)
+    if await _check_cooldown_and_limit(interaction, user_id):
+        return
+    style_key = style.value if style else "painterly"
+    await _resolve_and_generate(interaction, "style", style_key, None, character)
+
+
+@app_commands.command(name="자캐장면커미션",
+                      description="등록한 DNF 캐릭터를 원하는 장면/배경으로 AI 연출합니다 (반실사)")
+@app_commands.describe(
+    scene="장면 묘사 (영문 권장, 예: sitting on a throne in a castle)",
+    character="대상 캐릭터 이름 (자동완성 — 미지정 시 등록 캐릭터에서 선택)",
+)
+@app_commands.autocomplete(character=_character_autocomplete)
+async def character_scene_commission(
+    interaction: Interaction,
+    scene: str,
+    character: str = None,
+):
+    user_id = interaction.user.id
+    logger.info(f"/자캐장면커미션(장면연출) 호출: 사용자={user_id}")
+    # noinspection PyUnresolvedReferences
+    await interaction.response.defer(thinking=True)
+    if len(scene) > SCENE_MAX_LEN:
+        await interaction.followup.send(
+            f"`scene`이 너무 길어요. {SCENE_MAX_LEN}자 이내로 입력해 주세요.", ephemeral=True)
+        return
+    if await _check_cooldown_and_limit(interaction, user_id):
+        return
+    await _resolve_and_generate(interaction, "scene", "painterly", scene, character)
