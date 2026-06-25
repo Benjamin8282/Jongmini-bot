@@ -52,20 +52,20 @@ STYLE_RECIPES = {
     "anime": {
         "prompt": ("anime cel-shaded illustration, clean bold lineart, flat vibrant colors, "
                    "2D anime key visual, studio anime art"),
-        "strength": 0.5,
+        "strength": 0.4,  # 0.5→0.4: 원본 포즈/의상 충실 보존(해부학 붕괴·의상 오탐 방지). 화풍 약화 수용.
         "use_anchor": False,  # 앵커는 정체성↑·화풍↓ → anime 는 화풍 우선이라 생략
         "negative_extra": "3d render, cgi, photorealistic, glossy, realistic skin, photograph",
     },
     "watercolor": {
         "prompt": ("traditional watercolor painting, visible wet brush strokes, paper texture, "
                    "soft pigment bleeding, hand-painted, muted pastel palette"),
-        "strength": 0.6,
+        "strength": 0.5,  # 0.6→0.5: 해부학 붕괴 방지 우선(수채 화풍 발현 약화 수용)
         "use_anchor": True,  # watercolor 는 robust → 묘사 앵커로 정체성 보강
         "negative_extra": "3d render, cgi, photorealistic, glossy, sharp vector lines",
     },
     "painterly": {
         "prompt": "semi-realistic painterly digital art, soft detailed rendering, artstation",
-        "strength": 0.5,
+        "strength": 0.4,  # 0.5→0.4: 해부학 붕괴 방지
         "use_anchor": False,
         "negative_extra": "",
     },
@@ -74,7 +74,11 @@ STYLE_RECIPES = {
 # 장면연출(text2image)의 고정 화풍 = Ultra 네이티브(유일하게 안정적)
 SCENE_STYLE = "semi-realistic painterly digital art, soft detailed rendering, artstation"
 
-BASE_NEGATIVE = "blurry, low quality, pixelated, sprite, jpeg artifacts, deformed, text, watermark"
+BASE_NEGATIVE = (
+    "blurry, low quality, pixelated, sprite, jpeg artifacts, deformed, text, watermark, "
+    "extra arms, extra limbs, extra hands, missing limbs, mutated hands, malformed limbs, "
+    "fused fingers, too many fingers, bad anatomy, disfigured"
+)
 
 # 캐릭터 외형 자동 묘사 프롬프트(배경·포즈·캔버스 제외, 외형 키워드만)
 DESC_PROMPT = (
