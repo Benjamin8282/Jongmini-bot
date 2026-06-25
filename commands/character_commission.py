@@ -146,14 +146,30 @@ class CommissionCharacterSelect(ui.View):
         self.stop()
 
 
+async def _character_autocomplete(interaction: Interaction,
+                                  current: str) -> list[app_commands.Choice[str]]:
+    """character 파라미터 자동완성 — 본인 등록 캐릭터 중 입력어를 포함하는 항목을 제시."""
+    try:
+        chars = await get_characters_by_user(interaction.user.id)
+    except Exception:
+        return []
+    cur = current.strip().lower()
+    matched = [c for c in chars if cur in c["character_name"].lower()] if cur else chars
+    return [
+        app_commands.Choice(name=c["character_name"], value=c["character_name"])
+        for c in matched[:25]
+    ]
+
+
 @app_commands.command(name="자캐커미션", description="등록한 DNF 캐릭터를 AI 일러스트로 재해석합니다")
 @app_commands.describe(
     mode="모드 선택 (장면연출 / 화풍변환)",
     style="화풍변환 모드의 화풍 (기본: 반실사)",
     scene="장면연출 모드의 장면 묘사 (영문 권장, 예: sitting on a throne)",
-    character="대상 캐릭터 이름 (미지정 시 등록 캐릭터에서 선택)",
+    character="대상 캐릭터 이름 (자동완성 — 미지정 시 등록 캐릭터에서 선택)",
 )
 @app_commands.choices(mode=MODE_CHOICES, style=STYLE_CHOICES)
+@app_commands.autocomplete(character=_character_autocomplete)
 async def character_commission(
     interaction: Interaction,
     mode: app_commands.Choice[str],
@@ -207,17 +223,21 @@ async def character_commission(
 
     target = None
     if character:
-        target = next((c for c in characters if c["character_name"] == character), None)
+        cs = character.strip()
+        # 정확 일치 → 공백/대소문자 무시 폴백
+        target = next((c for c in characters if c["character_name"] == cs), None)
         if not target:
-            await interaction.followup.send(
-                f"등록된 캐릭터 중 '{character}'을(를) 찾지 못했어요.", ephemeral=True)
-            return
+            target = next(
+                (c for c in characters if c["character_name"].strip().lower() == cs.lower()), None)
     elif len(characters) == 1:
         target = characters[0]
 
     if target:
         await _run_generation(interaction.followup.send, target, mode_val, style_key, scene, user_id)
     else:
+        # 이름 매칭 실패 또는 여러 캐릭터 → 선택 UI 폴백(막다른 "찾지 못했어요" 제거)
+        msg = "커미션할 캐릭터를 선택하세요."
+        if character:
+            msg = f"'{character}'을(를) 정확히 찾지 못했어요. 아래 목록에서 선택해 주세요."
         view = CommissionCharacterSelect(characters, user_id, mode_val, style_key, scene)
-        view.message = await interaction.followup.send(
-            "커미션할 캐릭터를 선택하세요.", view=view, ephemeral=True)
+        view.message = await interaction.followup.send(msg, view=view, ephemeral=True)
