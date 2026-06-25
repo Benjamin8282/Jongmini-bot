@@ -78,7 +78,8 @@ pip install -r requirements.txt
 | 활동지수 | `/활동지수` | 활동지수 차트 조회 | `activity_basket.py` |
 | 활동지수 | `/던스피` | DUNSPY 종합지수 차트 | `dunspy.py` |
 | 설정 | `/출력채널` | 아이템/경제 알림 출력 채널 분리 설정 | `set_output_channel.py` |
-| AI | `/자캐커미션` | 등록 캐릭터를 AI 일러스트로 재해석 (장면연출/화풍변환) | `character_commission.py` |
+| AI | `/자캐커미션` | 등록 캐릭터를 AI로 화풍 변환 (원본 자세 유지) | `character_commission.py` |
+| AI | `/자캐장면커미션` | 등록 캐릭터를 원하는 장면으로 AI 연출 (반실사) | `character_commission.py` |
 
 ### 알림 채널 구조
 
@@ -90,8 +91,9 @@ pip install -r requirements.txt
 ### 자캐 AI 커미션 (`/자캐커미션`)
 
 AWS Bedrock 기반 캐릭터 일러스트화 (`core/bedrock.py`). `BEDROCK_COMMISSION_ENABLED=true` 일 때만 커맨드 등록.
-- **장면연출**: Claude Sonnet 4 묘사 + 사용자 장면 → Stable Image Ultra text2image. 자세/배경 자유, 화풍 반실사(painterly) 고정.
-- **화풍변환**: 원본 렌더를 알파 바운딩박스로 타이트 크롭 → Ultra img2img. 자세 원본 고정, 화풍 선택(반실사/애니 s0.45 / 수채화 s0.6+묘사 앵커).
+- **장면연출**(`/자캐장면커미션`): Claude Sonnet 4 묘사 + 사용자 장면 → Stable Image Ultra text2image. 자세/배경 자유, 화풍 반실사(painterly) 고정.
+- **화풍변환**(`/자캐커미션`): 원본 렌더를 알파 바운딩박스로 타이트 크롭 → Ultra img2img. 자세 원본 고정, 화풍 선택(반실사/애니 s0.45 / 수채화 s0.6+묘사 앵커).
+- 모드별 입력만 노출하려고 커맨드를 2개로 분리(discord는 옵션 동적 숨김 불가).
 - **해부학 게이트(self-correcting)**: 생성 후 Claude vision(`judge_anatomy`)이 팔 개수·꺾임·손-무기 융합 등 해부학 붕괴를 판정 → 붕괴 시 다른 seed로 재생성(최대 `MAX_GEN_ATTEMPTS`=3회). 복잡 실루엣 캐릭터의 팔 3개 등을 자동으로 거름.
 - 제한: 본인 등록 캐릭터만, 일 3장, 쿨다운 60초(재시도는 무료, 최종 1장만 차감). 결과 embed에 AI 생성·출처(© NEOPLE) 고지.
 - **Bedrock 한계(2모드 분리 이유)**: text2image는 화풍을 못 바꿈(painterly 고정), img2img는 자세를 못 바꿈(원본 고정). style_preset은 Ultra/Core 전부 미지원. 동시 충족 불가라 모드를 나눔.

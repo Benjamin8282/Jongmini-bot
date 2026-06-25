@@ -54,7 +54,7 @@ from commands.avatar_price import avatar_price
 from commands.export_data import export_data
 from commands.rest_days import rest_days_cmd
 from commands.mist_ranking import mist_ranking
-from commands.character_commission import character_commission
+from commands.character_commission import character_commission, character_scene_commission
 from core.bedrock import COMMISSION_ENABLED
 
 load_dotenv()
@@ -174,7 +174,8 @@ class JongminiBot(commands.Bot):
         # 자캐 AI 커미션: BEDROCK_COMMISSION_ENABLED=true 일 때만 등록(AWS 미설정 환경 보호)
         if COMMISSION_ENABLED:
             self.tree.add_command(character_commission)
-            logger.info("자캐 AI 커미션 커맨드 등록됨 (BEDROCK_COMMISSION_ENABLED=true)")
+            self.tree.add_command(character_scene_commission)
+            logger.info("자캐 AI 커미션 커맨드 2종 등록됨 (BEDROCK_COMMISSION_ENABLED=true)")
         else:
             logger.info("자캐 AI 커미션 비활성 (BEDROCK_COMMISSION_ENABLED 미설정)")
         logger.info("커맨드 등록 완료 (sync는 on_ready에서 실행)")
