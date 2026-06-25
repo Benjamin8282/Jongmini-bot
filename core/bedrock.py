@@ -19,6 +19,8 @@ import base64
 import io
 import json
 import os
+import random
+import re
 import threading
 
 from dotenv import load_dotenv
@@ -40,6 +42,9 @@ IMAGE_REGION = os.getenv("BEDROCK_IMAGE_REGION", "us-west-2")
 # ── 동시 호출 제한(부하/비용 보호) ──
 _SEM = asyncio.Semaphore(2)
 
+# 해부학 게이트 재생성 최대 시도 횟수(self-correcting generation)
+MAX_GEN_ATTEMPTS = 3
+
 # ── 화풍 선택 목록(슬래시 커맨드 노출용 한글 라벨 -> 내부 키) ──
 STYLE_LABELS = {
     "반실사": "painterly",
@@ -52,20 +57,20 @@ STYLE_RECIPES = {
     "anime": {
         "prompt": ("anime cel-shaded illustration, clean bold lineart, flat vibrant colors, "
                    "2D anime key visual, studio anime art"),
-        "strength": 0.4,  # 0.5→0.4: 원본 포즈/의상 충실 보존(해부학 붕괴·의상 오탐 방지). 화풍 약화 수용.
+        "strength": 0.45,  # 게이트가 해부학 backstop → 0.45로 화풍 회복(의상 대체로 보존)
         "use_anchor": False,  # 앵커는 정체성↑·화풍↓ → anime 는 화풍 우선이라 생략
         "negative_extra": "3d render, cgi, photorealistic, glossy, realistic skin, photograph",
     },
     "watercolor": {
         "prompt": ("traditional watercolor painting, visible wet brush strokes, paper texture, "
                    "soft pigment bleeding, hand-painted, muted pastel palette"),
-        "strength": 0.5,  # 0.6→0.5: 해부학 붕괴 방지 우선(수채 화풍 발현 약화 수용)
+        "strength": 0.6,  # 게이트 backstop → 0.6 복원(수채 화풍 발현)
         "use_anchor": True,  # watercolor 는 robust → 묘사 앵커로 정체성 보강
         "negative_extra": "3d render, cgi, photorealistic, glossy, sharp vector lines",
     },
     "painterly": {
         "prompt": "semi-realistic painterly digital art, soft detailed rendering, artstation",
-        "strength": 0.4,  # 0.5→0.4: 해부학 붕괴 방지
+        "strength": 0.45,  # 게이트 backstop → 0.45로 화풍 회복
         "use_anchor": False,
         "negative_extra": "",
     },
@@ -87,6 +92,19 @@ DESC_PROMPT = (
     "keywords covering: hair, eyes, headwear or horns, outfit, footwear, weapon, accessories, any "
     "companion creatures, dominant color palette, and overall aesthetic/vibe. "
     "Do NOT mention the background, the pose, or the white canvas. Output only the description, no preamble."
+)
+
+# 생성 결과의 해부학 정상 여부 판정 프롬프트(self-correcting generation 게이트)
+JUDGE_PROMPT = (
+    "You are a strict QA reviewer for AI-generated character illustrations. "
+    "Examine ONLY the character's anatomy. Look for these defects: "
+    "more than two arms or hands, a missing arm/hand, an arm bent backward unnaturally, "
+    "a reversed or twisted head/neck, a hand fused/melted into the weapon, "
+    "malformed or extra fingers, or a generally impossible body pose. "
+    "Respond with ONLY a JSON object: {\"ok\": true or false, \"reason\": \"short reason\"}. "
+    "Set ok=true ONLY when the character has exactly two arms and two hands in a natural, "
+    "anatomically possible pose, with the hand holding the weapon clearly distinct from it. "
+    "When in doubt, set ok=false. Output only the JSON, no preamble."
 )
 
 # ── boto3 client 싱글톤(지연 생성, threading.Lock 더블체크로 초기화 보호) ──
@@ -210,53 +228,115 @@ async def describe_character(png_bytes: bytes) -> str:
     return desc
 
 
-async def generate_scene_commission(png_bytes: bytes, scene: str) -> bytes:
-    """장면연출: Claude 묘사 + 사용자 장면 → Ultra text2image(자세/배경 자유, 반실사)."""
+def _judge_sync(png_bytes: bytes) -> dict:
+    client = _get_describe_client()
+    resp = client.converse(
+        modelId=DESCRIBE_MODEL_ID,
+        messages=[{"role": "user", "content": [
+            {"image": {"format": "png", "source": {"bytes": png_bytes}}},
+            {"text": JUDGE_PROMPT},
+        ]}],
+        inferenceConfig={"maxTokens": 200, "temperature": 0},
+    )
+    text = resp["output"]["message"]["content"][0]["text"].strip()
+    m = re.search(r"\{.*\}", text, re.DOTALL)
+    if m:
+        try:
+            data = json.loads(m.group(0))
+            return {"ok": bool(data.get("ok")), "reason": str(data.get("reason", ""))}
+        except (ValueError, TypeError):
+            pass
+    # 파싱 실패 시 안전하게 통과(무한 재시도 방지)
+    return {"ok": True, "reason": "판정 파싱 실패(통과 처리)"}
+
+
+async def judge_anatomy(png_bytes: bytes) -> dict:
+    """Bedrock Claude vision 으로 생성 이미지의 해부학 정상 여부를 판정. {ok: bool, reason: str}."""
+    async with _SEM:
+        verdict = await asyncio.to_thread(_judge_sync, png_bytes)
+    logger.info(f"해부학 판정: ok={verdict['ok']} ({verdict['reason'][:40]})")
+    return verdict
+
+
+async def generate_scene_commission(png_bytes: bytes, scene: str,
+                                    max_attempts: int = MAX_GEN_ATTEMPTS) -> bytes:
+    """장면연출: Claude 묘사 + 사용자 장면 → Ultra text2image(자세/배경 자유, 반실사).
+
+    생성 후 해부학 게이트(judge_anatomy)로 판정 → 붕괴 시 다른 seed 로 재생성(최대 max_attempts).
+    """
     flat = await asyncio.to_thread(_flatten_png, png_bytes)
     async with _SEM:
         desc = await asyncio.to_thread(_describe_sync, flat)
-        _log_desc(desc)
-        prompt = f"{desc}, {scene}, {SCENE_STYLE}, full body, highly detailed, masterpiece"
+    _log_desc(desc)
+    prompt = f"{desc}, {scene}, {SCENE_STYLE}, full body, highly detailed, masterpiece"
+
+    last_img = None
+    for attempt in range(max_attempts):
         body = {
             "prompt": prompt,
             "negative_prompt": BASE_NEGATIVE,
             "aspect_ratio": "2:3",
             "output_format": "png",
-            "seed": 0,
+            "seed": random.randint(1, 2_000_000_000),
         }
-        img = await asyncio.to_thread(_invoke_image_sync, body)
-    logger.info(f"장면연출 생성 완료: {len(img) // 1024}KB")
-    return img
+        async with _SEM:
+            last_img = await asyncio.to_thread(_invoke_image_sync, body)
+        if attempt == max_attempts - 1:
+            break  # 마지막 시도는 재생성 불가 → 판정 생략하고 반환
+        verdict = await judge_anatomy(last_img)
+        if verdict["ok"]:
+            logger.info(f"장면연출 생성 완료(시도 {attempt + 1}/{max_attempts}): {len(last_img) // 1024}KB")
+            return last_img
+        logger.info(f"장면연출 재시도({attempt + 1}/{max_attempts}): {verdict['reason'][:40]}")
+    logger.info(f"장면연출 생성 완료(최종 {max_attempts}/{max_attempts}): {len(last_img) // 1024}KB")
+    return last_img
 
 
-async def generate_style_commission(png_bytes: bytes, style: str) -> bytes:
-    """화풍변환: 원본 크롭 → Ultra img2img(자세 원본 고정, 화풍 anime/watercolor/painterly)."""
+async def generate_style_commission(png_bytes: bytes, style: str,
+                                    max_attempts: int = MAX_GEN_ATTEMPTS) -> bytes:
+    """화풍변환: 원본 크롭 → Ultra img2img(자세 원본 고정, 화풍 anime/watercolor/painterly).
+
+    생성 후 해부학 게이트(judge_anatomy)로 판정 → 붕괴 시 다른 seed 로 재생성(최대 max_attempts).
+    """
     if style not in STYLE_RECIPES:
         raise ValueError(f"지원하지 않는 화풍 키: {style!r} (가능: {list(STYLE_RECIPES)})")
     recipe = STYLE_RECIPES[style]
     b64 = await asyncio.to_thread(_preprocess_cropped, png_bytes)
-    flat = await asyncio.to_thread(_flatten_png, png_bytes) if recipe["use_anchor"] else None
+
+    # 정체성 앵커 묘사는 1회만(재시도마다 재사용)
+    parts = []
+    if recipe["use_anchor"]:
+        flat = await asyncio.to_thread(_flatten_png, png_bytes)
+        async with _SEM:
+            desc = await asyncio.to_thread(_describe_sync, flat)
+        _log_desc(desc)
+        parts.append(desc)
+    parts.append(recipe["prompt"])
+    parts.append("full body, masterpiece")
+    prompt = ", ".join(parts)
 
     negative = BASE_NEGATIVE
     if recipe["negative_extra"]:
         negative += ", " + recipe["negative_extra"]
 
-    async with _SEM:
-        parts = []
-        if recipe["use_anchor"]:
-            desc = await asyncio.to_thread(_describe_sync, flat)  # 정체성 앵커(묘사)
-            _log_desc(desc)
-            parts.append(desc)
-        parts.append(recipe["prompt"])
-        parts.append("full body, masterpiece")
+    last_img = None
+    for attempt in range(max_attempts):
         body = {
-            "prompt": ", ".join(parts),
+            "prompt": prompt,
             "image": b64,
             "strength": recipe["strength"],
             "negative_prompt": negative,
             "output_format": "png",
-            "seed": 0,
+            "seed": random.randint(1, 2_000_000_000),
         }
-        img = await asyncio.to_thread(_invoke_image_sync, body)
-    logger.info(f"화풍변환({style}) 생성 완료: {len(img) // 1024}KB")
-    return img
+        async with _SEM:
+            last_img = await asyncio.to_thread(_invoke_image_sync, body)
+        if attempt == max_attempts - 1:
+            break  # 마지막 시도는 재생성 불가 → 판정 생략하고 반환
+        verdict = await judge_anatomy(last_img)
+        if verdict["ok"]:
+            logger.info(f"화풍변환({style}) 생성 완료(시도 {attempt + 1}/{max_attempts}): {len(last_img) // 1024}KB")
+            return last_img
+        logger.info(f"화풍변환({style}) 재시도({attempt + 1}/{max_attempts}): {verdict['reason'][:40]}")
+    logger.info(f"화풍변환({style}) 생성 완료(최종 {max_attempts}/{max_attempts}): {len(last_img) // 1024}KB")
+    return last_img
