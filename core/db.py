@@ -1,7 +1,9 @@
 import aiosqlite
+from datetime import datetime, timedelta
 from pathlib import Path
 from core.logger import logger
 from core.models import SERVER_MAP
+from core.time_utils import KST
 
 DB_PATH = Path("data/characters.db")
 
@@ -873,18 +875,27 @@ async def get_basket_items() -> list[dict]:
 
 
 async def get_daily_volumes(item_id: str, days: int) -> list[dict]:
-    """아이템의 일별 거래량 집계"""
+    """아이템의 일별 거래량 집계 (KST 달력 기준, 진행 중인 오늘은 제외).
+
+    sold_date는 KST 문자열(YYYY-MM-DD HH:MM:SS)이므로 SQLite의
+    'now'(UTC) 대신 KST로 계산한 날짜 경계를 문자열 비교로 사용한다.
+    오늘의 부분 집계가 하루치 완성값처럼 섞이는 것을 막기 위해
+    상한은 오늘 0시(미포함)로 둔다.
+    """
     try:
-        modifier = f"-{int(days)} days"
+        today_kst = datetime.now(KST).date()
+        start_date = (today_kst - timedelta(days=int(days))).isoformat()
+        end_date = today_kst.isoformat()
         conn = await get_conn()
         cursor = await conn.execute("""
             SELECT DATE(sold_date) as date, SUM(count) as volume
             FROM auction_price_history
             WHERE item_id = ?
-              AND datetime(sold_date) >= datetime('now', ?)
+              AND sold_date >= ?
+              AND sold_date < ?
             GROUP BY DATE(sold_date)
             ORDER BY date
-        """, (item_id, modifier))
+        """, (item_id, start_date, end_date))
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
     except Exception as e:

@@ -34,7 +34,7 @@ pip install -r requirements.txt
   - `dundam_api.py` - 던담 외부 랭킹 API
   - `chart.py` - matplotlib/mplfinance 기반 캔들스틱, 스파크라인, 오버뷰 차트 생성
   - `analysis.py` - 통계 분석 (IQR 이상치 필터링, Hampel 필터 등)
-  - `activity_index.py` - 활동지수 계산 (바스켓 기반 거래량 가중 평균)
+  - `activity_index.py` - 활동지수 계산 (아이템별 거래량을 최근 90일 평균 대비 %로 앵커 정규화 후 일별 중앙값. KST 달력 기준·진행 중인 당일 제외, 수집 가동일의 무거래는 0, 전 아이템 공백일은 결측 처리. Hampel/MAD는 급변 플래그 전용, PELT는 체제 전환 표시 전용)
   - `dunspy_index.py` - 던스피(DUNSPY) 종합지수 산출
   - `models.py` - 서버 매핑, 희귀도 가중치 등 상수
   - `time_utils.py` - KST 기준 기간 계산 유틸리티
@@ -43,7 +43,7 @@ pip install -r requirements.txt
 - **`tasks/`**: 백그라운드 태스크 (asyncio.create_task로 실행)
   - `notify_items.py` - 20초 간격 타임라인 모니터링 및 득템 알림 → **아이템 채널**
   - `daily/weekly/monthly_aggregation.py` - 정기 통계 집계 (KST 06:00 기준) → **아이템 채널**
-  - `poll_auction_prices.py` - 5분 간격 경매장 시세 폴링
+  - `poll_auction_prices.py` - 30초 간격 경매장 시세 폴링
   - `price_alert.py` - 시세 급등/급락 감지 및 채널/DM 알림 → **경제 채널**
   - `morning_briefing.py` - 매일 06:00 경제 브리핑 발송 → **경제 채널**
   - `weekly_character_aggregation.py` - 캐릭터별 주간 아이템 집계 → **아이템 채널**
