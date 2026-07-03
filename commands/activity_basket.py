@@ -1,7 +1,10 @@
 import asyncio
+from datetime import datetime, timedelta
 
 import discord
 from discord import app_commands, Interaction, ui
+
+from core.time_utils import KST
 
 from core.db import (
     add_basket_item, remove_basket_item, get_basket_items,
@@ -231,14 +234,21 @@ def _build_activity_embed(result: dict, days: int) -> discord.Embed:
     diff = current - prev
     arrow = "▲" if diff > 0 else "▼" if diff < 0 else "−"
     status, color = _status_info(current)
+    last_date = result["dates"][-1] if result.get("dates") else "?"
+    baseline_days = result.get("baseline_days", 90)
+
+    yesterday = (datetime.now(KST).date() - timedelta(days=1)).isoformat()
+    stale_note = ""
+    if last_date != "?" and last_date < yesterday:
+        stale_note = f"\n⚠ {last_date} 이후 수집된 거래 데이터가 없습니다"
 
     embed = discord.Embed(
         title="게임 활동지수",
         description=(
             f"**현재: {current:.1f}%** ({arrow} {abs(diff):.1f}%p)\n"
-            f"상태: **{status}**\n\n"
+            f"상태: **{status}** | 기준일: {last_date} (완결일){stale_note}\n\n"
             f"기간: {days}일 | 바스켓: {result['item_count']}개 아이템\n"
-            f"100% = 최근 30일 평균 거래량 기준"
+            f"100% = 최근 {baseline_days}일 평균 거래량"
         ),
         color=color
     )
@@ -246,20 +256,20 @@ def _build_activity_embed(result: dict, days: int) -> discord.Embed:
     return embed
 
 
-def _add_hampel_field(embed: discord.Embed, result: dict):
-    hampel = result.get("hampel_stats", {})
-    if hampel.get("total_replaced", 0) <= 0:
+def _add_spike_field(embed: discord.Embed, result: dict):
+    spikes = result.get("spike_stats", {})
+    if spikes.get("total_flagged", 0) <= 0:
         return
-    hampel_text = f"스파이크 교체: {hampel['total_replaced']}건\n"
+    spike_text = f"감지: {spikes['total_flagged']}건 (지수에 반영됨)\n"
     item_details = ", ".join(
         f"{name}({cnt}건)"
-        for name, cnt in hampel.get("items", {}).items()
+        for name, cnt in spikes.get("items", {}).items()
     )
     if item_details:
-        hampel_text += item_details
+        spike_text += item_details
     embed.add_field(
-        name="노이즈 제거 (Hampel)",
-        value=hampel_text[:1024],
+        name="이벤트성 급변 감지 (Hampel)",
+        value=spike_text[:1024],
         inline=True
     )
 
@@ -314,6 +324,7 @@ async def activity_index_cmd(interaction: Interaction, days: int = 30):
         changepoints=result.get("changepoints"),
         outlier_dates=list(result.get("outliers", {}).keys()),
         raw_index=result.get("raw_index"),
+        baseline_days=result.get("baseline_days", 0),
     )
     if not chart_buf:
         await interaction.followup.send("차트 생성에 실패했습니다.")
@@ -321,13 +332,13 @@ async def activity_index_cmd(interaction: Interaction, days: int = 30):
 
     file = discord.File(chart_buf, filename="activity_index.png")
     embed = _build_activity_embed(result, days)
-    _add_hampel_field(embed, result)
+    _add_spike_field(embed, result)
     _add_changepoint_field(embed, result)
     _add_outlier_field(embed, result)
 
     embed.set_footer(
         text=(
-            "Hampel→STL→MAD→PELT 파이프라인 적용 | "
+            "STL 요일 보정 + Hampel/MAD 급변 감지 + PELT 체제 표시 | "
             "거래량 기반 추정치이며, 실제 접속자 수와 다를 수 있습니다."
         )
     )

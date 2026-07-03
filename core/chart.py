@@ -591,11 +591,11 @@ def _draw_activity_lines(ax, x, y, raw_index, dates):
     ax.axhline(y=100, color="#888888", linewidth=1,
                linestyle="--", alpha=0.6)
 
-    # 원본 지수 (정제 전) 반투명 라인
+    # 원본 지수 (요일 보정 전) 반투명 라인 — NaN 구간은 선이 끊겨 데이터 부재 표시
     if raw_index and len(raw_index) == len(dates):
         y_raw = np.array(raw_index, dtype=float)
         ax.plot(x, y_raw, color="#888888", linewidth=1,
-                alpha=0.35, linestyle=":", label="원본 (정제 전)")
+                alpha=0.35, linestyle=":", label="원본 (요일 보정 전)")
 
     # 100% 위/아래 색분할 채우기
     ax.fill_between(x, y, 100, where=(y >= 100),
@@ -605,7 +605,7 @@ def _draw_activity_lines(ax, x, y, raw_index, dates):
 
     # 메인 라인
     ax.plot(x, y, color=ACCENT, linewidth=2.5, alpha=0.9,
-            label="정제된 지수")
+            label="활동지수 (요일 보정)")
 
 
 def _setup_activity_axes(ax):
@@ -618,9 +618,14 @@ def _setup_activity_axes(ax):
     _setup_grid(ax)
 
 
-def _build_activity_subtitle(item_count: int, changepoints: list[str] | None) -> str:
+def _build_activity_subtitle(
+    item_count: int, changepoints: list[str] | None, baseline_days: int = 0
+) -> str:
     """활동지수 차트 부제목 생성."""
-    subtitle = f"바스켓 {item_count}개 아이템 | 100% = 30일 평균"
+    baseline_text = (
+        f"최근 {baseline_days}일 평균" if baseline_days else "조회 구간 평균"
+    )
+    subtitle = f"바스켓 {item_count}개 아이템 | 100% = {baseline_text}"
     if changepoints:
         subtitle += f" | 체제 전환 {len(changepoints)}건"
     return subtitle
@@ -640,6 +645,7 @@ def generate_activity_chart(
     changepoints: list[str] | None = None,
     outlier_dates: list[str] | None = None,
     raw_index: list[float] | None = None,
+    baseline_days: int = 0,
 ) -> BytesIO | None:
     """
     활동지수 라인 차트 생성.
@@ -650,12 +656,14 @@ def generate_activity_chart(
 
     with _MPL_LOCK:
         return _generate_activity_chart_impl(
-            dates, index_values, item_count, changepoints, outlier_dates, raw_index
+            dates, index_values, item_count, changepoints, outlier_dates,
+            raw_index, baseline_days,
         )
 
 
 def _generate_activity_chart_impl(
     dates, index_values, item_count, changepoints, outlier_dates, raw_index,
+    baseline_days,
 ) -> BytesIO | None:
     fig, ax = plt.subplots(figsize=(13, 5), facecolor=BG_COLOR)
     ax.set_facecolor(PANEL_COLOR)
@@ -672,7 +680,7 @@ def _generate_activity_chart_impl(
              fontsize=15, fontweight="bold", fontfamily=_FONT_NAME,
              color=TEXT_COLOR, va="top")
 
-    subtitle = _build_activity_subtitle(item_count, changepoints)
+    subtitle = _build_activity_subtitle(item_count, changepoints, baseline_days)
     fig.text(0.06, 0.91, subtitle,
              fontsize=10, fontfamily=_FONT_NAME,
              color="#888888", va="top")
